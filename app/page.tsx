@@ -1,6 +1,20 @@
-﻿import Image from "next/image";
+﻿"use client";
+
+import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Home() {
+  const supabase = createClient();
+
+  const handleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       <header className="w-full border-b border-[#E5E7EB] bg-white">
@@ -8,21 +22,21 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Image
               src="/logo_videos.png"
-              alt="Logo PUBLI&#42;CAT"
+              alt="Logo PUBLI*CAT"
               width={48}
               height={48}
             />
             <span className="text-xl font-semibold tracking-tight text-[#111827]">
-              PUBLI&#42;CAT
+              PUBLI*CAT
             </span>
           </div>
 
-          <a
-            href="/login"
-            className="rounded-full bg-[#16AFAA] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#11948F] transition-colors"
+          <button
+            onClick={handleLogin}
+            className="rounded-full bg-[#16AFAA] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#11948F] transition-colors cursor-pointer"
           >
             Inicia la sessió
-          </a>
+          </button>
         </div>
       </header>
 
@@ -39,19 +53,19 @@ export default function Home() {
                 el vídeo educatiu del teu centre.
               </h1>
               <p className="max-w-xl text-base leading-relaxed text-[#4B5563]">
-                La plataforma PUBLI&#42;CAT permet als centres pujar i gestionar
+                La plataforma PUBLI*CAT permet als centres pujar i gestionar
                 els seus vídeos educatius de forma segura, amb llistes de
                 reproducció per pantalles informatives i un accés controlat per
                 professorat i alumnat.
               </p>
 
               <div className="flex flex-wrap gap-3">
-                <a
-                  href="/login"
-                  className="rounded-full bg-[#F91248] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#d70f3d] transition-colors"
+                <button
+                  onClick={handleLogin}
+                  className="rounded-full bg-[#F91248] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#d70f3d] transition-colors cursor-pointer"
                 >
                   Inicia la sessió
-                </a>
+                </button>
               </div>
             </div>
 
@@ -61,7 +75,7 @@ export default function Home() {
                   <div className="rounded-2xl bg-linear-to-br from-[#FEDD2C] to-[#FEDD2C]/60 p-6 shadow-lg">
                     <Image
                       src="/logo_videos.png"
-                      alt="Logo PUBLI&#42;CAT"
+                      alt="Logo PUBLI*CAT"
                       width={120}
                       height={120}
                     />
@@ -70,19 +84,19 @@ export default function Home() {
 
                 <div className="space-y-5 text-center">
                   <h3 className="text-xl font-bold leading-tight text-[#111827]">
-                    PUBLI&#42;CAT és una plataforma pensada per donar visibilitat a l&apos;aprenentatge dels centres.
+                    PUBLI*CAT és una plataforma pensada per donar visibilitat a l&apos;aprenentatge dels centres.
                   </h3>
-                  
+
                   <div className="space-y-4 text-left">
                     <div className="rounded-xl bg-[#F9FAFB] p-4">
                       <p className="text-sm leading-relaxed text-[#4B5563]">
                         <span className="font-semibold text-[#F91248]">Facilita la pujada i organització</span> de vídeos educatius, permet crear playlists per a pantalles del centre i reforça la comunicació interna.
                       </p>
                     </div>
-                    
+
                     <div className="rounded-xl bg-[#F9FAFB] p-4">
                       <p className="text-sm leading-relaxed text-[#4B5563]">
-                        Amb una gestió senzilla i segura, PUBLI&#42;CAT converteix el vídeo en una <span className="font-semibold text-[#16AFAA]">eina per compartir projectes</span>, fomentar la participació de l&apos;alumnat i impulsar la competència digital a tots els nivells.
+                        Amb una gestió senzilla i segura, PUBLI*CAT converteix el vídeo en una <span className="font-semibold text-[#16AFAA]">eina per compartir projectes</span>, fomentar la participació de l&apos;alumnat i impulsar la competència digital a tots els nivells.
                       </p>
                     </div>
                   </div>
@@ -98,7 +112,7 @@ export default function Home() {
         >
           <div className="mx-auto max-w-6xl px-6 py-16">
             <h2 className="mb-4 text-center text-3xl font-bold text-[#111827]">
-              Objectius de PUBLI&#42;CAT
+              Objectius de PUBLI*CAT
             </h2>
             <p className="mx-auto mb-10 max-w-2xl text-center text-sm text-[#4B5563]">
               Donar als centres educatius una eina senzilla per gestionar
@@ -153,7 +167,7 @@ export default function Home() {
           className="border-t border-[#E5E7EB] bg-white text-sm text-[#6B7280]"
         >
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row">
-            <p>© {new Date().getFullYear()} PUBLI&#42;CAT</p>
+            <p>© {new Date().getFullYear()} PUBLI*CAT</p>
             <p className="text-xs">
               Plataforma pilot per a centres educatius · Desenvolupament intern
             </p>
