@@ -7,6 +7,8 @@ export async function GET(request: Request) {
     const code = searchParams.get('code')
     const next = searchParams.get('next') ?? '/pantalla'
 
+    console.log('Callback hit:', { origin, code: code?.substring(0, 10) + '...', next })
+
     if (code) {
         const cookieStore = await cookies()
         const supabase = createServerClient(
@@ -28,10 +30,13 @@ export async function GET(request: Request) {
         )
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
+            console.log('Auth successful, redirecting to:', `${origin}${next}`)
             return NextResponse.redirect(`${origin}${next}`)
         }
+        console.error('Auth error:', error)
     }
 
     // return the user to an error page with instructions
+    console.log('Redirecting to error page')
     return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
