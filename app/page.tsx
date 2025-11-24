@@ -19,6 +19,16 @@ export default function Home() {
     });
   };
 
+  // Fallback: Check if we have a code in the URL and redirect to callback
+  // This handles cases where the provider redirects to root instead of callback
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      window.location.href = `/auth/callback?code=${code}`;
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       <header className="w-full border-b border-[#E5E7EB] bg-white">
