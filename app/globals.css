@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+body, p, li, a, button {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
