@@ -17,9 +17,9 @@ function ConfirmInviteContent() {
   const searchParams = useSearchParams();
 
   // Verificar si hay un token de invitación
-  const token = searchParams.get('token');
+  const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type');
-  const tokenError = !token || type !== 'invite';
+  const tokenError = !token_hash || type !== 'invite';
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,13 +37,25 @@ function ConfirmInviteContent() {
 
     setLoading(true);
 
+    // Verificar el token y actualizar la contraseña
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash: token_hash!,
+      type: 'invite',
+    });
+
+    if (verifyError) {
+      setError(verifyError.message);
+      setLoading(false);
+      return;
+    }
+
     // Actualizar la contraseña del usuario invitado
-    const { error } = await supabase.auth.updateUser({
+    const { error: updateError } = await supabase.auth.updateUser({
       password: password,
     });
 
-    if (error) {
-      setError(error.message);
+    if (updateError) {
+      setError(updateError.message);
       setLoading(false);
     } else {
       router.push("/pantalla");

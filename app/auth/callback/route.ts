@@ -6,6 +6,15 @@ export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
     const next = searchParams.get('next') ?? '/pantalla'
+    const token_hash = searchParams.get('token_hash')
+    const type = searchParams.get('type')
+
+    // Si es una invitación, redirigir a /auth/confirm con los parámetros
+    if (type === 'invite' && token_hash) {
+        return NextResponse.redirect(
+            `${origin}/auth/confirm?token_hash=${token_hash}&type=${type}`
+        )
+    }
 
     if (code) {
         const cookieStore = await cookies()
