@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
             <strong className="text-[#111827]">{email}</strong>
           </p>
           <p className="text-sm text-[#6B7280]">
-            L&apos;enllaç caducarà en 60 minuts per motius de seguretat.
+            L&apos;enllaç caducarà en <strong>24 hores</strong> per motius de seguretat.
           </p>
           <Link
             href="/login"
