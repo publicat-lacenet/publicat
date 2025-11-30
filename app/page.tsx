@@ -1,34 +1,7 @@
-﻿"use client";
-
-import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
-import { useEffect } from "react";
+﻿import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
-  const supabase = createClient();
-
-  const handleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
-    });
-  };
-
-  // Fallback: Check if we have a code in the URL and redirect to callback
-  // This handles cases where the provider redirects to root instead of callback
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      window.location.href = `/auth/callback?code=${code}`;
-    }
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
@@ -46,12 +19,12 @@ export default function Home() {
             </span>
           </div>
 
-          <button
-            onClick={handleLogin}
-            className="rounded-full bg-[#16AFAA] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#11948F] transition-colors cursor-pointer"
+          <Link
+            href="/login"
+            className="rounded-full bg-[#16AFAA] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#11948F] transition-colors"
           >
             Inicia la sessió
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -75,12 +48,12 @@ export default function Home() {
               </p>
 
               <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={handleLogin}
-                  className="rounded-full bg-[#F91248] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#d70f3d] transition-colors cursor-pointer"
+                <Link
+                  href="/login"
+                  className="rounded-full bg-[#F91248] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#d70f3d] transition-colors"
                 >
                   Inicia la sessió
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -163,7 +136,7 @@ export default function Home() {
               </div>
 
               <div className="rounded-2xl bg-[#F9FAFB] p-6 shadow-sm">
-                <div className="mb-3 inline-flex rounded-xl bg-[#F91248]/15 p-2">
+                git status                git remote -v                git remote -v                <div className="mb-3 inline-flex rounded-xl bg-[#F91248]/15 p-2">
                   <span className="text-lg">🔐</span>
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-[#111827]">
