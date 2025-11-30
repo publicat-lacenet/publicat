@@ -1,12 +1,12 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function ConfirmInvitePage() {
+function ConfirmInviteContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -162,5 +162,20 @@ export default function ConfirmInvitePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ConfirmInvitePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F91248] mx-auto"></div>
+          <p className="mt-4 text-[#6B7280]">Carregant...</p>
+        </div>
+      </div>
+    }>
+      <ConfirmInviteContent />
+    </Suspense>
   );
 }
