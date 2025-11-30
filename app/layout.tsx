@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Vídeo Lacenet",
-  description: "Plataforma de vídeos per a centres educatius",
+  title: "PUBLI*CAT",
+  description: "Plataforma de vídeo per a centres educatius",
 };
 
 export default function RootLayout({
