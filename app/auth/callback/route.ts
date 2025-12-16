@@ -16,6 +16,37 @@ export async function GET(request: Request) {
         )
     }
 
+    // Si es recuperación de contraseña, procesar el token y redirigir
+    if (type === 'recovery' && token_hash) {
+        const cookieStore = await cookies()
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) {
+                        return cookieStore.get(name)?.value
+                    },
+                    set(name: string, value: string, options: CookieOptions) {
+                        cookieStore.set({ name, value, ...options })
+                    },
+                    remove(name: string, options: CookieOptions) {
+                        cookieStore.delete({ name, ...options })
+                    },
+                },
+            }
+        )
+        
+        const { error } = await supabase.auth.verifyOtp({
+            token_hash,
+            type: 'recovery',
+        })
+
+        if (!error) {
+            return NextResponse.redirect(`${origin}${next}`)
+        }
+    }
+
     if (code) {
         const cookieStore = await cookies()
         const supabase = createServerClient(
