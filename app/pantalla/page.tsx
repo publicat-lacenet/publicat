@@ -14,6 +14,20 @@ export default async function PantallaPage() {
         return redirect("/");
     }
 
+    // Comprovar el rol de l'usuari i redirigir si no és display
+    const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    // Si l'usuari no és display, redirigir segons el seu rol
+    if (profile?.role === 'admin_global') {
+        redirect('/admin');
+    } else if (profile?.role === 'editor_profe' || profile?.role === 'editor_alumne') {
+        redirect('/contingut');
+    }
+
     return (
         <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
             <header className="w-full border-b border-[#E5E7EB] bg-white">
