@@ -62,6 +62,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Protegir ruta /pantalla - només display
+  if (request.nextUrl.pathname.startsWith('/pantalla') && user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role && profile.role !== 'display') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
   return response;
 }
 
@@ -72,6 +85,7 @@ export const config = {
     '/contingut/:path*',
     '/llistes/:path*',
     '/rss/:path*',
-    '/perfil/:path*'
+    '/perfil/:path*',
+    '/pantalla/:path*'
   ],
 };
