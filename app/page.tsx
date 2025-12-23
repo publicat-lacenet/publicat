@@ -33,18 +33,13 @@ export default function Home() {
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-10 px-6 py-16 lg:flex-row lg:items-center lg:py-20">
             <div className="flex-1 space-y-6">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#F91248]">
-                Programa de vídeo per a centres educatius
+                PUBLICAT - Comunicant el futur
               </p>
               <h1 className="text-4xl font-bold tracking-tight text-[#111827] sm:text-5xl">
-                Centralitza, organitza i comparteix
-                <br />
-                el vídeo educatiu del teu centre.
+                Projecte de periodisme digital per a centres educatius
               </h1>
               <p className="max-w-xl text-base leading-relaxed text-[#4B5563]">
-                La plataforma PUBLI*CAT permet als centres pujar i gestionar
-                els seus vídeos educatius de forma segura, amb llistes de
-                reproducció per pantalles informatives i un accés controlat per
-                professorat i alumnat.
+                El projecte PUBLICAT proporciona estratègies i recursos per crear i difondre contingut en català, fomentant l’esperit crític i desenvolupant la pròpia opinió davant de les fake news i el nou panorama de manipulació informativa.
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -136,7 +131,7 @@ export default function Home() {
               </div>
 
               <div className="rounded-2xl bg-[#F9FAFB] p-6 shadow-sm">
-                git status                git remote -v                git remote -v                <div className="mb-3 inline-flex rounded-xl bg-[#F91248]/15 p-2">
+                <div className="mb-3 inline-flex rounded-xl bg-[#F91248]/15 p-2">
                   <span className="text-lg">🔐</span>
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-[#111827]">
