@@ -16,6 +16,7 @@ interface Center {
 interface User {
   id: string;
   email: string;
+  full_name?: string;
   role: 'admin_global' | 'editor_profe' | 'editor_alumne' | 'display';
   center_id: string | null;
   is_active: boolean;
