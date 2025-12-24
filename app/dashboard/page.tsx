@@ -24,29 +24,21 @@ export default async function DashboardPage() {
   }
 
   // Obtenir el perfil de l'usuari per saber el seu rol
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from('users')
-    .select('role, center_id, email')
+    .select('role, center_id')
     .eq('id', user.id)
     .single();
 
-  console.log('Dashboard - User ID:', user.id);
-  console.log('Dashboard - Profile:', profile);
-  console.log('Dashboard - Error:', error);
-
   // Redirigir segons el rol
   if (profile?.role === 'admin_global') {
-    console.log('Redirigint a /admin');
     redirect('/admin');
   } else if (profile?.role === 'display') {
-    console.log('Redirigint a /pantalla');
     redirect('/pantalla');
   } else if (profile?.role === 'editor_profe' || profile?.role === 'editor_alumne') {
-    console.log('Redirigint a /contingut');
     redirect('/contingut');
   }
 
   // Fallback per si no té rol assignat
-  console.log('Fallback - Redirigint a /pantalla');
   redirect('/pantalla');
 }
