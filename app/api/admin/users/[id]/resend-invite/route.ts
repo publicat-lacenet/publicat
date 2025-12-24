@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
+  const { id: userId } = await params
 
   // Verificar autenticació
   const {
@@ -27,8 +28,6 @@ export async function POST(
   if (!profile || profile.role !== 'admin_global') {
     return NextResponse.json({ error: 'Permís denegat' }, { status: 403 })
   }
-
-  const userId = params.id
 
   // Obtenir informació de l'usuari
   const { data: targetUser, error: userError } = await supabase
