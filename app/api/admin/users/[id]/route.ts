@@ -32,14 +32,24 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { role, center_id, is_active } = body;
+  const { role, center_id, is_active, full_name, phone } = body;
 
   // Construir objecte d'actualització
   const updates: {
     role?: string;
     center_id?: string | null;
     is_active?: boolean;
+    full_name?: string | null;
+    phone?: string | null;
   } = {};
+
+  if (full_name !== undefined) {
+    updates.full_name = full_name || null;
+  }
+
+  if (phone !== undefined) {
+    updates.phone = phone || null;
+  }
 
   if (role !== undefined) {
     if (!['admin_global', 'editor_profe', 'editor_alumne', 'display'].includes(role)) {

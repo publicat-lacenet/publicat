@@ -142,6 +142,8 @@ export default function UsersTab() {
       const body: any = {
         role: formData.role,
         center_id: formData.role === 'admin_global' ? null : formData.center_id,
+        full_name: formData.full_name || null,
+        phone: formData.phone || null,
       };
 
       if (!editingUser) {
