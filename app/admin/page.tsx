@@ -6,6 +6,8 @@ import Breadcrumb from '@/app/components/ui/Breadcrumb';
 import PageHeader from '@/app/components/ui/PageHeader';
 import AdminTabs from '@/app/components/ui/AdminTabs';
 import ZonesTab from './tabs/ZonesTab';
+import CentresTab from './tabs/CentresTab';
+import UsersTab from './tabs/UsersTab';
 
 const tabs = [
   { id: 'centres', label: 'Centres', icon: '🏫' },
@@ -34,16 +36,8 @@ export default function AdminPage() {
       />
 
       <div>
-        {activeTab === 'centres' && (
-          <div className="text-center py-12 text-[var(--color-gray)]">
-            Tab Centres (pendent implementació)
-          </div>
-        )}
-        {activeTab === 'usuaris' && (
-          <div className="text-center py-12 text-[var(--color-gray)]">
-            Tab Usuaris (pendent implementació)
-          </div>
-        )}
+        {activeTab === 'centres' && <CentresTab />}
+        {activeTab === 'usuaris' && <UsersTab />}
         {activeTab === 'zones' && <ZonesTab />}
         {activeTab === 'landing' && (
           <div className="text-center py-12 text-[var(--color-gray)]">

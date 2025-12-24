@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 export default function AppHeader() {
-  const pathname = usePathname();
-
   return (
     <header className="h-[60px] bg-white border-b border-[var(--color-border)] fixed top-0 left-0 right-0 z-50">
       <div className="h-full px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="text-2xl font-bold font-[family-name:var(--font-montserrat)]">
-            <span className="text-[var(--color-accent)]">PUBLI</span>
-            <span className="text-[var(--color-dark)]">CAT</span>
-          </div>
+          <Image
+            src="/logo_videos.png"
+            alt="Logo PUBLI*CAT"
+            width={40}
+            height={40}
+          />
+          <span className="text-xl font-semibold tracking-tight text-[#111827] font-[family-name:var(--font-montserrat)]">
+            PUBLI*CAT
+          </span>
         </Link>
 
         {/* Search Bar (placeholder) */}

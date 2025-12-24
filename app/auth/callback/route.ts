@@ -66,8 +66,15 @@ export async function GET(request: Request) {
                 },
             }
         )
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
+        const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error && data.user) {
+            // Marcar onboarding com a completat en el primer login exitós
+            await supabase
+                .from('users')
+                .update({ onboarding_status: 'active' })
+                .eq('id', data.user.id)
+                .eq('onboarding_status', 'invited')
+            
             return NextResponse.redirect(`${origin}${next}`)
         }
     }

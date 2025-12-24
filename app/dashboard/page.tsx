@@ -32,13 +32,13 @@ export default async function DashboardPage() {
 
   // Redirigir segons el rol
   if (profile?.role === 'admin_global') {
-    redirect('/admin');
+    redirect('/visor');
   } else if (profile?.role === 'display') {
     redirect('/pantalla');
   } else if (profile?.role === 'editor_profe' || profile?.role === 'editor_alumne') {
-    redirect('/contingut');
+    redirect('/visor');
   }
 
   // Fallback per si no té rol assignat
-  redirect('/pantalla');
+  redirect('/visor');
 }

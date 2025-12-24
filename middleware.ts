@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protegir rutas que requereixen autenticació
-  const protectedPaths = ['/admin', '/dashboard', '/contingut', '/llistes', '/rss', '/perfil'];
+  const protectedPaths = ['/admin', '/dashboard', '/visor', '/contingut', '/llistes', '/rss', '/usuaris', '/perfil'];
   const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path));
 
   if (isProtectedPath && !user) {
@@ -82,9 +82,11 @@ export const config = {
   matcher: [
     '/admin/:path*',
     '/dashboard/:path*',
+    '/visor/:path*',
     '/contingut/:path*',
     '/llistes/:path*',
     '/rss/:path*',
+    '/usuaris/:path*',
     '/perfil/:path*',
     '/pantalla/:path*'
   ],

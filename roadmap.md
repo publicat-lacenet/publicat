@@ -26,6 +26,9 @@ M1  🔴 Foundation (DB + RLS + Seeds)  [1.5-2 setmanes] CRÍTIC
 M2  🟡 Admin UI                        [1 setmana]
      └─> Gestió centres, usuaris, zones
 
+M2.5 🔵 Sistema Auth en Layout          [0.5 setmanes] TÈCNIC
+     └─> Context Provider + Permisos dinàmics
+
 M3  🟡 Contingut & Moderació           [2 setmanes]
      ├─> M3a: Contingut Base          [1 setmana]
      └─> M3b: Moderació Alumnes       [1 setmana]
@@ -208,7 +211,47 @@ Aquest milestone es divideix en **8 sub-milestones** atòmics per garantir una i
 
 **Durada:** 1 setmana
 
-**Entregables:**
+**⚠️ PRE-REQUISIT TÈCNIC: Sistema d'Autenticació en Layout**
+
+Abans de començar M3a, cal implementar:
+
+**1. Context Provider d'Autenticació** (`app/contexts/AuthContext.tsx`)
+- Hook `useAuth()` que retorna `{ user, profile, loading }`
+- Llegeix usuari de Supabase: `supabase.auth.getUser()`
+- Llegeix perfil de BD: `SELECT * FROM users WHERE id = auth.uid()`
+- Gestiona loading states
+- Supabase Realtime per actualitzacions de perfil
+
+**2. Integració al Layout** (`app/components/layout/AdminLayout.tsx`)
+- Wrapejar amb `<AuthProvider>`
+- AppSidebar consumeix `useAuth()` per filtrar items segons `profile.role`
+- Eliminar rol hardcoded `'admin_global'`
+
+**3. AppHeader Dinàmic** (`app/components/layout/AppHeader.tsx`)
+- Mostrar rol traduït: 
+  - `admin_global` → **Admin Global**
+  - `editor_profe` → **Editor Professor**
+  - `editor_alumne` → **Editor Alumne**
+- Inicial de l'avatar dinàmica des de `user.email[0].toUpperCase()`
+- (Opcional) Mostrar logo del centre si `profile.center_id` existeix
+
+**4. Protected Routes millor** (`middleware.ts`)
+- Verificar rol específic per cada ruta (ja està parcialment implementat)
+- Evitar duplicació de queries (Context Provider ja ho fa)
+
+**Criteris d'Acceptació Pre-M3a:**
+- [ ] `useAuth()` retorna dades reals de l'usuari autenticat
+- [ ] Sidebar filtra ítems segons `profile.role` real
+- [ ] Header mostra rol traduït correctament
+- [ ] Editor-alumne NO veu RSS, Usuaris ni Administració
+- [ ] Admin Global veu totes les seccions
+- [ ] Context actualitza automàticament si canvia el rol
+
+**Temps estimat:** 0.5 setmanes (mig sprint abans de M3a)
+
+---
+
+**Entregables M3a:**
 
 **1. Pàgina `/contingut`**
 - Graella de vídeos (cards 24/pàgina)

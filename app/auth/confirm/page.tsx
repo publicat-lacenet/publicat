@@ -58,7 +58,7 @@ function ConfirmInviteContent() {
       setError(updateError.message);
       setLoading(false);
     } else {
-      router.push("/pantalla");
+      router.push("/dashboard");
       router.refresh();
     }
   };
