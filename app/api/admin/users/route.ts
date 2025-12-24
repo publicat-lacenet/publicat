@@ -106,7 +106,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { email, role, center_id } = body;
+  const { email, full_name, phone, role, center_id } = body;
 
   // Validació
   if (!email || !email.includes('@')) {
@@ -169,6 +169,8 @@ export async function POST(request: Request) {
       .insert({
         id: authData.user?.id,
         email,
+        full_name: full_name || null,
+        phone: phone || null,
         role,
         center_id: role === 'admin_global' ? null : center_id,
         is_active: true,

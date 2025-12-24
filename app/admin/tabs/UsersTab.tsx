@@ -17,6 +17,7 @@ interface User {
   id: string;
   email: string;
   full_name?: string;
+  phone?: string;
   role: 'admin_global' | 'editor_profe' | 'editor_alumne' | 'display';
   center_id: string | null;
   is_active: boolean;
@@ -48,6 +49,8 @@ export default function UsersTab() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     email: '',
+    full_name: '',
+    phone: '',
     role: 'editor_profe' as User['role'],
     center_id: '',
   });
@@ -97,6 +100,8 @@ export default function UsersTab() {
     setEditingUser(null);
     setFormData({
       email: '',
+      full_name: '',
+      phone: '',
       role: 'editor_profe',
       center_id: '',
     });
@@ -107,6 +112,8 @@ export default function UsersTab() {
     setEditingUser(user);
     setFormData({
       email: user.email,
+      full_name: user.full_name || '',
+      phone: user.phone || '',
       role: user.role,
       center_id: user.center_id || '',
     });
@@ -412,6 +419,34 @@ export default function UsersTab() {
                 L'email no es pot modificar
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-dark)] mb-1">
+              Nom complet
+            </label>
+            <input
+              type="text"
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              placeholder="Nom i cognoms"
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg 
+                       focus:outline-none focus:border-[var(--color-secondary)]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-dark)] mb-1">
+              Telèfon
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+34 600 000 000"
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg 
+                       focus:outline-none focus:border-[var(--color-secondary)]"
+            />
           </div>
 
           <div>
