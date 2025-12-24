@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import AdminLayout from '@/app/components/layout/AdminLayout';
-import Breadcrumb from '@/app/components/ui/Breadcrumb';
 import PageHeader from '@/app/components/ui/PageHeader';
 import AdminTabs from '@/app/components/ui/AdminTabs';
 import ZonesTab from './tabs/ZonesTab';
@@ -18,12 +17,10 @@ const tabs = [
 ];
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('zones');
+  const [activeTab, setActiveTab] = useState('centres');
 
   return (
     <AdminLayout>
-      <Breadcrumb items={['Home', 'Administració']} />
-      
       <PageHeader
         title="Administració"
         description="Gestió global de centres, usuaris i zones del sistema"

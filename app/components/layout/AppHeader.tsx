@@ -36,16 +36,10 @@ export default function AppHeader() {
           </div>
         </div>
 
-        {/* Right side: Notifications + User */}
+        {/* Right side: User + Logout */}
         <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <button className="relative p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors">
-            <span className="text-xl">🔔</span>
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--color-accent)] rounded-full"></span>
-          </button>
-
-          {/* User Dropdown */}
-          <div className="flex items-center gap-2 pl-4 border-l border-[var(--color-border)]">
+          {/* User Info */}
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-[var(--color-dark)] font-semibold">
               A
             </div>
@@ -53,6 +47,16 @@ export default function AppHeader() {
               Admin
             </span>
           </div>
+
+          {/* Logout Button */}
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium bg-[#16AFAA] text-white rounded-full hover:bg-[#14998F] transition-colors font-[family-name:var(--font-inter)]"
+            >
+              Sortir
+            </button>
+          </form>
         </div>
       </div>
     </header>
