@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
@@ -65,8 +66,14 @@ export async function POST(
     }
   }
 
+  // Crear client admin amb service role key
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   // Reenviar invitació
-  const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+  const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
     targetUser.email,
     {
       redirectTo: `${request.nextUrl.origin}/auth/confirm`,

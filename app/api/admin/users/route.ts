@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 // GET /api/admin/users - Llistar usuaris amb filtres
@@ -131,8 +132,14 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Crear client admin amb service role key
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Crear usuari a Supabase Auth i enviar invitació
-    const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       data: {
         role,
         center_id: role === 'admin_global' ? null : center_id,
