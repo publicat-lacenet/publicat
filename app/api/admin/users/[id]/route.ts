@@ -67,10 +67,24 @@ export async function PATCH(
   }
 
   if (center_id !== undefined) {
-    // Validar que si no és admin_global, té center_id
-    const currentRole = role || (await supabase.from('users').select('role').eq('id', id).single()).data?.role;
-    
-    if (currentRole !== 'admin_global' && !center_id) {
+    // Si estem canviant el center_id, validar que si no és admin_global, té center_id
+    if (!role) {
+      // Necessitem obtenir el rol actual
+      const { data: currentUser } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', id)
+        .maybeSingle();
+      
+      const currentRole = currentUser?.role;
+      
+      if (currentRole !== 'admin_global' && !center_id) {
+        return NextResponse.json(
+          { error: 'center_id és obligatori per rols no admin_global' },
+          { status: 400 }
+        );
+      }
+    } else if (role !== 'admin_global' && !center_id) {
       return NextResponse.json(
         { error: 'center_id és obligatori per rols no admin_global' },
         { status: 400 }
