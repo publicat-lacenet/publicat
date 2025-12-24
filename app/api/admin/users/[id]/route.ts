@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 // PATCH /api/admin/users/[id] - Actualitzar usuari
@@ -30,6 +31,12 @@ export async function PATCH(
       { status: 403 }
     );
   }
+
+  // Crear client admin per evitar problemes RLS
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const body = await request.json();
   const { role, center_id, is_active, full_name, phone } = body;
@@ -70,7 +77,7 @@ export async function PATCH(
     // Si estem canviant el center_id, validar que si no és admin_global, té center_id
     if (!role) {
       // Necessitem obtenir el rol actual
-      const { data: currentUser } = await supabase
+      const { data: currentUser } = await supabaseAdmin
         .from('users')
         .select('role')
         .eq('id', id)
@@ -107,7 +114,7 @@ export async function PATCH(
   }
 
   try {
-    const { data: updatedUser, error } = await supabase
+    const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
       .update(updates)
       .eq('id', id)
@@ -186,9 +193,15 @@ export async function DELETE(
     );
   }
 
+  // Crear client admin per evitar problemes RLS
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     // Soft delete: desactivar usuari
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('users')
       .update({ is_active: false })
       .eq('id', id);
