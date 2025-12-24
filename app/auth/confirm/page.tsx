@@ -50,7 +50,7 @@ function ConfirmInviteContent() {
     }
 
     // Actualizar la contraseña del usuario invitado
-    const { error: updateError } = await supabase.auth.updateUser({
+    const { error: updateError, data: userData } = await supabase.auth.updateUser({
       password: password,
     });
 
@@ -58,6 +58,14 @@ function ConfirmInviteContent() {
       setError(updateError.message);
       setLoading(false);
     } else {
+      // Actualizar onboarding_status a 'active'
+      if (userData.user) {
+        await supabase
+          .from('users')
+          .update({ onboarding_status: 'active' })
+          .eq('id', userData.user.id);
+      }
+      
       router.push("/dashboard");
       router.refresh();
     }
