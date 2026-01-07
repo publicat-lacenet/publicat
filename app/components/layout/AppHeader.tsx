@@ -2,8 +2,18 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/utils/supabase/useAuth';
+
+const ROLE_LABELS: Record<string, string> = {
+  admin_global: 'Admin Global',
+  editor_profe: 'Editor Professor',
+  editor_alumne: 'Editor Alumne',
+  display: 'Display',
+};
 
 export default function AppHeader() {
+  const { user, role } = useAuth();
+
   return (
     <header className="h-[60px] bg-white border-b border-[var(--color-border)] fixed top-0 left-0 right-0 z-50">
       <div className="h-full px-6 flex items-center justify-between">
@@ -41,10 +51,10 @@ export default function AppHeader() {
           {/* User Info */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-[var(--color-dark)] font-semibold">
-              A
+              {user?.email?.[0].toUpperCase() || '?'}
             </div>
             <span className="text-sm font-[family-name:var(--font-inter)] text-[var(--color-dark)]">
-              Admin
+              {role ? ROLE_LABELS[role] || role : 'Carregant...'}
             </span>
           </div>
 

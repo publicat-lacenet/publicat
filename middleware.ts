@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -11,13 +11,13 @@ export async function middleware(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options });
           response = NextResponse.next({
             request: {
@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
           });
           response.cookies.set({ name, value, ...options });
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: CookieOptions) {
           request.cookies.set({ name, value: '', ...options });
           response = NextResponse.next({
             request: {
@@ -49,28 +49,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Protegir ruta /admin - només admin_global
+  // Protegir ruta /admin - només admin_global (si role està present en metadata)
   if (request.nextUrl.pathname.startsWith('/admin') && user) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin_global') {
+    const role = (user.user_metadata as { role?: string })?.role;
+    if (role && role !== 'admin_global') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
 
-  // Protegir ruta /pantalla - només display
+  // Protegir ruta /pantalla - només display (si role està present en metadata)
   if (request.nextUrl.pathname.startsWith('/pantalla') && user) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role && profile.role !== 'display') {
+    const role = (user.user_metadata as { role?: string })?.role;
+    if (role && role !== 'display') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }

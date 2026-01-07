@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/utils/supabase/useAuth';
 
 interface SidebarItem {
   id: string;
@@ -22,12 +23,20 @@ const sidebarItems: SidebarItem[] = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { role, loading } = useAuth();
 
-  // TODO: Get user role from auth context
-  const userRole = 'admin_global'; // Hardcoded per ara
+  if (loading) {
+    return (
+      <aside className="w-[70px] bg-gradient-to-b from-[#FEDD2C] to-[#FFF7CF] border-r border-[#E5E7EB] fixed left-0 top-[60px] bottom-0 z-40">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-sm text-gray-500">...</div>
+        </div>
+      </aside>
+    );
+  }
 
   const visibleItems = sidebarItems.filter(item => 
-    !item.roles || item.roles.includes(userRole)
+    !item.roles || (role && item.roles.includes(role))
   );
 
   const isActive = (href: string) => pathname.startsWith(href);

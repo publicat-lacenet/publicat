@@ -24,6 +24,12 @@ L'Admin Global UI permet als administradors del sistema:
 
 ---
 
+## Estat d'implementació (07/01/2026)
+
+- Fet: middleware amb check de rol `admin_global` i redirecció, pàgina `/admin` amb tabs Centres/Usuaris/Zones funcionals (CRUD bàsic), API `/api/admin/*` amb validació de rol, zones inactives filtrades al selector de centres.
+- Pendent: tabs LandingPlaylist i Supervisió (només placeholder), components reutilitzables (`DataTable`, `ActionButton`, `DraggableList`) no creats, paginació i uploads de logo no implementats, endpoint de reenviament d'invitació inexistent mentre el client el crida (`/api/admin/users/:id/resend-invite`).
+- Seguretat: la protecció actual combina middleware + checks a API. El middleware utilitza `SUPABASE_SERVICE_ROLE_KEY` (sobreprivilegiat); recomanat canviar a `createMiddlewareClient` amb ANON key. Sidebar mostra Administració per rol hardcodejat; caldrà llegir el rol real d'usuari per ocultar l'entrada (evita confusió encara que el middleware bloquegi l'accés).
+
 ## 2. Layout Base Comú (`AdminLayout`)
 
 ### 2.1 Estructura Visual
@@ -812,100 +818,100 @@ export function useRequireAdmin() {
 ## 13. Priorització d'Implementació
 
 ### Fase 1: Foundation (Setmana 1)
-1. ✅ Configurar Tailwind amb colors de marca
-2. ✅ Crear `<AdminLayout>` (header + sidebar)
-3. ✅ Implementar middleware de protecció
-4. ✅ Crear components base (`<PageHeader>`, `<Breadcrumb>`, `<AdminTabs>`)
-5. ✅ Setup API routes base
+1. [x] Configurar Tailwind amb colors de marca
+2. [x] Crear `<AdminLayout>` (header + sidebar)
+3. [x] Implementar middleware de protecció
+4. [x] Crear components base (`<PageHeader>`, `<Breadcrumb>`, `<AdminTabs>`)
+5. [x] Setup API routes base
 
 ### Fase 2: Gestió de Zones i Centres (Setmana 2)
-6. ✅ Tab Zones (CRUD complet)
-7. ✅ Tab Centres (llistat + cerca)
-8. ✅ Modal crear/editar Centre
-9. ✅ Upload de logo (Supabase Storage)
-10. ✅ API routes `/api/admin/centers` i `/api/admin/zones`
+6. [x] Tab Zones (CRUD complet)
+7. [x] Tab Centres (llistat + cerca)
+8. [x] Modal crear/editar Centre
+9. [ ] Upload de logo (Supabase Storage)
+10. [x] API routes `/api/admin/centers` i `/api/admin/zones`
 
 ### Fase 3: Gestió d'Usuaris (Setmana 2-3)
-11. ✅ Tab Usuaris (llistat + cerca)
-12. ✅ Modal convidar usuari (integració amb Supabase Auth)
-13. ✅ Funcionalitat "Reenviar invitació"
-14. ✅ Editar usuari (rol, centre, estat)
-15. ✅ API routes `/api/admin/users`
+11. [x] Tab Usuaris (llistat + cerca)
+12. [x] Modal convidar usuari (integració amb Supabase Auth)
+13. [ ] Funcionalitat "Reenviar invitació" (endpoint no creat)
+14. [x] Editar usuari (rol, centre, estat)
+15. [x] API routes `/api/admin/users`
 
 ### Fase 4: LandingPlaylist (Setmana 3)
-16. ✅ Component `<DraggableList>` (drag & drop)
-17. ✅ Tab LandingPlaylist (llistat ordenable)
-18. ✅ Modal afegir element (vídeos compartits)
-19. ✅ API routes `/api/admin/landing-playlist`
+16. [ ] Component `<DraggableList>` (drag & drop)
+17. [ ] Tab LandingPlaylist (llistat ordenable)
+18. [ ] Modal afegir element (vídeos compartits)
+19. [ ] API routes `/api/admin/landing-playlist`
 
 ### Fase 5: Supervisió (Setmana 3)
-20. ✅ Component `<StatCard>`
-21. ✅ Tab Supervisió (dashboard de mètriques)
-22. ✅ API route `/api/admin/stats`
+20. [ ] Component `<StatCard>`
+21. [ ] Tab Supervisió (dashboard de mètriques)
+22. [ ] API route `/api/admin/stats`
 
 ### Fase 6: Poliment (Opcional)
-23. ✅ Animacions i transicions
-24. ✅ Toast notifications (success/error)
-25. ✅ Loading states
-26. ✅ Responsive design (tablet/mobile)
+23. [ ] Animacions i transicions
+24. [ ] Toast notifications (success/error)
+25. [ ] Loading states (spinners/toasts coherents)
+26. [ ] Responsive design (tablet/mobile revisat)
 
 ---
 
 ## 14. Criteris d'Acceptació
 
 ### 14.1 Funcionals
-- ✅ Només usuaris `admin_global` poden accedir a `/admin`
-- ✅ Crear, editar i desactivar centres funciona correctament
-- ✅ Convidar usuaris envia email d'invitació
-- ✅ Reenviar invitació només apareix si l'usuari està "Pendent d'activació"
-- ✅ Zones inactives no apareixen als selectors de centres
-- ✅ LandingPlaylist només accepta vídeos amb `isSharedWithOtherCenters = true`
-- ✅ Drag & drop reordena correctament la LandingPlaylist
-- ✅ Supervisió mostra dades en temps real
+- [x] Només usuaris `admin_global` poden accedir a `/admin` (middleware + API)
+- [x] Crear, editar i desactivar centres funciona correctament
+- [x] Convidar usuaris envia email d'invitació
+- [ ] Reenviar invitació només apareix si l'usuari està "Pendent d'activació" (UI mostra acció però falta endpoint)
+- [x] Zones inactives no apareixen als selectors de centres
+- [ ] LandingPlaylist només accepta vídeos amb `isSharedWithOtherCenters = true` (no implementat)
+- [ ] Drag & drop reordena correctament la LandingPlaylist (no implementat)
+- [ ] Supervisió mostra dades en temps real (no implementat)
 
 ### 14.2 UI/UX
-- ✅ Colors de marca aplicats consistentment
-- ✅ Tipografia Montserrat (títols) + Inter (contingut)
-- ✅ Hover states amb transicions suaus
-- ✅ Loading spinners durant operacions asyncrones
-- ✅ Confirmacions abans d'accions destructives
-- ✅ Missatges d'error clars i accionables
-- ✅ Layout responsive (min-width: 1024px optimitzat)
+- [x] Colors de marca aplicats consistentment
+- [x] Tipografia Montserrat (títols) + Inter (contingut)
+- [x] Hover states amb transicions suaus
+- [ ] Loading amb spinners/toasts coherents (ara textos simples)
+- [ ] Confirmacions abans d'accions destructives (només present a eliminar zona)
+- [ ] Missatges d'error clars i accionables a tots els fluxos
+- [ ] Layout responsive revisat per tablet/mobile
 
 ### 14.3 Tècnics
-- ✅ API routes protegides amb validació de rol
-- ✅ Queries optimitzades (paginació, índexs)
-- ✅ RLS policies validen permisos al backend
-- ✅ Formularis amb validació client i servidor
-- ✅ Upload d'imatges amb límit de mida
-- ✅ Tests E2E per fluxos crítics (opcional)
+- [x] API routes protegides amb validació de rol
+- [ ] Queries optimitzades (paginació, índexs) a llistats
+- [ ] RLS policies validades per rols no admin_global (revisió pendent)
+- [x] Formularis amb validació client i servidor bàsica
+- [ ] Upload d'imatges amb límit de mida (logos de centre)
+- [ ] Tests E2E per fluxos crítics
 
 ---
 
 ## 15. Checklist de Finalització
 
 **Layout i Navegació**
-- [ ] `<AdminLayout>` amb header + sidebar funcional
-- [ ] Sidebar mostra icona Administració només a admin_global
-- [ ] Sidebar indica secció activa amb colors de marca
-- [ ] Middleware redirigeix usuaris no autoritzats
+- [x] `<AdminLayout>` amb header + sidebar funcional
+- [ ] Sidebar mostra icona Administració només a admin_global (rol hardcodejat a `admin_global`)
+- [x] Sidebar indica secció activa amb colors de marca
+- [x] Middleware redirigeix usuaris no autoritzats
 
 **Tab Centres**
-- [ ] Llistat de centres amb cerca i paginació
-- [ ] Crear centre amb zona i logo
-- [ ] Editar centre (nom, zona, logo, estat)
+- [ ] Llistat de centres amb cerca i paginació (paginació pendent)
+- [ ] Crear centre amb zona i logo (logo pendent)
+- [x] Editar centre (nom, zona, estat)
 - [ ] Desactivar/activar centre amb confirmació
 
 **Tab Usuaris**
-- [ ] Llistat d'usuaris amb cerca i filtre per rol
-- [ ] Convidar usuari envia invitació per email
-- [ ] Reenviar invitació només si pendent
-- [ ] Editar usuari (rol, centre, estat)
+- [x] Llistat d'usuaris amb cerca i filtre per rol
+- [x] Convidar usuari envia invitació per email
+- [ ] Reenviar invitació només si pendent (falta endpoint)
+- [x] Editar usuari (rol, centre, estat)
 
 **Tab Zones**
-- [ ] Llistat de zones amb cerca
-- [ ] Crear i editar zones
-- [ ] Activar/desactivar zones
+- [x] Llistat de zones amb cerca
+- [x] Crear i editar zones
+- [x] Activar/desactivar zones
 
 **Tab LandingPlaylist**
 - [ ] Llistat ordenable amb drag & drop
@@ -919,10 +925,10 @@ export function useRequireAdmin() {
 
 **Components i Estil**
 - [ ] `<DataTable>` reutilitzable
-- [ ] `<AdminTabs>` amb estil de marca
-- [ ] `<Modal>` per formularis
+- [x] `<AdminTabs>` amb estil de marca
+- [x] `<Modal>` per formularis
 - [ ] `<ActionButton>` amb variants
-- [ ] Colors i tipografia segons guia d'estil
+- [x] Colors i tipografia segons guia d'estil
 
 **Testing**
 - [ ] Tests unitaris de components crítics

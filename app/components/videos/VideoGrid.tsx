@@ -1,0 +1,62 @@
+import VideoCard, { Video } from './VideoCard';
+
+interface VideoGridProps {
+  videos: Video[];
+  loading?: boolean;
+  onEdit?: (video: Video) => void;
+  onDelete?: (video: Video) => void;
+  showActions?: boolean;
+}
+
+export default function VideoGrid({
+  videos,
+  loading = false,
+  onEdit,
+  onDelete,
+  showActions = true,
+}: VideoGridProps) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="bg-white border border-[var(--color-border)] rounded-xl overflow-hidden animate-pulse">
+            <div className="w-full aspect-video bg-gray-200" />
+            <div className="p-4 space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-3/4" />
+              <div className="h-3 bg-gray-200 rounded w-1/2" />
+              <div className="h-3 bg-gray-200 rounded w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (videos.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="text-6xl mb-4">📹</div>
+        <h3 className="text-xl font-semibold text-[var(--color-dark)] mb-2 font-[family-name:var(--font-montserrat)]">
+          No s'han trobat vídeos
+        </h3>
+        <p className="text-[var(--color-gray)] font-[family-name:var(--font-inter)]">
+          Prova de canviar els filtres o puja el primer vídeo
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {videos.map(video => (
+        <VideoCard
+          key={video.id}
+          video={video}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showActions={showActions}
+        />
+      ))}
+    </div>
+  );
+}
