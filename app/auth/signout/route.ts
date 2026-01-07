@@ -11,5 +11,6 @@ export async function POST(request: Request) {
   const origin = headersList.get('origin') || headersList.get('referer') || request.url
   const baseUrl = new URL(origin).origin
   
-  return NextResponse.redirect(new URL('/', baseUrl))
+  // Redirect amb status 303 per forçar GET després del POST
+  return NextResponse.redirect(new URL('/', baseUrl), { status: 303 })
 }
