@@ -18,7 +18,7 @@ interface VimeoUrlInputProps {
 }
 
 export default function VimeoUrlInput({ value, onChange, onValidationChange }: VimeoUrlInputProps) {
-  const { state, error, metadata, validate, reset } = useVimeoValidation();
+  const { state, validate, reset } = useVimeoValidation();
   const prevValueRef = useRef(value);
   const onValidationChangeRef = useRef(onValidationChange);
   
@@ -41,8 +41,14 @@ export default function VimeoUrlInput({ value, onChange, onValidationChange }: V
 
   useEffect(() => {
     // Usar ref para evitar bucles por cambio de callback
-    onValidationChangeRef.current(state === 'valid', metadata);
-  }, [state, metadata]);
+    const metadata = state.status === 'valid' ? {
+      vimeo_id: state.videoId || undefined,
+      title: state.title || undefined,
+      duration: state.duration || undefined,
+      thumbnail_url: state.thumbnail || undefined,
+    } : undefined;
+    onValidationChangeRef.current(state.status === 'valid', metadata);
+  }, [state]);
 
   return (
     <div className="space-y-3">
@@ -60,26 +66,26 @@ export default function VimeoUrlInput({ value, onChange, onValidationChange }: V
       </div>
 
       {/* Estado de validación */}
-      {state === 'validating' && (
+      {state.status === 'validating' && (
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           Validant URL...
         </div>
       )}
 
-      {state === 'error' && error && (
+      {state.status === 'error' && state.error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">❌ {error}</p>
+          <p className="text-sm text-red-700">❌ {state.error}</p>
         </div>
       )}
 
-      {state === 'valid' && metadata && (
+      {state.status === 'valid' && state.thumbnail && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
           <div className="flex items-start gap-3">
             {/* Thumbnail */}
-            {metadata.thumbnail_url && (
+            {state.thumbnail && (
               <Image
-                src={metadata.thumbnail_url}
+                src={state.thumbnail}
                 alt="Video thumbnail"
                 width={128}
                 height={80}
@@ -92,14 +98,14 @@ export default function VimeoUrlInput({ value, onChange, onValidationChange }: V
               <p className="text-sm font-medium text-green-800">
                 ✅ Vídeo vàlid
               </p>
-              {metadata.title && (
+              {state.title && (
                 <p className="text-sm text-gray-700">
-                  <strong>Títol:</strong> {metadata.title}
+                  <strong>Títol:</strong> {state.title}
                 </p>
               )}
-              {metadata.duration && (
+              {state.duration && (
                 <p className="text-sm text-gray-600">
-                  <strong>Durada:</strong> {Math.floor(metadata.duration / 60)}:{(metadata.duration % 60).toString().padStart(2, '0')}
+                  <strong>Durada:</strong> {Math.floor(state.duration / 60)}:{(state.duration % 60).toString().padStart(2, '0')}
                 </p>
               )}
             </div>
