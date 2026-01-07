@@ -6,10 +6,13 @@ Plataforma de vídeo per a centres educatius que permet centralitzar, organitzar
 
 PUBLI*CAT és una aplicació web desenvolupada amb Next.js que permet als centres educatius:
 
-- 📹 Centralitzar tots els vídeos educatius en un únic espai
-- 📺 Crear playlists per a pantalles informatives del centre
-- 🔐 Gestionar l'accés amb autenticació segura
-- 👥 Convidar i gestionar usuaris del centre
+- 📹 Centralitzar i gestionar tots els vídeos educatius de Vimeo
+- 🏷️ Organitzar contingut amb tags globals i hashtags per centre
+- 🔄 Compartir vídeos entre centres educatius
+- 📺 Crear playlists per a pantalles informatives (en desenvolupament)
+- 🔐 Gestionar l'accés amb autenticació segura i sistema de rols
+- 👥 Convidar i gestionar usuaris amb diferents permisos
+- 🎛️ Panel d'administració complet per a gestió de centres, zones i usuaris
 
 ## 🚀 Tecnologies
 
@@ -44,6 +47,7 @@ Crea un fitxer `.env.local` amb:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=la-teva-url-de-supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=la-teva-anon-key
+VIMEO_ACCESS_TOKEN=el-teu-token-de-vimeo
 ```
 
 4. Executa el servidor de desenvolupament:
@@ -83,21 +87,104 @@ El projecte utilitza autenticació amb email/contrasenya mitjançant Supabase:
 app/
 ├── page.tsx                    # Landing page
 ├── login/                      # Pàgina de login
+├── contingut/                  # Gestió de vídeos (M3a)
+├── admin/                      # Panel d'administració (M2)
+│   └── tabs/                   # Tabs de gestió
+│       ├── CentresTab.tsx      # Gestió de centres
+│       ├── UsersTab.tsx        # Gestió d'usuaris
+│       └── ZonesTab.tsx        # Gestió de zones
+├── dashboard/                  # Dashboard principal
 ├── reset-password/             # Recuperació de contrasenya
 │   └── confirm/                # Confirmar nova contrasenya
 ├── auth/
 │   ├── callback/               # Callback d'autenticació
 │   └── confirm/                # Confirmació d'invitació
-├── pantalla/                   # Dashboard principal
-└── api/                        # API routes
+├── components/
+│   ├── layout/                 # Components de layout
+│   │   ├── AppHeader.tsx       # Header amb info de rol
+│   │   └── AppSidebar.tsx      # Sidebar dinàmic per rol
+│   ├── videos/                 # Components de vídeo
+│   │   ├── VideoCard.tsx       # Card de vídeo
+│   │   ├── VideoGrid.tsx       # Grid responsive
+│   │   ├── VideoFormModal.tsx  # Formulari creació/edició
+│   │   ├── TagSelector.tsx     # Selector de tags
+│   │   ├── HashtagInput.tsx    # Input de hashtags
+│   │   └── VimeoUrlInput.tsx   # Input amb validació
+│   └── ui/                     # Components UI reutilitzables
+└── api/
+    ├── videos/                 # CRUD de vídeos
+    │   ├── route.ts            # GET, POST
+    │   └── [id]/route.ts       # PATCH, DELETE
+    ├── vimeo/                  # Validació Vimeo
+    │   └── validate/route.ts
+    ├── auth/
+    │   └── me/route.ts         # Hidratació de sessió
+    └── admin/                  # Gestió administrativa
+        ├── centers/
+        ├── users/
+        └── zones/
 
-documentacion/
-└── guia_estil.md              # Guia d'estil del projecte
+docs/                           # Documentació completa
+├── overview.md                 # Visió general
+├── database.schema.md          # Esquema de BD
+├── roles.md                    # Sistema de rols
+├── authentication.md           # Autenticació
+├── vimeo-integration.md        # Integració Vimeo
+└── milestones/                 # Documents de milestones
+
+hooks/
+├── useAuth.ts                  # Hook d'autenticació
+├── useVideos.ts                # Gestió de vídeos
+└── useVimeoValidation.ts       # Validació Vimeo
+
+supabase/
+└── migrations/                 # Migracions de BD (M1)
 
 utils/
-└── supabase/                  # Clients de Supabase
-    ├── client.ts              # Client-side
-    └── server.ts              # Server-side
+└── supabase/                   # Clients de Supabase
+    ├── client.ts               # Client-side
+    └── server.ts               # Server-side
+```
+
+## 👥 Rols d'Usuari
+
+El sistema implementa 4 rols amb permisos diferenciats:
+
+### 🔑 Admin Global
+- Gestió completa de centres, zones i usuaris
+- Accés a totes les funcionalitats administratives
+- Pot crear i editar contingut de qualsevol centre
+- Compartició intercentres automàtica
+
+### 📝 Editor Profe
+- Gestió de vídeos del seu centre
+- Creació, edició i eliminació de contingut
+- Pot compartir vídeos amb altres centres
+- Gestió de tags i hashtags
+
+### 👨‍🎓 Editor Alumne
+- Visualització de vídeos del centre
+- Gestió de llistes personalitzades (futur)
+- Accés a contingut compartit
+
+### 🖥️ Display
+- Mode pantalla (només visualització)
+- Reproducció automàtica de playlists
+- Sense controls d'edició
+
+## 🔗 Integració amb Vimeo
+
+El projecte utilitza l'API de Vimeo per a la gestió de contingut audiovisual:
+
+- ✅ Validació de URLs de vídeos en temps real
+- ✅ Obtenció automàtica de thumbnails
+- ✅ Extracció de metadades (títol, durada, descripció)
+- ✅ Sistema de fallback amb oEmbed per a vídeos no llistats
+- ✅ Preview del vídeo abans de guardar
+
+**Configuració necessària:**
+```env
+VIMEO_ACCESS_TOKEN=el-teu-token-dacces
 ```
 
 ## 🎨 Colors Corporatius
@@ -110,19 +197,53 @@ utils/
 
 ## 📱 Funcionalitats Implementades
 
+### ✅ Milestone 1: Base de Dades (M1)
+- Esquema core complet (centres, usuaris, zones)
+- Esquema de contingut (vídeos, tags, hashtags)
+- Sistema de playlists
+- RLS (Row Level Security) per a tots els rols
+- Triggers i funcions automatitzades
+- Seeds de dades inicials
+
+### ✅ Milestone 2: Admin UI (M2)
+- Panel d'administració complet
+- Gestió de centres educatius
+- Gestió d'usuaris amb invitacions
+- Gestió de zones territorials
+- Sistema de tabs amb navegació
+- Validacions i feedback visual
+
+### ✅ Milestone 3a: Contingut Base (M3a - 90%)
+- ✅ Pàgina de gestió de vídeos
+- ✅ Creació de vídeos amb integració Vimeo
+- ✅ Eliminació de vídeos amb confirmació
+- ✅ Sistema de tags globals (multi-selecció)
+- ✅ Sistema de hashtags per centre
+- ✅ Compartició intercentres (per editor-profe)
+- ✅ Filtres avançats (cerca, tipus, compartits)
+- ✅ Paginació amb 24 vídeos per pàgina
+- ✅ Grid responsive amb cards de vídeo
+- ✅ Thumbnails amb fallback automàtic
+- 🔄 Edició de vídeos (en implementació)
+
+### 🎯 Funcionalitats Generals
 - ✅ Landing page responsive
 - ✅ Sistema de login amb email/contrasenya
 - ✅ Recuperació de contrasenya per email
 - ✅ Sistema d'invitacions per a nous usuaris
 - ✅ Callbacks d'autenticació
 - ✅ Gestió de sessions amb Supabase
+- ✅ Sidebar dinàmic segons rol
+- ✅ Header amb indicador de rol
+- ✅ Middleware de protecció de rutes
 
 ## 🚧 En Desenvolupament
 
-- 🔄 Gestió de vídeos
-- 🔄 Creació de playlists
-- 🔄 Panel d'administració
-- 🔄 Visualització per a pantalles
+- 🔄 **M3a**: Edició de vídeos (0.5 dies)
+- 📋 **M4**: Gestió de llistes de reproducció
+- 📡 **M5**: Integració amb feeds RSS
+- 🖥️ **M6**: Mode visor per a pantalles
+- 🎨 **M7**: Personalització visual per centre
 
 ## 🌐 Deployment
 

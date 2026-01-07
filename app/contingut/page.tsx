@@ -35,15 +35,31 @@ export default function ContingutPage() {
     enabled: shouldFetchVideos,
   });
 
-  const canEdit = role === 'editor_profe' || role === 'admin_global';
+  // Admins globals i editors poden crear/editar vídeos
+  const canEdit = role === 'editor_profe' || role === 'editor_alumne' || role === 'admin_global';
 
-  // Mostrar loading mientras se carga la autenticación O no tenemos centerId
-  if (authLoading || !centerId) {
+  // Mostrar loading mentre es carga la autenticació
+  if (authLoading) {
     return (
       <AdminLayout>
         <PageHeader title="Contingut" description="Gestió de vídeos del centre" />
         <div className="flex items-center justify-center py-12">
           <div className="text-gray-600">Carregant contingut...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Si no hi ha centerId després de carregar, mostrar error
+  if (!centerId) {
+    return (
+      <AdminLayout>
+        <PageHeader title="Contingut" description="Gestió de vídeos del centre" />
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-gray-600 mb-2">No tens un centre associat</div>
+            <div className="text-sm text-gray-500">Contacta amb l'administrador del sistema</div>
+          </div>
         </div>
       </AdminLayout>
     );
