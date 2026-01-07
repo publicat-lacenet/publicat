@@ -41,12 +41,17 @@ export async function getVimeoVideoData(
     || data.pictures?.sizes?.[0]?.link
     || '';
   
+  // Acceptar vídeos públics (anybody) i ocults (unlisted)
+  // Rebutjar vídeos amb contrasenya (password) o privats (disable)
+  const privacy = data.privacy?.view || 'unknown';
+  const isAccessible = privacy === 'anybody' || privacy === 'unlisted';
+
   return {
     title: data.name || '',
     description: data.description || null,
     thumbnail,
     duration: data.duration || 0,
-    isAccessible: data.privacy?.view === 'anybody',
-    privacy: data.privacy?.view || 'unknown',
+    isAccessible,
+    privacy,
   };
 }

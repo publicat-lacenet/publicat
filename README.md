@@ -130,6 +130,7 @@ docs/                           # Documentació completa
 ├── roles.md                    # Sistema de rols
 ├── authentication.md           # Autenticació
 ├── vimeo-integration.md        # Integració Vimeo
+├── admin-global-center-policy.md # Política admin global
 └── milestones/                 # Documents de milestones
 
 hooks/
@@ -154,6 +155,7 @@ El sistema implementa 4 rols amb permisos diferenciats:
 - Gestió completa de centres, zones i usuaris
 - Accés a totes les funcionalitats administratives
 - Pot crear i editar contingut de qualsevol centre
+- **Associat automàticament al Centre Lacenet**
 - Compartició intercentres automàtica
 
 ### 📝 Editor Profe
@@ -213,18 +215,35 @@ VIMEO_ACCESS_TOKEN=el-teu-token-dacces
 - Sistema de tabs amb navegació
 - Validacions i feedback visual
 
-### ✅ Milestone 3a: Contingut Base (M3a - 90%)
+### ✅ Milestone 3a: Contingut Base (M3a - ✅ 100% COMPLETAT)
 - ✅ Pàgina de gestió de vídeos
-- ✅ Creació de vídeos amb integració Vimeo
-- ✅ Eliminació de vídeos amb confirmació
-- ✅ Sistema de tags globals (multi-selecció)
-- ✅ Sistema de hashtags per centre
-- ✅ Compartició intercentres (per editor-profe)
-- ✅ Filtres avançats (cerca, tipus, compartits)
-- ✅ Paginació amb 24 vídeos per pàgina
-- ✅ Grid responsive amb cards de vídeo
-- ✅ Thumbnails amb fallback automàtic
-- 🔄 Edició de vídeos (en implementació)
+- ✅ **Creació de vídeos amb integració Vimeo**
+  - Validació en temps real d'URLs de Vimeo
+  - Obtenció automàtica de metadades
+  - Preview del vídeo abans de guardar
+- ✅ **Edició de vídeos**
+  - Modal reutilitzable (crear + editar)
+  - URL de Vimeo no editable en mode edició
+  - Refetch automàtic després d'actualitzar
+- ✅ **Eliminació de vídeos** amb confirmació
+- ✅ **Sistema de tags globals** (multi-selecció)
+- ✅ **Sistema de hashtags per centre**
+  - UX coherent (input sense #, chips amb #)
+  - Creació automàtica si no existeixen
+- ✅ **Compartició intercentres** (per editor-profe i admin-global)
+- ✅ **Filtres avançats**
+  - Cerca per títol
+  - Filtrat per tipus (contingut/anunci)
+  - Inclusió de vídeos compartits
+- ✅ **Paginació** amb 24 vídeos per pàgina
+- ✅ **Grid responsive** amb cards de vídeo
+- ✅ **Thumbnails** amb fallback automàtic
+
+### ✅ Política Admin Global
+- ✅ Centre Lacenet per defecte per a administradors
+- ✅ Migració automàtica d'usuaris existents
+- ✅ Trigger per a nous administradors
+- ✅ Documentació completa de la política
 
 ### 🎯 Funcionalitats Generals
 - ✅ Landing page responsive
@@ -237,13 +256,13 @@ VIMEO_ACCESS_TOKEN=el-teu-token-dacces
 - ✅ Header amb indicador de rol
 - ✅ Middleware de protecció de rutes
 
-## 🚧 En Desenvolupament
+## 🚧 Pròxims Desenvolupaments
 
-- 🔄 **M3a**: Edició de vídeos (0.5 dies)
 - 📋 **M4**: Gestió de llistes de reproducció
 - 📡 **M5**: Integració amb feeds RSS
 - 🖥️ **M6**: Mode visor per a pantalles
 - 🎨 **M7**: Personalització visual per centre
+- 🔍 **Millores**: Sistema de cerca avançada i filtres dinàmics
 
 ## 🌐 Deployment
 

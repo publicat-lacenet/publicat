@@ -5,6 +5,7 @@ import AdminLayout from '@/app/components/layout/AdminLayout';
 import PageHeader from '@/app/components/ui/PageHeader';
 import VideoGrid from '@/app/components/videos/VideoGrid';
 import VideoFormModal from '@/app/components/videos/VideoFormModal';
+import VideoPreviewModal from '@/app/components/videos/VideoPreviewModal';
 import { Video } from '@/app/components/videos/VideoCard';
 import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/utils/supabase/useAuth';
@@ -17,6 +18,7 @@ export default function ContingutPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'content' | 'announcement'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
 
   // Solo habilitar useVideos cuando tengamos centerId (evita llamadas prematuras)
   const shouldFetchVideos = !authLoading && !!centerId;
@@ -179,6 +181,7 @@ export default function ContingutPage() {
         loading={loading}
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canEdit ? handleDelete : undefined}
+        onPreview={setPreviewVideo}
         showActions={canEdit}
       />
 
@@ -224,6 +227,13 @@ export default function ContingutPage() {
         onClose={handleModalClose}
         onSuccess={handleModalSuccess}
         editVideo={editingVideo}
+      />
+
+      {/* Modal de previsualització */}
+      <VideoPreviewModal
+        video={previewVideo}
+        isOpen={!!previewVideo}
+        onClose={() => setPreviewVideo(null)}
       />
     </AdminLayout>
   );

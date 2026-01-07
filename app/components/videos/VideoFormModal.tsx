@@ -117,6 +117,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         payload.vimeo_url = vimeoUrl;
         payload.thumbnail_url = vimeoMetadata?.thumbnail_url;
         payload.duration_seconds = vimeoMetadata?.duration;
+        console.log('📊 Vimeo metadata:', vimeoMetadata);
+        console.log('⏱️ Duration being sent:', vimeoMetadata?.duration);
       }
 
       const url = isEditMode ? `/api/videos/${editVideo!.id}` : '/api/videos';

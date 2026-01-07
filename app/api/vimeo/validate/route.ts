@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractVimeoId, getVimeoVideoData } from '@/lib/vimeo';
+import { extractVimeoId } from '@/lib/vimeo';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,40 +14,41 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Obtenir metadades de Vimeo
-    const data = await getVimeoVideoData(videoId);
+    // Utilitzar API oEmbed de Vimeo (funciona amb vídeos públics i ocults, sense autenticació)
+    const oembedUrl = `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${videoId}`;
+    const response = await fetch(oembedUrl);
     
-    if (!data.isAccessible) {
+    if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json(
+          { error: 'Vídeo no trobat a Vimeo' },
+          { status: 404 }
+        );
+      }
+      if (response.status === 403) {
+        return NextResponse.json(
+          { error: 'Aquest vídeo és privat o té contrasenya. Si us plau, configura\'l com a "Públic" o "Ocult" (unlisted) a Vimeo.' },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
-        { error: 'Aquest vídeo no és accessible públicament a Vimeo' },
-        { status: 403 }
+        { error: 'Error obtenint metadades de Vimeo' },
+        { status: 500 }
       );
     }
     
+    const data = await response.json();
+    
     return NextResponse.json({
       videoId,
-      title: data.title,
-      thumbnail: data.thumbnail,
-      duration: data.duration,
-      description: data.description,
+      title: data.title || '',
+      thumbnail: data.thumbnail_url || '',
+      duration: data.duration || 0,
+      description: data.description || null,
     });
     
   } catch (error: any) {
     console.error('Error validating Vimeo URL:', error);
-    
-    if (error.message === 'VIDEO_NOT_FOUND') {
-      return NextResponse.json(
-        { error: 'Vídeo no trobat a Vimeo' },
-        { status: 404 }
-      );
-    }
-    
-    if (error.message === 'VIDEO_PRIVATE') {
-      return NextResponse.json(
-        { error: 'Aquest vídeo és privat o té contrasenya' },
-        { status: 403 }
-      );
-    }
     
     return NextResponse.json(
       { error: 'Error de connexió amb Vimeo' },

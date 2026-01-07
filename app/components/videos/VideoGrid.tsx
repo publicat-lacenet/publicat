@@ -5,6 +5,7 @@ interface VideoGridProps {
   loading?: boolean;
   onEdit?: (video: Video) => void;
   onDelete?: (video: Video) => void;
+  onPreview?: (video: Video) => void;
   showActions?: boolean;
 }
 
@@ -13,6 +14,7 @@ export default function VideoGrid({
   loading = false,
   onEdit,
   onDelete,
+  onPreview,
   showActions = true,
 }: VideoGridProps) {
   if (loading) {
@@ -54,6 +56,7 @@ export default function VideoGrid({
           video={video}
           onEdit={onEdit}
           onDelete={onDelete}
+          onPreview={onPreview}
           showActions={showActions}
         />
       ))}

@@ -45,10 +45,11 @@ interface VideoCardProps {
   video: Video;
   onEdit?: (video: Video) => void;
   onDelete?: (video: Video) => void;
+  onPreview?: (video: Video) => void;
   showActions?: boolean;
 }
 
-export default function VideoCard({ video, onEdit, onDelete, showActions = true }: VideoCardProps) {
+export default function VideoCard({ video, onEdit, onDelete, onPreview, showActions = true }: VideoCardProps) {
   const [thumbnail, setThumbnail] = useState(video.thumbnail_url);
   const tags = video.video_tags?.map(vt => vt.tags).filter(Boolean) || [];
   const hashtags = video.video_hashtags?.map(vh => vh.hashtags).filter(Boolean) || [];
@@ -120,6 +121,13 @@ export default function VideoCard({ video, onEdit, onDelete, showActions = true 
             </span>
           )}
         </div>
+
+        {/* Duration Badge - Always visible for debugging */}
+        <div className="absolute bottom-1 right-1 z-20">
+          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-black text-white">
+            {formatDuration(video.duration_seconds)}
+          </span>
+        </div>
       </div>
 
       {/* Content */}
@@ -162,23 +170,30 @@ export default function VideoCard({ video, onEdit, onDelete, showActions = true 
           </div>
         )}
 
-        {/* Duration and Date */}
-        <div className="flex items-center justify-between text-xs text-[var(--color-gray)] mb-3">
-          <span>{formatDuration(video.duration_seconds)}</span>
-          <span>Pujat {formatDate(video.created_at)}</span>
-        </div>
-
         {/* Actions */}
         {showActions && (
           <div className="flex gap-2">
+            {/* Botó Veure Vídeo - Prioritari */}
+            {onPreview && (
+              <button
+                onClick={() => onPreview(video)}
+                className="flex-1 px-3 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
+              >
+                ▶️ Veure
+              </button>
+            )}
+            
+            {/* Botó Editar - Secundari */}
             {onEdit && (
               <button
                 onClick={() => onEdit(video)}
-                className="flex-1 px-3 py-2 bg-[var(--color-light-bg)] hover:bg-[var(--color-secondary)] hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"
+                className="px-3 py-2 bg-[var(--color-light-bg)] hover:bg-[var(--color-secondary)] hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"
               >
-                ✏️ Editar
+                ✏️
               </button>
             )}
+            
+            {/* Botó Eliminar - Perill */}
             {onDelete && (
               <button
                 onClick={() => onDelete(video)}
