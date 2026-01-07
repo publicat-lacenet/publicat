@@ -252,15 +252,15 @@ export async function POST(request: NextRequest) {
           .eq('center_id', centerId)
           .in('name', hashtags);
 
-        const existingNames = existingHashtags?.map(h => h.name) || [];
-        const newHashtags = hashtags.filter(h => !existingNames.includes(h));
+        const existingNames = existingHashtags?.map((h: { name: string }) => h.name) || [];
+        const newHashtags = hashtags.filter((h: string) => !existingNames.includes(h));
 
         // Crear nous hashtags
         if (newHashtags.length > 0) {
           await supabase
             .from('hashtags')
             .insert(
-              newHashtags.map(name => ({
+              newHashtags.map((name: string) => ({
                 name,
                 center_id: centerId,
                 is_active: true,
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
           await supabase
             .from('video_hashtags')
             .insert(
-              allHashtags.map(h => ({
+              allHashtags.map((h: { id: string }) => ({
                 video_id: video.id,
                 hashtag_id: h.id,
               }))
