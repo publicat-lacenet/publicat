@@ -11,5 +11,5 @@ export async function POST(request: Request) {
   const origin = headersList.get('origin') || headersList.get('referer') || request.url
   const baseUrl = new URL(origin).origin
   
-  return NextResponse.redirect(new URL('/login', baseUrl))
+  return NextResponse.redirect(new URL('/', baseUrl))
 }

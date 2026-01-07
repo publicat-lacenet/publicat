@@ -9,8 +9,8 @@ export default function SignOutButton() {
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
-        // Forçar navegació a la pàgina de login sense dependre de redirect automàtic
-        window.location.href = '/login';
+        // Forçar navegació a la pàgina principal
+        window.location.href = '/';
     };
 
     return (
