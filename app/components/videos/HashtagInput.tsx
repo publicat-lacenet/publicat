@@ -6,24 +6,16 @@ interface HashtagInputProps {
 }
 
 export default function HashtagInput({ value, onChange }: HashtagInputProps) {
+  // Mostrar hashtags amb # per als chips
   const hashtags = value
     .split(',')
     .map(h => h.trim())
-    .filter(h => h.length > 0);
+    .filter(h => h.length > 0)
+    .map(h => h.startsWith('#') ? h : '#' + h);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value;
-    
-    // Auto-añadir # si no está presente
-    const parts = input.split(',').map(part => {
-      const trimmed = part.trim();
-      if (trimmed && !trimmed.startsWith('#')) {
-        return '#' + trimmed;
-      }
-      return trimmed;
-    });
-    
-    onChange(parts.join(', '));
+    // No afegir # automàticament aquí, només guardar el valor
+    onChange(e.target.value);
   };
 
   return (
@@ -36,12 +28,12 @@ export default function HashtagInput({ value, onChange }: HashtagInputProps) {
         type="text"
         value={value}
         onChange={handleChange}
-        placeholder="#esports, #ciencies, #cultura"
+        placeholder="esports, ciencies, cultura"
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
       />
       
       <p className="text-xs text-gray-500">
-        Separa els hashtags amb comes. S&apos;afegiran automàticament si no existeixen.
+        Paraules clau del centre separades per comes. S&apos;afegiran automàticament si no existeixen.
       </p>
 
       {hashtags.length > 0 && (

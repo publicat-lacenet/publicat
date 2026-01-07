@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import VimeoUrlInput from './VimeoUrlInput';
 import TagSelector from './TagSelector';
 import HashtagInput from './HashtagInput';
@@ -13,15 +13,28 @@ interface VimeoMetadata {
   thumbnail_url?: string;
 }
 
+interface VideoData {
+  id: string;
+  title: string;
+  description: string | null;
+  type: 'content' | 'announcement';
+  vimeo_url: string;
+  is_shared_with_other_centers: boolean;
+  video_tags?: Array<{ tags: { id: string; name: string } }>;
+  video_hashtags?: Array<{ hashtags: { id: string; name: string } }>;
+}
+
 interface VideoFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editVideo?: VideoData | null;
 }
 
-export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoFormModalProps) {
+export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo = null }: VideoFormModalProps) {
   const { role } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const isEditMode = !!editVideo;
   
   // Form state
   const [vimeoUrl, setVimeoUrl] = useState('');
@@ -37,7 +50,27 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
 
   const canShare = role === 'editor_profe' || role === 'admin_global';
 
-  // Auto-rellenar título desde metadata - memoizado para evitar re-renders
+  // Carregar dades del vídeo en mode edició
+  useEffect(() => {
+    if (isEditMode && editVideo) {
+      setVimeoUrl(editVideo.vimeo_url);
+      setIsVimeoValid(true);
+      setTitle(editVideo.title);
+      setDescription(editVideo.description || '');
+      setType(editVideo.type);
+      setIsShared(editVideo.is_shared_with_other_centers);
+      
+      const videoTagIds = editVideo.video_tags?.map(vt => vt.tags.id) || [];
+      setTagIds(videoTagIds);
+      
+      // Carregar hashtags sense el símbol # per a l'input
+      const videoHashtags = editVideo.video_hashtags
+        ?.map(vh => vh.hashtags.name.replace(/^#/, '')) // Eliminar # inicial
+        .join(', ') || '';
+      setHashtags(videoHashtags);
+    }
+  }, [isEditMode, editVideo]);
+
   const handleVimeoValidation = useCallback((isValid: boolean, metadata?: VimeoMetadata) => {
     setIsVimeoValid(isValid);
     setVimeoMetadata(metadata ?? null);
@@ -50,39 +83,61 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!vimeoUrl || !title || tagIds.length === 0) {
+    if (!title || tagIds.length === 0) {
       alert('Si us plau, omple tots els camps obligatoris');
+      return;
+    }
+
+    if (!isEditMode && !vimeoUrl) {
+      alert('Si us plau, introdueix una URL de Vimeo');
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/videos', {
-        method: 'POST',
+      // Processar hashtags: afegir # si no hi és
+      const processedHashtags = hashtags
+        .split(',')
+        .map(h => h.trim())
+        .filter(h => h.length > 0)
+        .map(h => h.startsWith('#') ? h : '#' + h)
+        .join(', ');
+
+      const payload: Record<string, any> = {
+        title,
+        description: description || null,
+        type,
+        tag_ids: tagIds,
+        hashtag_names: processedHashtags,
+        is_shared_with_other_centers: isShared,
+      };
+
+      if (!isEditMode) {
+        payload.vimeo_url = vimeoUrl;
+        payload.thumbnail_url = vimeoMetadata?.thumbnail_url;
+        payload.duration_seconds = vimeoMetadata?.duration;
+      }
+
+      const url = isEditMode ? `/api/videos/${editVideo!.id}` : '/api/videos';
+      const method = isEditMode ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vimeo_url: vimeoUrl,
-          title,
-          description: description || null,
-          type,
-          tag_ids: tagIds,
-          hashtag_names: hashtags,
-          is_shared_with_other_centers: isShared,
-          thumbnail_url: vimeoMetadata?.thumbnail_url,
-          duration_seconds: vimeoMetadata?.duration,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert('✅ Vídeo pujat correctament!');
+        alert(isEditMode ? '✅ Vídeo actualitzat correctament!' : '✅ Vídeo pujat correctament!');
         resetForm();
         onSuccess();
         onClose();
       } else {
-        alert(`❌ Error: ${data.error || 'No s\'ha pogut crear el vídeo'}`);
+        const errorMsg = data.error || (isEditMode ? 'No s\'ha pogut actualitzar el vídeo' : 'No s\'ha pogut crear el vídeo');
+        alert(`❌ Error: ${errorMsg}`);
       }
     } catch {
       alert('❌ Error de connexió');
@@ -115,9 +170,10 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Pujar Vídeo</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {isEditMode ? 'Editar Vídeo' : 'Pujar Vídeo'}
+          </h2>
           <button
             onClick={handleClose}
             disabled={submitting}
@@ -127,16 +183,27 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Vimeo URL */}
-          <VimeoUrlInput
-            value={vimeoUrl}
-            onChange={setVimeoUrl}
-            onValidationChange={handleVimeoValidation}
-          />
+          {!isEditMode ? (
+            <VimeoUrlInput
+              value={vimeoUrl}
+              onChange={setVimeoUrl}
+              onValidationChange={handleVimeoValidation}
+            />
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                URL de Vimeo
+              </label>
+              <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-600">
+                {vimeoUrl}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                La URL del vídeo no es pot modificar
+              </p>
+            </div>
+          )}
 
-          {/* Título */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Títol *
@@ -151,7 +218,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
             />
           </div>
 
-          {/* Descripción */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Descripció (opcional)
@@ -165,7 +231,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
             />
           </div>
 
-          {/* Tipo */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tipus *
@@ -180,20 +245,10 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
             </select>
           </div>
 
-          {/* Tags */}
           <TagSelector selectedTagIds={tagIds} onChange={setTagIds} />
-          
-          {/* Debug info - temporal */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-gray-500">
-              Debug: {tagIds.length} tags seleccionats: {JSON.stringify(tagIds)}
-            </div>
-          )}
 
-          {/* Hashtags */}
           <HashtagInput value={hashtags} onChange={setHashtags} />
 
-          {/* Compartir con otros centros */}
           {canShare && (
             <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
               <input
@@ -209,7 +264,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
             </div>
           )}
 
-          {/* Buttons */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
@@ -226,10 +280,10 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess }: VideoForm
               title={
                 !title ? 'Falta el títol' :
                 tagIds.length === 0 ? 'Selecciona almenys una etiqueta' :
-                'Pujar vídeo'
+                isEditMode ? 'Actualitzar vídeo' : 'Pujar vídeo'
               }
             >
-              {submitting ? 'Pujant...' : 'Pujar Vídeo'}
+              {submitting ? (isEditMode ? 'Actualitzant...' : 'Pujant...') : (isEditMode ? 'Actualitzar Vídeo' : 'Pujar Vídeo')}
             </button>
           </div>
         </form>

@@ -9,7 +9,18 @@ Aquest document defineix de manera clara i exhaustiva els **rols d’usuari** de
 ### **Objectiu**
 
 Usuari amb control total sobre el sistema, independent dels centres. És l’únic rol amb abast global.
+### **Associació al Centre Lacenet**
 
+A partir de la implementació del sistema, tots els administradors globals es vinculen automàticament al **Centre Lacenet** per defecte. Aquesta política garanteix:
+
+* **Consistència operativa**: Els administradors globals poden gestionar i pujar contingut propi del projecte PUBLI\*CAT.
+* **Flexibilitat**: Tot i tenir accés global a tots els centres, els administradors disposen d'un espai de treball propi per a contingut corporatiu.
+* **Simplificació tècnica**: Elimina casos excepcionals d'usuaris sense centre assignat, facilitant la gestió de permisos i continguts.
+
+**Mecanisme d'assignació:**
+* **Usuaris existents**: Els administradors globals creats abans d'aquesta política s'actualitzen automàticament al centre Lacenet mitjançant una migració de base de dades.
+* **Usuaris nous**: Quan es crea un nou administrador global, un trigger de base de dades assigna automàticament el centre Lacenet si no se n'especifica un altre.
+* **Opció de canvi**: Els administradors globals poden tenir assignat un centre diferent si es defineix explícitament durant la creació.
 ### **Permisos**
 
 * Accés a la **pantalla d’Administració global**.  

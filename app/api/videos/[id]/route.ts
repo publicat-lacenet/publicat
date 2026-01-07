@@ -161,8 +161,38 @@ export async function PATCH(
       }
     }
 
+    // Retornar vídeo actualitzat amb totes les relacions
+    const { data: updatedVideo } = await supabase
+      .from('videos')
+      .select(`
+        *,
+        centers (
+          id,
+          name,
+          zones (
+            id,
+            name
+          )
+        ),
+        video_tags (
+          tags (
+            id,
+            name
+          )
+        ),
+        video_hashtags (
+          hashtags (
+            id,
+            name
+          )
+        )
+      `)
+      .eq('id', id)
+      .single();
+
     return NextResponse.json({
       message: 'Vídeo actualitzat correctament',
+      video: updatedVideo,
     });
 
   } catch (error: any) {

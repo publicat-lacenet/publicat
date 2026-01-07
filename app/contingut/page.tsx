@@ -16,6 +16,7 @@ export default function ContingutPage() {
   const [includeShared, setIncludeShared] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'content' | 'announcement'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
 
   // Solo habilitar useVideos cuando tengamos centerId (evita llamadas prematuras)
   const shouldFetchVideos = !authLoading && !!centerId;
@@ -66,7 +67,8 @@ export default function ContingutPage() {
   }
 
   const handleEdit = (video: Video) => {
-    alert(`Editar vídeo: ${video.title}\n(Funcionalitat en desenvolupament)`);
+    setEditingVideo(video);
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (video: Video) => {
@@ -92,7 +94,17 @@ export default function ContingutPage() {
   };
 
   const handleCreateVideo = () => {
+    setEditingVideo(null);
     setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingVideo(null);
+  };
+
+  const handleModalSuccess = () => {
+    refetch();
   };
 
   return (
@@ -206,11 +218,12 @@ export default function ContingutPage() {
         </div>
       )}
 
-      {/* Modal de creación */}
+      {/* Modal de creació/edició */}
       <VideoFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={refetch}
+        onClose={handleModalClose}
+        onSuccess={handleModalSuccess}
+        editVideo={editingVideo}
       />
     </AdminLayout>
   );
