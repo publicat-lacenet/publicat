@@ -140,8 +140,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No autoritzat' }, { status: 401 });
   }
 
-  const role = user.user_metadata?.role;
-  const centerId = user.user_metadata?.center_id;
+  console.log('📊 User metadata:', user.user_metadata);
+  console.log('📊 User app_metadata:', user.app_metadata);
+
+  // Intentar obtenir el rol de user_metadata o app_metadata
+  let role = user.user_metadata?.role || user.app_metadata?.role;
+  let centerId = user.user_metadata?.center_id || user.app_metadata?.center_id;
+
+  // Si no hi ha rol als metadata, buscar a la taula users
+  if (!role) {
+    const { data: dbUser } = await supabase
+      .from('users')
+      .select('role, center_id')
+      .eq('id', user.id)
+      .single();
+    
+    if (dbUser) {
+      role = dbUser.role;
+      centerId = centerId || dbUser.center_id;
+      console.log('📊 Role from DB:', role);
+    }
+  }
+
+  console.log('📊 Final role:', role, 'centerId:', centerId);
 
   // Només editor_profe i admin_global poden crear vídeos en M3a
   if (role !== 'editor_profe' && role !== 'admin_global') {
@@ -154,6 +175,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const {
     vimeo_url,
+    vimeo_hash,
     title,
     description,
     type,
@@ -162,7 +184,42 @@ export async function POST(request: NextRequest) {
     is_shared_with_other_centers,
     thumbnail_url,
     duration_seconds,
+    center_id: bodyCenterId, // Permet especificar centre des del body (per admin_global)
   } = body;
+
+  // Determinar el centre a utilitzar
+  let finalCenterId = centerId;
+  
+  // Si és admin_global i no té center_id, utilitzar el del body o buscar "Lacenet"
+  if (role === 'admin_global' && !centerId) {
+    if (bodyCenterId) {
+      finalCenterId = bodyCenterId;
+    } else {
+      // Buscar el centre "Lacenet" per defecte
+      const { data: defaultCenter } = await supabase
+        .from('centers')
+        .select('id')
+        .ilike('name', '%lacenet%')
+        .limit(1)
+        .single();
+      
+      if (defaultCenter) {
+        finalCenterId = defaultCenter.id;
+      } else {
+        // Si no hi ha Lacenet, agafar el primer centre actiu
+        const { data: anyCenter } = await supabase
+          .from('centers')
+          .select('id')
+          .eq('is_active', true)
+          .limit(1)
+          .single();
+        
+        if (anyCenter) {
+          finalCenterId = anyCenter.id;
+        }
+      }
+    }
+  }
 
   // Validacions
   if (!vimeo_url || !title) {
@@ -179,11 +236,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Obtenir zone_id del centre
+  if (!finalCenterId) {
+    return NextResponse.json(
+      { error: 'No s\'ha pogut determinar el centre' },
+      { status: 400 }
+    );
+  }
+
+  // Obtenir zone_id del centre (ja no fallarà)
   const { data: center } = await supabase
     .from('centers')
     .select('zone_id')
-    .eq('id', centerId)
+    .eq('id', finalCenterId)
     .single();
 
   if (!center) {
@@ -198,12 +262,13 @@ export async function POST(request: NextRequest) {
     const { data: video, error: videoError } = await supabase
       .from('videos')
       .insert({
-        center_id: centerId,
+        center_id: finalCenterId,
         title,
         description: description || null,
         type: type || 'content',
         status: 'published', // En M3a tot es publica directament
         vimeo_url,
+        vimeo_hash: vimeo_hash || null,
         thumbnail_url: thumbnail_url || null,
         duration_seconds: duration_seconds || null,
         uploaded_by_user_id: user.id,
@@ -249,7 +314,7 @@ export async function POST(request: NextRequest) {
         const { data: existingHashtags } = await supabase
           .from('hashtags')
           .select('id, name')
-          .eq('center_id', centerId)
+          .eq('center_id', finalCenterId)
           .in('name', hashtags);
 
         const existingNames = existingHashtags?.map((h: { name: string }) => h.name) || [];
@@ -262,7 +327,7 @@ export async function POST(request: NextRequest) {
             .insert(
               newHashtags.map((name: string) => ({
                 name,
-                center_id: centerId,
+                center_id: finalCenterId,
                 is_active: true,
               }))
             );
@@ -272,7 +337,7 @@ export async function POST(request: NextRequest) {
         const { data: allHashtags } = await supabase
           .from('hashtags')
           .select('id')
-          .eq('center_id', centerId)
+          .eq('center_id', finalCenterId)
           .in('name', hashtags);
 
         // Assignar hashtags al vídeo

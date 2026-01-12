@@ -11,6 +11,7 @@ interface Video {
   description: string | null;
   type: 'content' | 'announcement';
   vimeo_url: string;
+  vimeo_hash?: string | null;
   duration_seconds: number | null;
   created_at: string;
   centers?: {
@@ -111,7 +112,7 @@ export default function VideoPreviewModal({
           {/* Video Player */}
           <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src={`https://player.vimeo.com/video/${vimeoId}?autoplay=0`}
+              src={`https://player.vimeo.com/video/${vimeoId}${video.vimeo_hash ? `?h=${video.vimeo_hash}&` : '?'}autoplay=0`}
               className="absolute top-0 left-0 w-full h-full"
               frameBorder="0"
               allow="autoplay; fullscreen; picture-in-picture"

@@ -1,7 +1,7 @@
-# M3b: Moderació Alumnes
+# M3c: Moderació Alumnes
 
 **Durada estimada:** 1 setmana  
-**Dependències:** M3a completat (Contingut Base)  
+**Dependències:** M3a completat (Contingut Base), M3b completat (Vimeo Upload Direct)  
 **Risc:** 🟡 Mitjà (Supabase Realtime subscriptions)
 
 ---

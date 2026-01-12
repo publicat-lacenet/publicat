@@ -21,6 +21,56 @@ export async function PATCH(
   const role = user.user_metadata?.role;
   const centerId = user.user_metadata?.center_id;
 
+  // Llegir role i center_id de la taula users (fallback)
+  if (!role || !centerId) {
+    const { data: dbUser } = await supabase
+      .from('users')
+      .select('role, center_id')
+      .eq('id', user.id)
+      .single();
+
+    if (dbUser?.role && !role) {
+      user.user_metadata = user.user_metadata || {};
+      user.user_metadata.role = dbUser.role;
+    }
+    if (dbUser?.center_id && !centerId) {
+      user.user_metadata = user.user_metadata || {};
+      user.user_metadata.center_id = dbUser.center_id;
+    }
+  }
+
+  const finalRole = user.user_metadata?.role;
+  const finalCenterId = user.user_metadata?.center_id;
+
+  // admin_global no té center_id, buscar centre per defecte
+  let effectiveCenterId = finalCenterId;
+  if (finalRole === 'admin_global' && !finalCenterId) {
+    // Buscar centre Lacenet
+    const { data: lacenet } = await supabase
+      .from('centres')
+      .select('id')
+      .eq('slug', 'lacenet')
+      .eq('active', true)
+      .single();
+
+    if (lacenet) {
+      effectiveCenterId = lacenet.id;
+    } else {
+      // Buscar primer centre actiu
+      const { data: firstCenter } = await supabase
+        .from('centres')
+        .select('id')
+        .eq('active', true)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (firstCenter) {
+        effectiveCenterId = firstCenter.id;
+      }
+    }
+  }
+
   // Obtenir vídeo actual
   const { data: video } = await supabase
     .from('videos')
@@ -33,7 +83,7 @@ export async function PATCH(
   }
 
   // Validar permisos
-  if (role !== 'admin_global' && video.center_id !== centerId) {
+  if (finalRole !== 'admin_global' && video.center_id !== effectiveCenterId) {
     return NextResponse.json(
       { error: 'No tens permisos per editar aquest vídeo' },
       { status: 403 }
@@ -224,6 +274,56 @@ export async function DELETE(
   const role = user.user_metadata?.role;
   const centerId = user.user_metadata?.center_id;
 
+  // Llegir role i center_id de la taula users (fallback)
+  if (!role || !centerId) {
+    const { data: dbUser } = await supabase
+      .from('users')
+      .select('role, center_id')
+      .eq('id', user.id)
+      .single();
+
+    if (dbUser?.role && !role) {
+      user.user_metadata = user.user_metadata || {};
+      user.user_metadata.role = dbUser.role;
+    }
+    if (dbUser?.center_id && !centerId) {
+      user.user_metadata = user.user_metadata || {};
+      user.user_metadata.center_id = dbUser.center_id;
+    }
+  }
+
+  const finalRole = user.user_metadata?.role;
+  const finalCenterId = user.user_metadata?.center_id;
+
+  // admin_global no té center_id, buscar centre per defecte
+  let effectiveCenterId = finalCenterId;
+  if (finalRole === 'admin_global' && !finalCenterId) {
+    // Buscar centre Lacenet
+    const { data: lacenet } = await supabase
+      .from('centres')
+      .select('id')
+      .eq('slug', 'lacenet')
+      .eq('active', true)
+      .single();
+
+    if (lacenet) {
+      effectiveCenterId = lacenet.id;
+    } else {
+      // Buscar primer centre actiu
+      const { data: firstCenter } = await supabase
+        .from('centres')
+        .select('id')
+        .eq('active', true)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (firstCenter) {
+        effectiveCenterId = firstCenter.id;
+      }
+    }
+  }
+
   // Obtenir vídeo actual
   const { data: video } = await supabase
     .from('videos')
@@ -236,7 +336,7 @@ export async function DELETE(
   }
 
   // Validar permisos
-  if (role !== 'admin_global' && video.center_id !== centerId) {
+  if (finalRole !== 'admin_global' && video.center_id !== effectiveCenterId) {
     return NextResponse.json(
       { error: 'No tens permisos per eliminar aquest vídeo' },
       { status: 403 }
