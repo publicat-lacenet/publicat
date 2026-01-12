@@ -128,7 +128,8 @@ Recomanat: **Postgres ENUM** (clar, validació forta).
 - `UNIQUE (lower(email))` (email no pot estar associat a més d’un centre)
 
 **Constraints**
-- `CHECK ((role = 'admin_global' AND center_id IS NULL) OR (role <> 'admin_global' AND center_id IS NOT NULL))`
+- `CHECK ((role = 'admin_global') OR (role <> 'admin_global' AND center_id IS NOT NULL))`
+  - Nota: Els admin_global poden tenir o no tenir centre. Per defecte s'associen al Centre Lacenet.
 
 **Índexs**
 - `index (center_id)`
@@ -178,8 +179,9 @@ Recomanat: **Postgres ENUM** (clar, validació forta).
 - `description text null`
 - `type video_type not null default 'content'`
 - `status video_status not null default 'pending_approval'`
-- `vimeo_url text null` *(fase 1)*
-- `vimeo_id text null` *(fase 2)*
+- `vimeo_url text not null` *(URL completa del vídeo de Vimeo)*
+- `vimeo_id text null` *(ID numèric del vídeo, ex: 1153589462 - extret automàticament de vimeo_url)*
+- `vimeo_hash text null` *(hash de privacitat per vídeos unlisted, ex: e03029570e)*
 - `duration_seconds int null`
 - `thumbnail_url text null`
 - `uploaded_by_user_id uuid not null`
@@ -203,11 +205,12 @@ Recomanat: **Postgres ENUM** (clar, validació forta).
 - (Opcional) `CHECK (duration_seconds IS NULL OR duration_seconds >= 0)`
 - Coherència `zone_id`: via trigger que copiï `centers.zone_id` quan es crea/actualitza `center_id`.
 
-**Índexs “load-bearing”**
+**Índexs "load-bearing"**
 - `index (center_id)`
 - `index (zone_id)`
 - `index (status)`
 - `index (type)`
+- `index (vimeo_id)` *(nou - per consultes ràpides)*
 - `index (is_shared_with_other_centers)`
 - (Opcional) `index (created_at desc)`
 

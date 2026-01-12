@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { extractVimeoId } from '@/lib/vimeo/utils';
 
 // GET /api/videos - Llistar vídeos amb filtres
 export async function GET(request: NextRequest) {
@@ -258,6 +259,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Extreure vimeo_id de vimeo_url
+    const vimeo_id = extractVimeoId(vimeo_url);
+
     // Crear vídeo
     const { data: video, error: videoError } = await supabase
       .from('videos')
@@ -268,6 +272,7 @@ export async function POST(request: NextRequest) {
         type: type || 'content',
         status: 'published', // En M3a tot es publica directament
         vimeo_url,
+        vimeo_id: vimeo_id || null,
         vimeo_hash: vimeo_hash || null,
         thumbnail_url: thumbnail_url || null,
         duration_seconds: duration_seconds || null,

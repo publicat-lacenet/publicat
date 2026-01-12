@@ -284,13 +284,14 @@ VIMEO_ACCESS_TOKEN=el-teu-token-dacces
 - ✅ Grid responsive amb cards de vídeo
 - ✅ Thumbnails amb fallback automàtic
 
-### ✅ Milestone 3b: Pujada Directa a Vimeo (M3b) - NOU
+### ✅ Milestone 3b: Pujada Directa a Vimeo (M3b)
 - ✅ **Pujada directa de vídeos a Vimeo** des del formulari
 - ✅ Protocol Tus per pujades resumibles
 - ✅ Barra de progrés de pujada
 - ✅ Polling d'estat de processament
 - ✅ Detecció de thumbnail real (no placeholder)
-- ✅ Extracció automàtica de `vimeo_hash` per vídeos unlisted
+- ✅ Extracció automàtica de `vimeo_id` (ID numèric) i `vimeo_hash` (hash unlisted)
+- ✅ Índex optimitzat per consultes ràpides per `vimeo_id`
 - ✅ Botó de submit desactivat durant processament
 - ✅ Missatges d'estat clars per l'usuari
 - ✅ Suport per formats: mp4, mov, avi, mkv, webm (fins 2GB)
