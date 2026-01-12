@@ -6,6 +6,7 @@ interface FilterState {
   centerId: string | null;
   zoneId: string | null;
   type: 'all' | 'content' | 'announcement';
+  status?: 'all' | 'published' | 'pending';
   tagIds: string[];
   hashtagIds: string[];
   includeShared: boolean;
@@ -52,6 +53,9 @@ export function useVideos(options: UseVideosOptions) {
       }
       if (filters.type !== 'all') {
         params.append('type', filters.type);
+      }
+      if (filters.status && filters.status !== 'all') {
+        params.append('status', filters.status);
       }
       if (filters.tagIds.length > 0) {
         params.append('tagIds', filters.tagIds.join(','));

@@ -46,10 +46,11 @@ interface VideoCardProps {
   onEdit?: (video: Video) => void;
   onDelete?: (video: Video) => void;
   onPreview?: (video: Video) => void;
+  onApprove?: (video: Video) => void;
   showActions?: boolean;
 }
 
-export default function VideoCard({ video, onEdit, onDelete, onPreview, showActions = true }: VideoCardProps) {
+export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprove, showActions = true }: VideoCardProps) {
   const [thumbnail, setThumbnail] = useState(video.thumbnail_url);
   const tags = video.video_tags?.map(vt => vt.tags).filter(Boolean) || [];
   const hashtags = video.video_hashtags?.map(vh => vh.hashtags).filter(Boolean) || [];
@@ -108,6 +109,11 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, showActi
         
         {/* Badges */}
         <div className="absolute top-2 right-2 flex gap-1">
+          {video.status === 'pending_approval' && (
+            <span className="px-2 py-1 rounded-md text-xs font-semibold bg-yellow-500 text-white">
+              ⏳ Pendent
+            </span>
+          )}
           <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
             video.type === 'announcement'
               ? 'bg-white/95 text-[var(--color-accent)]'
@@ -173,17 +179,28 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, showActi
         {/* Actions */}
         {showActions && (
           <div className="flex gap-2">
+            {/* Botó Aprovar - Només per vídeos pendents */}
+            {onApprove && video.status === 'pending_approval' && (
+              <button
+                onClick={() => onApprove(video)}
+                className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                title="Aprovar vídeo"
+              >
+                ✓ Aprovar
+              </button>
+            )}
+
             {/* Botó Veure Vídeo - Prioritari */}
             {onPreview && (
               <button
                 onClick={() => onPreview(video)}
-                className="flex-1 px-3 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                className={`${onApprove && video.status === 'pending_approval' ? '' : 'flex-1'} px-3 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1`}
               >
                 ▶️ Veure
               </button>
             )}
-            
-            {/* Botó Editar - Secundari */}
+
+            {/* Botó Editar - Tots els vídeos (publicats i pendents) */}
             {onEdit && (
               <button
                 onClick={() => onEdit(video)}
@@ -192,14 +209,15 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, showActi
                 ✏️
               </button>
             )}
-            
+
             {/* Botó Eliminar - Perill */}
             {onDelete && (
               <button
                 onClick={() => onDelete(video)}
                 className="px-3 py-2 bg-[var(--color-light-bg)] hover:bg-red-500 hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"
+                title={video.status === 'pending_approval' ? 'Rebutjar vídeo' : 'Eliminar vídeo'}
               >
-                🗑️
+                {video.status === 'pending_approval' ? '✕' : '🗑️'}
               </button>
             )}
           </div>

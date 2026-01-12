@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/app/components/layout/AdminLayout';
 import PageHeader from '@/app/components/ui/PageHeader';
 import VideoGrid from '@/app/components/videos/VideoGrid';
@@ -12,13 +13,23 @@ import { useAuth } from '@/utils/supabase/useAuth';
 
 export default function ContingutPage() {
   const { role, centerId, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [includeShared, setIncludeShared] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'content' | 'announcement'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'pending'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
+
+  // Llegir paràmetre status de la URL
+  useEffect(() => {
+    const statusParam = searchParams?.get('status');
+    if (statusParam === 'pending') {
+      setStatusFilter('pending');
+    }
+  }, [searchParams]);
 
   // Solo habilitar useVideos cuando tengamos centerId (evita llamadas prematuras)
   const shouldFetchVideos = !authLoading && !!centerId;
@@ -29,6 +40,7 @@ export default function ContingutPage() {
       centerId: centerId || null,
       zoneId: null,
       type: typeFilter,
+      status: statusFilter,
       tagIds: [],
       hashtagIds: [],
       includeShared,
@@ -109,6 +121,30 @@ export default function ContingutPage() {
     refetch();
   };
 
+  const handleApprove = async (video: Video) => {
+    if (!confirm(`Aprovar el vídeo "${video.title}"?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/videos/${video.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' }),
+      });
+
+      if (res.ok) {
+        alert('Vídeo aprovat correctament');
+        refetch();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error aprovant el vídeo');
+      }
+    } catch {
+      alert('Error de connexió');
+    }
+  };
+
   return (
     <AdminLayout>
       <PageHeader
@@ -118,14 +154,14 @@ export default function ContingutPage() {
 
       {/* Filtres bàsics */}
       <div className="mb-6 bg-white rounded-xl shadow-sm p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           {/* Cerca */}
           <input
             type="text"
             placeholder="Cerca per títol..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-[var(--color-border)] rounded-lg 
+            className="px-4 py-2 border border-[var(--color-border)] rounded-lg
                      focus:outline-none focus:border-[var(--color-secondary)]
                      font-[family-name:var(--font-inter)]"
           />
@@ -134,7 +170,7 @@ export default function ContingutPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as 'all' | 'content' | 'announcement')}
-            className="px-4 py-2 border border-[var(--color-border)] rounded-lg 
+            className="px-4 py-2 border border-[var(--color-border)] rounded-lg
                      focus:outline-none focus:border-[var(--color-secondary)]
                      font-[family-name:var(--font-inter)]"
           >
@@ -143,11 +179,26 @@ export default function ContingutPage() {
             <option value="announcement">Només anuncis</option>
           </select>
 
+          {/* Estat (només per editor_profe i admin_global) */}
+          {(role === 'editor_profe' || role === 'admin_global') && (
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'published' | 'pending')}
+              className="px-4 py-2 border border-[var(--color-border)] rounded-lg
+                       focus:outline-none focus:border-[var(--color-secondary)]
+                       font-[family-name:var(--font-inter)]"
+            >
+              <option value="all">Tots els estats</option>
+              <option value="published">Publicats</option>
+              <option value="pending">Pendents d&apos;aprovació</option>
+            </select>
+          )}
+
           {/* Botó crear */}
           {canEdit && (
             <button
               onClick={handleCreateVideo}
-              className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg 
+              className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg
                        hover:bg-[var(--color-secondary)] transition-colors
                        font-medium font-[family-name:var(--font-inter)]"
             >
@@ -182,6 +233,7 @@ export default function ContingutPage() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canEdit ? handleDelete : undefined}
         onPreview={setPreviewVideo}
+        onApprove={(role === 'editor_profe' || role === 'admin_global') ? handleApprove : undefined}
         showActions={canEdit}
       />
 

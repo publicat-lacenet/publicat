@@ -42,28 +42,27 @@ export async function GET() {
     });
   }
 
-  // Enriquecer metadatos: si no hay role/center_id en user_metadata, intentar cargar desde tabla users
+  // SIEMPRE buscar rol en la tabla users y priorizar ese valor sobre user_metadata
   let user_metadata = data.user.user_metadata ?? {};
-  const hasRole = typeof (user_metadata as any).role === 'string';
-  const hasCenter = typeof (user_metadata as any).center_id === 'string';
 
   try {
-    if (!hasRole || !hasCenter) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role, center_id')
-        .eq('id', data.user.id)
-        .maybeSingle();
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role, center_id')
+      .eq('id', data.user.id)
+      .maybeSingle();
 
-      if (profile) {
-        user_metadata = {
-          ...user_metadata,
-          ...(profile.role ? { role: profile.role } : {}),
-          ...(profile.center_id ? { center_id: profile.center_id } : {}),
-        } as Record<string, any>;
-      }
+    if (profile) {
+      // Priorizar rol y center_id de la tabla users
+      user_metadata = {
+        ...user_metadata,
+        role: profile.role || (user_metadata as any).role,
+        center_id: profile.center_id || (user_metadata as any).center_id,
+      } as Record<string, any>;
     }
-  } catch {}
+  } catch {
+    // Silently handle error
+  }
 
   return new Response(
     JSON.stringify({

@@ -12,7 +12,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function AppHeader() {
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
+
+  // Mostrar el rol incluso mientras carga si ya está disponible
+  const displayRole = role ? (ROLE_LABELS[role] || role) : (loading ? 'Carregant...' : 'Sense rol');
 
   return (
     <header className="h-[60px] bg-white border-b border-[var(--color-border)] fixed top-0 left-0 right-0 z-50">
@@ -53,8 +56,11 @@ export default function AppHeader() {
             <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-[var(--color-dark)] font-semibold">
               {user?.email?.[0].toUpperCase() || '?'}
             </div>
-            <span className="text-sm font-[family-name:var(--font-inter)] text-[var(--color-dark)]">
-              {role ? ROLE_LABELS[role] || role : 'Carregant...'}
+            <span 
+              className="text-sm font-[family-name:var(--font-inter)] text-[var(--color-dark)]"
+              suppressHydrationWarning
+            >
+              {displayRole}
             </span>
           </div>
 

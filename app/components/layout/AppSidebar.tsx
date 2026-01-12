@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/utils/supabase/useAuth';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { Badge } from '@/app/components/ui/badge';
 
 interface SidebarItem {
   id: string;
@@ -10,11 +13,12 @@ interface SidebarItem {
   label: string;
   href: string;
   roles?: string[]; // Rols que poden veure aquest item
+  showBadge?: boolean; // Mostrar badge de comptador
 }
 
 const sidebarItems: SidebarItem[] = [
   { id: 'visor', icon: '📺', label: 'Visor', href: '/visor' },
-  { id: 'contingut', icon: '📹', label: 'Contingut', href: '/contingut', roles: ['editor_profe', 'editor_alumne', 'admin_global'] },
+  { id: 'contingut', icon: '📹', label: 'Contingut', href: '/contingut', roles: ['editor_profe', 'editor_alumne', 'admin_global'], showBadge: true },
   { id: 'llistes', icon: '📋', label: 'Llistes', href: '/llistes', roles: ['editor_profe', 'editor_alumne', 'admin_global'] },
   { id: 'rss', icon: '📡', label: 'RSS', href: '/rss', roles: ['editor_profe', 'admin_global'] },
   { id: 'usuaris', icon: '👥', label: 'Usuaris', href: '/usuaris', roles: ['editor_profe', 'admin_global'] },
@@ -23,7 +27,63 @@ const sidebarItems: SidebarItem[] = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const { role, loading } = useAuth();
+  const { role, loading, centerId } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+  const supabase = createClient();
+
+  // Fetch pending videos count per editor_profe i admin_global
+  useEffect(() => {
+    if (!role || (role !== 'editor_profe' && role !== 'admin_global')) {
+      setPendingCount(0);
+      return;
+    }
+
+    const fetchPendingCount = async () => {
+      try {
+        let query = supabase
+          .from('videos')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending_approval');
+
+        // Si és editor_profe, filtrar per centre
+        if (role === 'editor_profe' && centerId) {
+          query = query.eq('center_id', centerId);
+        }
+        // Si és admin_global, veure tots els pendents
+
+        const { count, error } = await query;
+
+        if (!error) {
+          setPendingCount(count || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching pending count:', err);
+      }
+    };
+
+    fetchPendingCount();
+
+    // Realtime subscription per actualitzar el comptador
+    const channel = supabase
+      .channel('pending_videos_count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'videos',
+          filter: role === 'editor_profe' && centerId ? `center_id=eq.${centerId}` : undefined
+        },
+        () => {
+          fetchPendingCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role, centerId, supabase]);
 
   if (loading) {
     return (
@@ -35,7 +95,7 @@ export default function AppSidebar() {
     );
   }
 
-  const visibleItems = sidebarItems.filter(item => 
+  const visibleItems = sidebarItems.filter(item =>
     !item.roles || (role && item.roles.includes(role))
   );
 
@@ -61,6 +121,12 @@ export default function AppSidebar() {
               `}
             >
               <span className="text-2xl">{item.icon}</span>
+              {/* Badge de comptador per vídeos pendents (només per Contingut si ets editor_profe) */}
+              {item.showBadge && pendingCount > 0 && (role === 'editor_profe' || role === 'admin_global') && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </Badge>
+              )}
             </Link>
           ))}
         </div>

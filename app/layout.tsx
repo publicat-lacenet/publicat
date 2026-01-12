@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Montserrat, Inter } from "next/font/google";
+import { Providers } from "./providers";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="ca" className={`${montserrat.variable} ${inter.variable}`}>
       <body className="bg-[#F9FAFB] text-[#111827]">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

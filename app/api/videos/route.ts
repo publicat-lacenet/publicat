@@ -15,14 +15,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'No autoritzat' }, { status: 401 });
   }
 
-  const role = user.user_metadata?.role;
-  const userCenterId = user.user_metadata?.center_id;
+  // SIEMPRE buscar en la tabla users - priorizar ese valor sobre metadata
+  const { data: dbUser } = await supabase
+    .from('users')
+    .select('role, center_id')
+    .eq('id', user.id)
+    .single();
+  
+  // Priorizar rol y center_id de DB, luego metadata
+  const role = dbUser?.role || user.user_metadata?.role || user.app_metadata?.role;
+  const userCenterId = dbUser?.center_id || user.user_metadata?.center_id || user.app_metadata?.center_id;
+
+  console.log('🔍 [GET /api/videos] User:', user.email, 'Role:', role, 'Center:', userCenterId);
 
   // Obtenir paràmetres de query
   const { searchParams } = new URL(request.url);
   const centerId = searchParams.get('centerId') || userCenterId;
   const zoneId = searchParams.get('zoneId');
   const type = searchParams.get('type');
+  const status = searchParams.get('status');
   const tagIds = searchParams.get('tagIds')?.split(',').filter(Boolean);
   const hashtagIds = searchParams.get('hashtagIds')?.split(',').filter(Boolean);
   const includeShared = searchParams.get('includeShared') === 'true';
@@ -61,7 +72,6 @@ export async function GET(request: NextRequest) {
         )
       )
     `, { count: 'exact' })
-    .eq('status', 'published')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -86,6 +96,32 @@ export async function GET(request: NextRequest) {
     query = query.eq('type', type);
   }
 
+  // Filtre per status
+  if (status && status !== 'all') {
+    if (status === 'pending') {
+      query = query.eq('status', 'pending_approval');
+    } else {
+      query = query.eq('status', status);
+    }
+  } else {
+    // Lògica per defecte segons el rol:
+    // - editor_profe i admin_global: veuen tots els vídeos (publicats + pendents)
+    // - editor_alumne: veu els seus vídeos pendents + tots els publicats
+    // - altres rols: només vídeos publicats
+    if (role === 'editor_profe' || role === 'admin_global') {
+      // Veuen tots els estats
+      query = query.in('status', ['published', 'pending_approval']);
+    } else if (role === 'editor_alumne') {
+      // Veuen: (status='published') O (status='pending_approval' I uploaded_by=user_id)
+      // Important: Aquesta consulta no es pot fer amb .or() directament perquè no suporta condicions complexes
+      // Solució: Filtrar al backend després de la consulta
+      query = query.in('status', ['published', 'pending_approval']);
+    } else {
+      // Altres rols només veuen publicats
+      query = query.eq('status', 'published');
+    }
+  }
+
   // Cerca per títol o descripció
   if (search) {
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
@@ -103,8 +139,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Filtrar per tags si cal (client-side ja que és relació many-to-many)
+  console.log(`📹 [GET /api/videos] Loaded ${videos?.length || 0} videos from DB`);
+
+  // Filtrar vídeos per editor_alumne (només els seus pendents + tots els publicats)
   let filteredVideos = videos || [];
+  if (role === 'editor_alumne') {
+    const beforeFilter = filteredVideos.length;
+    filteredVideos = filteredVideos.filter(video => {
+      // Veure vídeos publicats O vídeos pendents propis
+      return video.status === 'published' || 
+             (video.status === 'pending_approval' && video.uploaded_by_user_id === user.id);
+    });
+    console.log(`🎓 [editor_alumne] Filtered: ${beforeFilter} -> ${filteredVideos.length} videos`);
+    console.log(`🎓 [editor_alumne] User ID: ${user.id}`);
+  }
+
+  // Filtrar per tags si cal (client-side ja que és relació many-to-many)
   if (tagIds && tagIds.length > 0) {
     filteredVideos = filteredVideos.filter(video => {
       const videoTagIds = video.video_tags?.map((vt: any) => vt.tags?.id).filter(Boolean) || [];
@@ -144,29 +194,22 @@ export async function POST(request: NextRequest) {
   console.log('📊 User metadata:', user.user_metadata);
   console.log('📊 User app_metadata:', user.app_metadata);
 
-  // Intentar obtenir el rol de user_metadata o app_metadata
-  let role = user.user_metadata?.role || user.app_metadata?.role;
-  let centerId = user.user_metadata?.center_id || user.app_metadata?.center_id;
+  // SIEMPRE buscar en la tabla users - priorizar ese valor sobre metadata
+  const { data: dbUser } = await supabase
+    .from('users')
+    .select('role, center_id')
+    .eq('id', user.id)
+    .single();
+  
+  // Priorizar rol de DB, luego metadata
+  let role = dbUser?.role || user.user_metadata?.role || user.app_metadata?.role;
+  let centerId = dbUser?.center_id || user.user_metadata?.center_id || user.app_metadata?.center_id;
 
-  // Si no hi ha rol als metadata, buscar a la taula users
-  if (!role) {
-    const { data: dbUser } = await supabase
-      .from('users')
-      .select('role, center_id')
-      .eq('id', user.id)
-      .single();
-    
-    if (dbUser) {
-      role = dbUser.role;
-      centerId = centerId || dbUser.center_id;
-      console.log('📊 Role from DB:', role);
-    }
-  }
-
+  console.log('📊 Role from DB:', dbUser?.role);
   console.log('📊 Final role:', role, 'centerId:', centerId);
 
-  // Només editor_profe i admin_global poden crear vídeos en M3a
-  if (role !== 'editor_profe' && role !== 'admin_global') {
+  // Permetre crear vídeos a editor_alumne, editor_profe i admin_global
+  if (role !== 'editor_profe' && role !== 'admin_global' && role !== 'editor_alumne') {
     return NextResponse.json(
       { error: 'No tens permisos per crear vídeos' },
       { status: 403 }
@@ -262,6 +305,18 @@ export async function POST(request: NextRequest) {
     // Extreure vimeo_id de vimeo_url
     const vimeo_id = extractVimeoId(vimeo_url);
 
+    // Determinar l'estat segons el rol
+    // - editor_alumne: pending_approval (requereix aprovació del professor)
+    // - editor_profe i admin_global: published (aprovats automàticament)
+    const videoStatus = role === 'editor_alumne' ? 'pending_approval' : 'published';
+
+    console.log(`📹 [POST /api/videos] Creating video with status: ${videoStatus} for role: ${role}`);
+
+    // Determinar si es pot compartir amb altres centres
+    // - editor_alumne: NO pot compartir (sempre false)
+    // - editor_profe i admin_global: poden compartir si ho especifiquen
+    const canShare = role !== 'editor_alumne' && is_shared_with_other_centers === true;
+
     // Crear vídeo
     const { data: video, error: videoError } = await supabase
       .from('videos')
@@ -270,13 +325,14 @@ export async function POST(request: NextRequest) {
         title,
         description: description || null,
         type: type || 'content',
-        status: 'published', // En M3a tot es publica directament
+        status: videoStatus,
         vimeo_url,
         vimeo_id: vimeo_id || null,
         vimeo_hash: vimeo_hash || null,
         thumbnail_url: thumbnail_url || null,
         duration_seconds: duration_seconds || null,
         uploaded_by_user_id: user.id,
+        is_shared_with_other_centers: canShare,
         is_active: true,
       })
       .select()
@@ -289,6 +345,14 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    console.log(`✅ [POST /api/videos] Video created successfully:`, {
+      id: video.id,
+      title: video.title,
+      status: video.status,
+      uploaded_by: video.uploaded_by_user_id,
+      center_id: video.center_id
+    });
 
     // Assignar tags
     if (tag_ids && tag_ids.length > 0) {

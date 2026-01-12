@@ -47,10 +47,11 @@ export async function PATCH(
   if (finalRole === 'admin_global' && !finalCenterId) {
     // Buscar centre Lacenet
     const { data: lacenet } = await supabase
-      .from('centres')
+      .from('centers')
       .select('id')
-      .eq('slug', 'lacenet')
-      .eq('active', true)
+      .ilike('name', '%lacenet%')
+      .eq('is_active', true)
+      .limit(1)
       .single();
 
     if (lacenet) {
@@ -58,9 +59,9 @@ export async function PATCH(
     } else {
       // Buscar primer centre actiu
       const { data: firstCenter } = await supabase
-        .from('centres')
+        .from('centers')
         .select('id')
-        .eq('active', true)
+        .eq('is_active', true)
         .order('created_at', { ascending: true })
         .limit(1)
         .single();
@@ -95,6 +96,7 @@ export async function PATCH(
     title,
     description,
     type,
+    status,
     tag_ids,
     hashtag_names,
     is_shared_with_other_centers,
@@ -114,6 +116,12 @@ export async function PATCH(
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (type !== undefined) updates.type = type;
+
+    // Permetre canvi d'estat només per editor_profe i admin_global
+    if (status !== undefined && (finalRole === 'editor_profe' || finalRole === 'admin_global')) {
+      updates.status = status;
+    }
+
     if (is_shared_with_other_centers !== undefined) {
       updates.is_shared_with_other_centers = is_shared_with_other_centers;
       if (is_shared_with_other_centers && !video.shared_at) {
@@ -300,10 +308,11 @@ export async function DELETE(
   if (finalRole === 'admin_global' && !finalCenterId) {
     // Buscar centre Lacenet
     const { data: lacenet } = await supabase
-      .from('centres')
+      .from('centers')
       .select('id')
-      .eq('slug', 'lacenet')
-      .eq('active', true)
+      .ilike('name', '%lacenet%')
+      .eq('is_active', true)
+      .limit(1)
       .single();
 
     if (lacenet) {
@@ -311,9 +320,9 @@ export async function DELETE(
     } else {
       // Buscar primer centre actiu
       const { data: firstCenter } = await supabase
-        .from('centres')
+        .from('centers')
         .select('id')
-        .eq('active', true)
+        .eq('is_active', true)
         .order('created_at', { ascending: true })
         .limit(1)
         .single();
