@@ -48,12 +48,16 @@ interface VideoCardProps {
   onPreview?: (video: Video) => void;
   onApprove?: (video: Video) => void;
   showActions?: boolean;
+  userCenterId?: string | null;
 }
 
-export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprove, showActions = true }: VideoCardProps) {
+export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprove, showActions = true, userCenterId }: VideoCardProps) {
   const [thumbnail, setThumbnail] = useState(video.thumbnail_url);
   const tags = video.video_tags?.map(vt => vt.tags).filter(Boolean) || [];
   const hashtags = video.video_hashtags?.map(vh => vh.hashtags).filter(Boolean) || [];
+
+  // Verificar si el vídeo pertany al centre de l'usuari
+  const isOwnCenterVideo = userCenterId && video.centers?.id === userCenterId;
 
   // Intentar obtenir thumbnail de Vimeo si no el té
   useEffect(() => {
@@ -145,7 +149,7 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
 
         {/* Center and Zone */}
         <p className="text-sm text-[var(--color-gray)] mb-2 font-[family-name:var(--font-inter)]">
-          {video.centers?.name} · {video.centers?.zones?.name}
+          {video.centers?.name || 'Centre desconegut'} · {video.centers?.zones?.name || 'Zona desconeguda'}
         </p>
 
         {/* Tags */}
@@ -179,8 +183,8 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
         {/* Actions */}
         {showActions && (
           <div className="flex gap-2">
-            {/* Botó Aprovar - Només per vídeos pendents */}
-            {onApprove && video.status === 'pending_approval' && (
+            {/* Botó Aprovar - Només per vídeos pendents del propi centre */}
+            {onApprove && video.status === 'pending_approval' && isOwnCenterVideo && (
               <button
                 onClick={() => onApprove(video)}
                 className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
@@ -194,14 +198,14 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
             {onPreview && (
               <button
                 onClick={() => onPreview(video)}
-                className={`${onApprove && video.status === 'pending_approval' ? '' : 'flex-1'} px-3 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1`}
+                className={`${onApprove && video.status === 'pending_approval' && isOwnCenterVideo ? '' : 'flex-1'} px-3 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1`}
               >
                 ▶️ Veure
               </button>
             )}
 
-            {/* Botó Editar - Tots els vídeos (publicats i pendents) */}
-            {onEdit && (
+            {/* Botó Editar - Només per vídeos del propi centre */}
+            {onEdit && isOwnCenterVideo && (
               <button
                 onClick={() => onEdit(video)}
                 className="px-3 py-2 bg-[var(--color-light-bg)] hover:bg-[var(--color-secondary)] hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"
@@ -210,8 +214,8 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
               </button>
             )}
 
-            {/* Botó Eliminar - Perill */}
-            {onDelete && (
+            {/* Botó Eliminar - Només per vídeos del propi centre */}
+            {onDelete && isOwnCenterVideo && (
               <button
                 onClick={() => onDelete(video)}
                 className="px-3 py-2 bg-[var(--color-light-bg)] hover:bg-red-500 hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"

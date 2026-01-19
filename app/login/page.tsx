@@ -1,25 +1,54 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import SessionConflictModal from "@/app/components/auth/SessionConflictModal";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [pendingCredentials, setPendingCredentials] = useState<{email: string, password: string} | null>(null);
+
   const supabase = createClient();
   const router = useRouter();
+
+  // Comprobar si ya hay una sesión activa al cargar la página
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Hay una sesión activa, redirigir al dashboard
+        router.push("/dashboard");
+      }
+    };
+    checkExistingSession();
+  }, [supabase, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    // Comprobar si ya hay una sesión activa
+    const { data: { user: existingUser } } = await supabase.auth.getUser();
+
+    if (existingUser && existingUser.email !== email) {
+      // Hay una sesión activa con otro usuario
+      setCurrentUserEmail(existingUser.email || null);
+      setPendingCredentials({ email, password });
+      setShowSessionModal(true);
+      setLoading(false);
+      return;
+    }
+
+    // No hay sesión o es el mismo usuario, proceder con login
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -32,6 +61,49 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     }
+  };
+
+  const handleConfirmSwitch = async () => {
+    if (!pendingCredentials) return;
+
+    setShowSessionModal(false);
+    setLoading(true);
+
+    // Cerrar sesión actual
+    await supabase.auth.signOut();
+
+    // Limpiar sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
+
+    // Esperar un momento para asegurar que la sesión se cerró
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Intentar login con las nuevas credenciales
+    const { error } = await supabase.auth.signInWithPassword({
+      email: pendingCredentials.email,
+      password: pendingCredentials.password,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+      router.refresh();
+    }
+
+    setPendingCredentials(null);
+  };
+
+  const handleCancelSwitch = () => {
+    setShowSessionModal(false);
+    setPendingCredentials(null);
+    setCurrentUserEmail(null);
+    setLoading(false);
+    // Redirigir al dashboard de la sesión actual
+    router.push("/dashboard");
   };
 
   return (
@@ -126,6 +198,14 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal de conflicto de sesión */}
+      <SessionConflictModal
+        isOpen={showSessionModal}
+        currentUserEmail={currentUserEmail}
+        onConfirmSwitch={handleConfirmSwitch}
+        onCancel={handleCancelSwitch}
+      />
     </div>
   );
 }

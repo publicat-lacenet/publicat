@@ -117,8 +117,9 @@ export async function PATCH(
     if (description !== undefined) updates.description = description;
     if (type !== undefined) updates.type = type;
 
-    // Permetre canvi d'estat només per editor_profe i admin_global
-    if (status !== undefined && (finalRole === 'editor_profe' || finalRole === 'admin_global')) {
+    // Permetre canvi d'estat NOMÉS per editor_profe
+    // L'admin_global NO gestiona aprovacions de vídeos pendents
+    if (status !== undefined && finalRole === 'editor_profe') {
       updates.status = status;
     }
 

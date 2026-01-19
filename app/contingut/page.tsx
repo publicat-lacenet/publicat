@@ -106,6 +106,11 @@ function ContingutContent() {
       if (res.ok) {
         alert('Vídeo eliminat correctament');
         refetch();
+
+        // Emitir evento para actualizar el contador del sidebar (por si era pendiente)
+        if (video.status === 'pending_approval') {
+          window.dispatchEvent(new CustomEvent('videoStatusChanged'));
+        }
       } else {
         const data = await res.json();
         alert(data.error || 'Error eliminant el vídeo');
@@ -127,6 +132,10 @@ function ContingutContent() {
 
   const handleModalSuccess = () => {
     refetch();
+
+    // Emitir evento para actualizar el contador del sidebar
+    // (útil cuando un alumno sube un vídeo que queda pendiente)
+    window.dispatchEvent(new CustomEvent('videoStatusChanged'));
   };
 
   const handleApprove = async (video: Video) => {
@@ -144,6 +153,9 @@ function ContingutContent() {
       if (res.ok) {
         alert('Vídeo aprovat correctament');
         refetch();
+
+        // Emitir evento para actualizar el contador del sidebar
+        window.dispatchEvent(new CustomEvent('videoStatusChanged'));
       } else {
         const data = await res.json();
         alert(data.error || 'Error aprovant el vídeo');
@@ -187,8 +199,8 @@ function ContingutContent() {
             <option value="announcement">Només anuncis</option>
           </select>
 
-          {/* Estat (només per editor_profe i admin_global) */}
-          {(role === 'editor_profe' || role === 'admin_global') && (
+          {/* Estat (només per editor_profe - admin_global no gestiona pendents) */}
+          {role === 'editor_profe' && (
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'published' | 'pending')}
@@ -241,8 +253,9 @@ function ContingutContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canEdit ? handleDelete : undefined}
         onPreview={setPreviewVideo}
-        onApprove={(role === 'editor_profe' || role === 'admin_global') ? handleApprove : undefined}
+        onApprove={role === 'editor_profe' ? handleApprove : undefined}
         showActions={canEdit}
+        userCenterId={centerId}
       />
 
       {/* Paginació */}

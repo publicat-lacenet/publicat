@@ -31,9 +31,10 @@ export default function AppSidebar() {
   const [pendingCount, setPendingCount] = useState(0);
   const supabase = createClient();
 
-  // Fetch pending videos count per editor_profe i admin_global
+  // Fetch pending videos count NOMÉS per editor_profe
+  // L'admin_global NO gestiona vídeos pendents de centres
   useEffect(() => {
-    if (!role || (role !== 'editor_profe' && role !== 'admin_global')) {
+    if (!role || role !== 'editor_profe') {
       setPendingCount(0);
       return;
     }
@@ -45,11 +46,10 @@ export default function AppSidebar() {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending_approval');
 
-        // Si és editor_profe, filtrar per centre
-        if (role === 'editor_profe' && centerId) {
+        // Filtrar per centre (tant per editor_profe com per admin_global)
+        if (centerId) {
           query = query.eq('center_id', centerId);
         }
-        // Si és admin_global, veure tots els pendents
 
         const { count, error } = await query;
 
@@ -72,7 +72,7 @@ export default function AppSidebar() {
           event: '*',
           schema: 'public',
           table: 'videos',
-          filter: role === 'editor_profe' && centerId ? `center_id=eq.${centerId}` : undefined
+          filter: centerId ? `center_id=eq.${centerId}` : undefined
         },
         () => {
           fetchPendingCount();
@@ -80,8 +80,16 @@ export default function AppSidebar() {
       )
       .subscribe();
 
+    // Escuchar eventos manuales de aprobación/rechazo de vídeos
+    const handleVideoStatusChange = () => {
+      fetchPendingCount();
+    };
+
+    window.addEventListener('videoStatusChanged', handleVideoStatusChange);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('videoStatusChanged', handleVideoStatusChange);
     };
   }, [role, centerId, supabase]);
 
@@ -121,8 +129,8 @@ export default function AppSidebar() {
               `}
             >
               <span className="text-2xl">{item.icon}</span>
-              {/* Badge de comptador per vídeos pendents (només per Contingut si ets editor_profe) */}
-              {item.showBadge && pendingCount > 0 && (role === 'editor_profe' || role === 'admin_global') && (
+              {/* Badge de comptador per vídeos pendents (NOMÉS per editor_profe) */}
+              {item.showBadge && pendingCount > 0 && role === 'editor_profe' && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
                   {pendingCount > 9 ? '9+' : pendingCount}
                 </Badge>

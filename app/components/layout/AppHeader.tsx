@@ -12,16 +12,46 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function AppHeader() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, error } = useAuth();
 
   // Mostrar el rol incluso mientras carga si ya está disponible
-  const displayRole = role ? (ROLE_LABELS[role] || role) : (loading ? 'Carregant...' : 'Sense rol');
+  const displayRole = error
+    ? 'Error de sessió'
+    : role
+    ? (ROLE_LABELS[role] || role)
+    : (loading ? 'Carregant...' : 'Sense rol');
 
   return (
-    <header className="h-[60px] bg-white border-b border-[var(--color-border)] fixed top-0 left-0 right-0 z-50">
-      <div className="h-full px-6 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-3">
+    <>
+      {/* Error banner */}
+      {error && (
+        <div className="fixed top-0 left-0 right-0 bg-red-50 border-b-2 border-red-300 px-6 py-2 z-[60] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-red-600 text-sm font-medium">⚠️ {error}</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Refrescar
+            </button>
+            <form action="/auth/signout" method="post" className="inline">
+              <button
+                type="submit"
+                className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Tancar sessió
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <header className={`h-[60px] bg-white border-b border-[var(--color-border)] fixed left-0 right-0 z-50 ${error ? 'top-[44px]' : 'top-0'}`}>
+        <div className="h-full px-6 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/dashboard" className="flex items-center gap-3">
           <Image
             src="/logo_videos.png"
             alt="Logo PUBLI*CAT"
@@ -65,7 +95,16 @@ export default function AppHeader() {
           </div>
 
           {/* Logout Button */}
-          <form action="/auth/signout" method="post">
+          <form
+            action="/auth/signout"
+            method="post"
+            onSubmit={() => {
+              // Limpiar sessionStorage antes de enviar el formulario
+              if (typeof window !== 'undefined') {
+                sessionStorage.clear();
+              }
+            }}
+          >
             <button
               type="submit"
               className="px-4 py-2 text-sm font-medium bg-[#16AFAA] text-white rounded-full hover:bg-[#14998F] transition-colors font-[family-name:var(--font-inter)]"
@@ -76,5 +115,6 @@ export default function AppHeader() {
         </div>
       </div>
     </header>
+    </>
   );
 }

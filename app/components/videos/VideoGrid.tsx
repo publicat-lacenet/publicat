@@ -8,6 +8,7 @@ interface VideoGridProps {
   onPreview?: (video: Video) => void;
   onApprove?: (video: Video) => void;
   showActions?: boolean;
+  userCenterId?: string | null;
 }
 
 export default function VideoGrid({
@@ -18,6 +19,7 @@ export default function VideoGrid({
   onPreview,
   onApprove,
   showActions = true,
+  userCenterId,
 }: VideoGridProps) {
   if (loading) {
     return (
@@ -61,6 +63,7 @@ export default function VideoGrid({
           onPreview={onPreview}
           onApprove={onApprove}
           showActions={showActions}
+          userCenterId={userCenterId}
         />
       ))}
     </div>

@@ -16,9 +16,9 @@ interface Video {
   created_at: string;
   centers?: {
     name: string;
-    zones: {
+    zones?: {
       name: string;
-    };
+    } | null;
   };
   video_tags?: Array<{
     tags: {
@@ -57,8 +57,8 @@ export default function VideoPreviewModal({
   if (!isOpen || !video) return null;
 
   const vimeoId = extractVimeoId(video.vimeo_url);
-  const tags = video.video_tags?.map(vt => vt.tags) || [];
-  const hashtags = video.video_hashtags?.map(vh => vh.hashtags) || [];
+  const tags = video.video_tags?.map(vt => vt.tags).filter(Boolean) || [];
+  const hashtags = video.video_hashtags?.map(vh => vh.hashtags).filter(Boolean) || [];
 
   const handleApprove = () => {
     if (onApprove) {
@@ -155,7 +155,7 @@ export default function VideoPreviewModal({
             {/* Center and Zone */}
             {video.centers && (
               <div className="text-sm text-gray-600">
-                📍 {video.centers.name} · {video.centers.zones.name}
+                📍 {video.centers.name} · {video.centers.zones?.name || 'Zona desconeguda'}
               </div>
             )}
 
