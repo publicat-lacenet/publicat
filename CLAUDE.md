@@ -298,7 +298,7 @@ Comprehensive documentation in `docs/`:
 - `roles.md`: Role system details
 - `authentication.md`: Auth flow documentation
 - `vimeo-integration.md`: Vimeo integration guide
-- `milestones/`: Feature milestone specifications (M1, M2, M3a, M3b, M3c)
+- `milestones/`: Feature milestone specifications (M1, M2, M3a, M3b, M3c, M4)
 - `ui/`: UI design guidelines and component documentation
 
 **Important:** When working with database schema, always check `DB-AUDIT-REPORT.md` for the current state, including all applied migrations, RLS policies, triggers, and indexes.
@@ -328,6 +328,8 @@ Currently no automated test suite. Manual testing workflow:
 - ✅ M2: Admin UI (centers, users, zones management)
 - ✅ M3a: Content management base (URL-based video creation)
 - ✅ M3b: Direct upload to Vimeo via Tus protocol
+- ✅ M3c: Moderation system for editor_alumne uploads
+- ✅ M4: Playlist management UI with @dnd-kit drag & drop
 - ✅ **Database Audit (2026-01-19)**: Complete review of schema, RLS, triggers, and indexes
 
 **Database Status:**
@@ -338,10 +340,8 @@ Currently no automated test suite. Manual testing workflow:
 - ✅ All migrations applied and documented
 
 **In Progress / Next:**
-- 🚧 M3c: Moderation system for editor_alumne uploads (schema ready)
-- 📋 M4: Playlist management UI (schema ready)
 - 📡 M5: RSS feed integration (schema ready, UI pending)
-- 🖥️ M6: Display mode for TV screens
+- 🖥️ M6: Display mode for TV screens (MVP Demo)
 
 ## Quick Start for New Features
 

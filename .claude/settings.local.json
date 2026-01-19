@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node analyze-db.js:*)"
+      "Bash(node analyze-db.js:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build)"
     ]
   }
 }

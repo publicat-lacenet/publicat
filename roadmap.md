@@ -1,8 +1,9 @@
 # Roadmap — Publicat
 
-**Data inicial:** 16 desembre 2025  
-**Estat actual:** M0 completat (Auth + Landing + Infraestructura)  
-**Durada estimada total:** 13-14 setmanes (~3.5 mesos)  
+**Data inicial:** 16 desembre 2025
+**Estat actual:** M3 completat (Sistema de Contingut complet)
+**Data actualització:** 19 gener 2026
+**Durada estimada total:** 13-14 setmanes (~3.5 mesos)
 **MVP demo-able:** M6 (Pantalla Principal)
 
 ---
@@ -10,10 +11,10 @@
 ## 📊 Visió General
 
 ```
-M0  ✅ Setup & Auth                    [COMPLETAT]
+M0  ✅ Setup & Auth                    [COMPLETAT - Desembre 2025]
      └─> Infraestructura + Login + Landing
 
-M1  🔴 Foundation (DB + RLS + Seeds)  [1.5-2 setmanes] CRÍTIC
+M1  ✅ Foundation (DB + RLS + Seeds)   [COMPLETAT - Desembre 2025]
      ├─> M1.0: Convencions & Contractes
      ├─> M1.1: Schema Core Mínim
      ├─> M1.2: Seguretat Base (RLS)
@@ -23,29 +24,30 @@ M1  🔴 Foundation (DB + RLS + Seeds)  [1.5-2 setmanes] CRÍTIC
      ├─> M1.6: Seeds & Dades Demo
      └─> M1.7: Extensions (RSS, Calendari)
 
-M2  🟡 Admin UI                        [1 setmana]
+M2  ✅ Admin UI                        [COMPLETAT - Gener 2026]
      └─> Gestió centres, usuaris, zones
 
-M2.5 🔵 Sistema Auth en Layout          [0.5 setmanes] TÈCNIC
+M2.5 ✅ Sistema Auth en Layout         [COMPLETAT - Gener 2026]
      └─> Context Provider + Permisos dinàmics
 
-M3  🟡 Contingut & Moderació           [2 setmanes]
-     ├─> M3a: Contingut Base          [1 setmana]
-     └─> M3b: Moderació Alumnes       [1 setmana]
+M3  ✅ Sistema de Contingut            [COMPLETAT - Gener 2026] [2.5 setmanes]
+     ├─> M3a: Contingut Base (URL)    [1 setmana] ✅
+     ├─> M3b: Direct Upload (Tus)     [1 setmana] ✅ NOVA
+     └─> M3c: Moderació Alumnes       [0.5 setmanes] ✅
 
-M4  🟢 Llistes de Reproducció          [1.5 setmanes]
-     └─> Playlist management + drag&drop
+M4  ✅ Llistes de Reproducció          [COMPLETAT - Gener 2026] [1.5 setmanes]
+     └─> Playlist management + drag&drop ✅
 
-M5  🟢 Sistema RSS                     [1.5 setmanes]
+M5  🟢 Sistema RSS                     [1.5 setmanes] PENDENT
      └─> Feeds + validació + rotació
 
-M6  🎯 Pantalla Principal (MVP)        [2 setmanes] DEMO
+M6  🎯 Pantalla Principal (MVP)        [2 setmanes] DEMO - PENDENT
      └─> 3 zones + Mode Display + Reproducció
 
-M7  🟢 Features Avançades              [2 setmanes]
+M7  🟢 Features Avançades              [2 setmanes] PENDENT
      └─> Calendari + Landing Playlist + Llistes Globals
 
-M8  🟢 Multi-tenant Avançat            [1.5 setmanes]
+M8  🟢 Multi-tenant Avançat            [1.5 setmanes] PENDENT
      └─> Convidats + Compartició + Auditoria
 ```
 
@@ -75,13 +77,13 @@ M8  🟢 Multi-tenant Avançat            [1.5 setmanes]
 
 ---
 
-### **M1: Foundation (DB + RLS + Seeds)** 🔴 CRÍTIC
+### **M1: Foundation (DB + RLS + Seeds)** ✅ COMPLETAT
 
 **Objectiu:** Crear l'estructura completa de base de dades, policies RLS i dades seed per poder desenvolupar la resta de funcionalitats.
 
-**Situació actual:** Base de dades buida (només `auth.users` de Supabase)
+**Estat:** Implementat i auditat (veure DB-AUDIT-REPORT.md del 19-01-2026)
 
-**Risc:** 🔴 **MOLT ALT** - Tot el projecte depèn d'aquest milestone. És el bloqueig més gran.
+**Data completació:** Desembre 2025 - Gener 2026
 
 **ESTRATÈGIA: M1 Ultra-Split**
 
@@ -129,21 +131,22 @@ Aquest milestone es divideix en **8 sub-milestones** atòmics per garantir una i
 ---
 
 **Criteris d'Acceptació Global M1:**
-- [ ] Totes les taules creades i verificades
-- [ ] RLS policies testejades amb cada rol
-- [ ] Seeds executables i verificables
-- [ ] Triggers funcionant correctament
-- [ ] **Desbloqueja M2 i M3a completament**
+- [x] Totes les taules creades i verificades (14 taules)
+- [x] RLS policies testejades amb cada rol (~30 policies)
+- [x] Seeds executables i verificables
+- [x] Triggers funcionant correctament (11 triggers)
+- [x] **M2 i M3 desbloquejats i completats amb èxit**
+
+**Resultat:** Veure informe complet a `docs/DB-AUDIT-REPORT.md`
 
 ---
 
-### **M2: Admin UI** 🟡
+### **M2: Admin UI** ✅ COMPLETAT
 
 **Objectiu:** Interfície d'administració per gestionar centres, usuaris i zones.
 
 **Durada:** 1 setmana
-
-**Situació actual:** Tenen auth funcional però cap pantalla d'admin
+**Data completació:** Gener 2026
 
 **Entregables:**
 
@@ -190,26 +193,25 @@ Aquest milestone es divideix en **8 sub-milestones** atòmics per garantir una i
 - `DataTable` (genèric reutilitzable)
 
 **Criteris d'Acceptació:**
-- [ ] Admin global pot crear/editar centres
-- [ ] Admin global pot crear/editar usuaris
-- [ ] Sistema d'invitació funciona (email rebut)
-- [ ] Reenviar invitació funciona amb cooldown
-- [ ] Upload de logo funciona
-- [ ] Altres rols NO poden accedir a `/admin/*`
+- [x] Admin global pot crear/editar centres
+- [x] Admin global pot crear/editar usuaris
+- [x] Sistema d'invitació funciona (email rebut)
+- [x] Reenviar invitació funciona amb cooldown
+- [x] Upload de logo funciona
+- [x] Altres rols NO poden accedir a `/admin/*`
 
 **Dependències:**
 - ✅ M1 completat (taules `centers`, `users`, `zones`)
 - ✅ Supabase Storage bucket `center-logos` creat
 
-**Risc:** 🟡 Mitjà (depèn de Supabase Storage que no han usat encara)
-
 ---
 
-### **M3a: Contingut Base** 🟡
+### **M3a: Contingut Base (URL-based)** ✅ COMPLETAT
 
-**Objectiu:** Sistema de gestió de vídeos per Editor-profe (sense moderació inicial).
+**Objectiu:** Sistema de gestió de vídeos per Editor-profe amb validació d'URL de Vimeo.
 
 **Durada:** 1 setmana
+**Data completació:** 7-12 gener 2026
 
 **⚠️ PRE-REQUISIT TÈCNIC: Sistema d'Autenticació en Layout**
 
@@ -240,12 +242,12 @@ Abans de començar M3a, cal implementar:
 - Evitar duplicació de queries (Context Provider ja ho fa)
 
 **Criteris d'Acceptació Pre-M3a:**
-- [ ] `useAuth()` retorna dades reals de l'usuari autenticat
-- [ ] Sidebar filtra ítems segons `profile.role` real
-- [ ] Header mostra rol traduït correctament
-- [ ] Editor-alumne NO veu RSS, Usuaris ni Administració
-- [ ] Admin Global veu totes les seccions
-- [ ] Context actualitza automàticament si canvia el rol
+- [x] `useAuth()` retorna dades reals de l'usuari autenticat
+- [x] Sidebar filtra ítems segons `profile.role` real
+- [x] Header mostra rol traduït correctament
+- [x] Editor-alumne NO veu RSS, Usuaris ni Administració
+- [x] Admin Global veu totes les seccions
+- [x] Context actualitza automàticament si canvia el rol
 
 **Temps estimat:** 0.5 setmanes (mig sprint abans de M3a)
 
@@ -306,12 +308,12 @@ Abans de començar M3a, cal implementar:
 - ✅ Editor-alumne NO pot crear vídeos encara (això serà a M3b)
 
 **Criteris d'Acceptació:**
-- [ ] Editor-profe pot crear vídeos amb URL Vimeo
-- [ ] Validació Vimeo funciona (thumbnail + metadades)
-- [ ] Filtres funcionen correctament
-- [ ] Tags i hashtags assignables
-- [ ] Editor-profe pot editar/esborrar els seus vídeos
-- [ ] Compartició intercentres activable
+- [x] Editor-profe pot crear vídeos amb URL Vimeo
+- [x] Validació Vimeo funciona (thumbnail + metadades)
+- [x] Filtres funcionen correctament
+- [x] Tags i hashtags assignables
+- [x] Editor-profe pot editar/esborrar els seus vídeos
+- [x] Compartició intercentres activable
 
 **Dependències:**
 - ✅ M1 completat (taula `videos`, `tags`, `hashtags`)
@@ -321,84 +323,129 @@ Abans de començar M3a, cal implementar:
 
 ---
 
-### **M3b: Moderació Alumnes** 🟡
+### **M3b: Direct Upload (Tus Protocol)** ✅ COMPLETAT - NOVA FUNCIONALITAT
 
-**Objectiu:** Permetre que Editor-alumne pugui pujar vídeos que queden pendents d'aprovació per Editor-profe.
+**Objectiu:** Implementar pujada directa de fitxers de vídeo a Vimeo des del formulari utilitzant el protocol Tus (resumable uploads).
 
 **Durada:** 1 setmana
+**Data completació:** 12 gener 2026
 
-**Entregables:**
+**Què s'ha implementat:**
+- ✅ Component `VideoUploader` amb drag & drop
+- ✅ Integració amb Tus protocol per pujades resumables
+- ✅ Barra de progrés en temps real
+- ✅ API route `/api/vimeo/upload/ticket` per generar upload tickets
+- ✅ API route `/api/vimeo/status/[videoId]` per polling d'estat
+- ✅ Validació de format (mp4, mov, avi, mkv, webm)
+- ✅ Validació de mida (màx 2GB)
+- ✅ Cancel·lació d'upload en curs
+- ✅ Retry automàtic en errors
+- ✅ Vídeos configurats com "unlisted" automàticament
+- ✅ Polling fins que Vimeo processa el vídeo i genera thumbnail real
 
-**1. Workflow de Moderació**
-```
-Editor-alumne puja vídeo
-    ↓
-status = 'pending_approval'
-is_shared_with_other_centers = false
-    ↓
-Editor-profe revisa
-    ↓
-Aprovar → status = 'published'
-Rebutjar → DELETE vídeo
-```
+**Components creats:**
+- `app/components/videos/VideoUploader.tsx` - Component principal d'upload
+- `app/api/vimeo/upload/ticket/route.ts` - Genera tickets Tus
+- `app/api/vimeo/status/[videoId]/route.ts` - Comprova estat de processament
 
-**2. Dashboard de Moderació `/moderacio`**
-- Llistat de vídeos `pending_approval` del centre
-- Targetes amb preview (thumbnail, títol, descripció, autor, data)
-- Botons: Aprovar / Rebutjar
-- Filtre per data
-- Badge al menú lateral amb comptador de pendents
-
-**3. Sistema de Notificacions**
-- Taula `notifications` (ja creada a M1)
-- Triggers SQL:
-  - `notify_pending_video()` → notifica Editor-profe quan hi ha nou vídeo pendent
-  - `notify_video_decision()` → notifica Editor-alumne quan s'aprova el seu vídeo
-  
-- Component `NotificationBadge` a barra superior
-- Component `NotificationDropdown` amb llista
-- Hook `useNotifications` amb Supabase Realtime
-- API routes:
-  - `GET /api/notifications`
-  - `POST /api/notifications/[id]/read`
-  - `POST /api/notifications/read-all`
-
-**4. Permisos actualitzats**
-- Editor-alumne pot crear vídeos (queden `pending_approval`)
-- Editor-alumne pot veure els seus vídeos pendents (només lectura)
-- Editor-alumne NO pot editar ni esborrar cap vídeo (ni pendents ni aprovats)
-- Editor-alumne veu vídeos aprovats del centre (només lectura)
-- Editor-profe veu tots els vídeos del centre (tots els estats)
-
-**5. Components nous**
-- `ModerationDashboard`
-- `PendingVideoCard`
-- `NotificationBadge`
-- `NotificationDropdown`
-- Hook: `useNotifications`
-
-**Criteris d'Acceptació:**
-- [ ] Editor-alumne pot pujar vídeos (queden pendents)
-- [ ] Editor-profe rep notificació in-app
-- [ ] Editor-profe pot aprovar des de `/moderacio`
-- [ ] Editor-profe pot rebutjar (vídeo s'esborra)
-- [ ] Editor-alumne rep notificació quan s'aprova
-- [ ] Badge de notificacions funciona amb Realtime
-- [ ] Contador de vídeos pendents al menú
+**Integració:**
+- Toggle al `VideoFormModal` entre "URL de Vimeo" i "Pujar fitxer"
+- Metadades autocompletades després de l'upload
+- Compatible amb workflow existent
 
 **Dependències:**
 - ✅ M3a completat
-- ✅ Taula `notifications` creada (M1)
+- ✅ Vimeo Access Token amb scope `upload`
+- ✅ Llibreria `tus-js-client` instal·lada
 
-**Risc:** 🟡 Mitjà (Supabase Realtime subscriptions)
+**Risc:** 🟡 Mitjà (gestió de grans fitxers + timeout de processament Vimeo)
 
 ---
 
-### **M4: Llistes de Reproducció** 🟢
+### **M3c: Moderació Alumnes (Simplificada)** ✅ COMPLETAT
+
+**Objectiu:** Permetre que Editor-alumne pugui pujar vídeos que queden pendents d'aprovació per Editor-profe.
+
+**Durada:** 0.5 setmanes
+**Data completació:** 12 gener 2026
+
+**Implementació SIMPLIFICADA** (no requereix pàgina `/moderacio` dedicada):
+
+**1. Workflow de Moderació** ✅
+```
+Editor-alumne puja vídeo
+    ↓
+status = 'pending_approval' (automàtic segons rol)
+is_shared_with_other_centers = false
+    ↓
+Editor-profe revisa a /contingut?status=pending
+    ↓
+Aprovar → status = 'published' (botó verd a VideoCard)
+Rebutjar → DELETE vídeo (botó eliminar)
+```
+
+**2. Gestió des de `/contingut`** ✅ (NO es crea pàgina `/moderacio`)
+- Editor-profe veu TOTS els vídeos (pending + published) a `/contingut`
+- Filtre d'estat: "Tots" / "Publicats" / "Pendents d'aprovació"
+- Paràmetre URL `?status=pending` per accés directe
+- Badge groc "⏳ Pendent" en vídeos pendents
+- Botó verd "✓ Aprovar" només visible per editor-profe
+- Botó "✏️ Editar" funcional per editar abans d'aprovar
+- Botó "✕" per rebutjar (eliminar) amb confirmació
+
+**3. Sistema de Notificacions (BD only)** ✅
+- Taula `notifications` creada
+- Triggers SQL funcionals:
+  - `notify_pending_video()` → crea registre quan alumne puja vídeo
+  - `notify_video_approved()` → crea registre quan s'aprova
+  - `notify_video_rejected()` → crea registre quan es rebutja
+- ❌ NO implementat: UI de notificacions in-app (futur)
+- ❌ NO implementat: Supabase Realtime subscriptions (futur)
+- ❌ NO implementat: Badge/dropdown de notificacions (futur)
+
+**4. Permisos RLS actualitzats** ✅
+- Editor-alumne pot crear vídeos (queden `pending_approval`)
+- Editor-alumne veu els seus propis vídeos pendents + tots els publicats del centre
+- Editor-alumne NO pot editar ni esborrar vídeos
+- Editor-profe veu TOTS els vídeos del centre (pending + published)
+- Editor-profe pot editar TOTS els vídeos (incloent pendents)
+- Editor-profe pot aprovar vídeos (UPDATE status → 'published')
+- Editor-profe pot rebutjar (DELETE) vídeos pendents
+
+**5. Components actualitzats** ✅
+- `VideoCard` - Afegit badge "Pendent" i botó "Aprovar"
+- `page.tsx` (`/contingut`) - Afegit filtre d'estat i funció `handleApprove`
+- `AuthContext` - Context global d'autenticació per detectar rol correctament
+- Migració SQL `20260112120000_m3c_moderation_system.sql` - RLS + triggers
+
+**Criteris d'Acceptació:**
+- [x] Editor-alumne pot pujar vídeos (queden pendents)
+- [x] Editor-profe veu vídeos pendents amb badge groc
+- [x] Editor-profe pot aprovar des de `/contingut?status=pending`
+- [x] Editor-profe pot rebutjar (vídeo s'esborra)
+- [x] Editor-profe pot editar vídeos pendents abans d'aprovar
+- [x] Triggers SQL creen notificacions a la BD
+- [x] RLS policies permeten accés correcte segons rol
+- [ ] UI de notificacions in-app (PENDENT - futur)
+- [ ] Badge amb comptador de notificacions (PENDENT - futur)
+- [ ] Realtime subscriptions (PENDENT - futur)
+
+**Dependències:**
+- ✅ M3a completat
+- ✅ M3b completat (upload directe disponible per alumnes)
+- ✅ Taula `notifications` creada (M1)
+- ✅ AuthContext implementat
+
+**Risc:** 🟢 Baix (implementació simplificada sense Realtime)
+
+---
+
+### **M4: Llistes de Reproducció** ✅ COMPLETAT
 
 **Objectiu:** Sistema de playlists amb drag&drop per organitzar vídeos.
 
 **Durada:** 1.5 setmanes
+**Estat:** COMPLETAT (19 Gener 2026)
 
 **Entregables:**
 
@@ -758,31 +805,40 @@ Rebutjar → DELETE vídeo
 
 ---
 
-## 📅 Timeline Estimat
+## 📅 Timeline Real (Actualitzat 19 Gener 2026)
 
-### **Opció B: Amb Ultra-Split de M1 (RECOMANAT)**
+### **Estat Actual del Projecte**
 
-| Milestone | Durada | Setmanes Acumulades | Notes |
-|-----------|--------|---------------------|-------|
-| M0: Setup ✅ | COMPLETAT | 0 | - |
-| M1.0 - M1.2 | 3 dies | 0.5 | Convencions, Core Schema, RLS |
-| M1.3 - M1.6 | 4 dies | 1 | Contingut, Playlists, Triggers, Seeds |
-| M2 + M1.7 (paral·lel) | 1 setmana | 2 | Admin UI + Extensions (RSS, etc.) |
-| M3a: Contingut Base | 1 setmana | 3 | - |
-| M3b: Moderació | 1 setmana | 4 | - |
-| M4: Llistes | 1.5 setmanes | 5.5 | - |
-| M5: RSS | 1.5 setmanes | 7 | Requereix M1.7 |
-| M6: Pantalla Principal 🎯 | 2 setmanes | **9** | ← **MVP Demo** |
-| M7: Features Avançades | 2 setmanes | 11 | - |
-| M8: Multi-tenant | 1.5 setmanes | **12.5** | ← **Complet** |
+| Milestone | Durada | Setmanes Acumulades | Estat | Notes |
+|-----------|--------|---------------------|-------|-------|
+| M0: Setup ✅ | - | 0 | ✅ COMPLETAT | Desembre 2025 |
+| M1: Foundation ✅ | 1.5 setmanes | 1.5 | ✅ COMPLETAT | Desembre 2025 - Gener 2026 |
+| M2: Admin UI ✅ | 1 setmana | 2.5 | ✅ COMPLETAT | Gener 2026 |
+| M2.5: Auth Context ✅ | 0.5 setmanes | 3 | ✅ COMPLETAT | Gener 2026 |
+| M3a: Contingut Base ✅ | 1 setmana | 4 | ✅ COMPLETAT | 7-12 Gener 2026 |
+| M3b: Direct Upload ✅ | 1 setmana | 5 | ✅ COMPLETAT | 12 Gener 2026 - NOVA |
+| M3c: Moderació ✅ | 0.5 setmanes | 5.5 | ✅ COMPLETAT | 12 Gener 2026 - Simplificada |
+| M4: Llistes ✅ | 1.5 setmanes | 7 | ✅ COMPLETAT | 19 Gener 2026 |
+| **M5: RSS** | 1.5 setmanes | **8.5** | 🔵 SEGÜENT | **Pendent** |
+| M6: Pantalla Principal 🎯 | 2 setmanes | **10.5** | 🎯 MVP DEMO | **Pendent** |
+| M7: Features Avançades | 2 setmanes | 12.5 | 🔵 PENDENT | - |
+| M8: Multi-tenant | 1.5 setmanes | **14** | 🔵 PENDENT | ← Complet |
 
-**Total:** ~12.5 setmanes (~3 mesos)
+**Total estimat:** ~14 setmanes (~3.5 mesos)
+**Completat fins ara:** 7 setmanes (50%)
+**MVP Demo estimat:** Setmana 10.5 (final Març 2026)
+**Completat final estimat:** Setmana 14 (mitjans Abril 2026)
 
-**Guany:** 1 setmana (però més risc)
+**Nota:** M3 va durar 2.5 setmanes (en lloc de 2) degut a l'addició de M3b (Direct Upload)
 
 ---
 
-### **Opció A: Seqüencial (més segur, no recomanat)**
+### **Timeline Original (Planificat) - OBSOLET**
+
+<details>
+<summary>Veure timeline planificat original (click per expandir)</summary>
+
+Aquest era el timeline inicial del projecte. S'ha substituït pel timeline real de dalt.
 
 | Milestone | Durada | Setmanes Acumulades |
 |-----------|--------|---------------------|
@@ -791,90 +847,85 @@ Rebutjar → DELETE vídeo
 | M2: Admin UI | 1 setmana | 3 |
 | M3a: Contingut Base | 1 setmana | 4 |
 | M3b: Moderació | 1 setmana | 5 |
-| M5: RSS | 1.5 setmanes | 6.5 |
-| M4: Llistes | 1.5 setmanes | 8 |
+| M4: Llistes | 1.5 setmanes | 6.5 |
+| M5: RSS | 1.5 setmanes | 8 |
 | M6: Pantalla Principal 🎯 | 2 setmanes | **10** ← MVP Demo |
 | M7: Features Avançades | 2 setmanes | 12 |
 | M8: Multi-tenant | 1.5 setmanes | **13.5** ← Completo |
 
-**Total:** ~12.5 setmanes (~3 mesos)
+**Total planificat:** ~13.5 setmanes
+**Desviació real:** +0.5 setmanes (per M3b Direct Upload)
 
-**Guany:** 1 setmana respecte Opció A
-
----
-
-### **Opció A: Seqüencial (més segur, no recomanat)**
-
-| Milestone | Durada | Setmanes Acumulades |
-|-----------|--------|---------------------|
-| M0: Setup ✅ | COMPLETAT | 0 |
-| M1: Foundation Complet | 1.5-2 setmanes | 2 |
-| M2: Admin UI | 1 setmana | 3 |
-| M3a: Contingut Base | 1 setmana | 4 |
-| M3b: Moderació | 1 setmana | 5 |
-| M4: Llistes | 1.5 setmanes | 6.5 |
-| M5: RSS | 1.5 setmanes | 8 |
-| M6: Pantalla Principal 🎯 | 2 setmanes | **10** | ← **MVP Demo** |
-| M7: Features Avançades | 2 setmanes | 12 |
-| M8: Multi-tenant | 1.5 setmanes | **13.5** | ← **Complet** |
-
-**Total:** ~13.5 setmanes (~3.5 mesos)
-
-**Desavantatge:** Més lent, bloqueja desenvolupament
+</details>
 
 ---
 
 ## 🎯 Hites Clau (Demo Milestones)
 
-### **🟢 Demo 1: Admin Funcional (M2)**
-**Setmana 3**
-- Mostrar gestió de centres i usuaris
-- Sistema d'invitació funcional
-- Zones gestionables
+### **✅ Demo 1: Admin Funcional (M2)** - COMPLETAT
+**Setmana 2.5** - Gener 2026
+- ✅ Gestió de centres i usuaris
+- ✅ Sistema d'invitació funcional
+- ✅ Zones gestionables
 
-### **🟡 Demo 2: Contingut & Moderació (M3b)**
-**Setmana 5**
-- Alta de vídeos amb Vimeo
-- Flux de moderació complet
-- Notificacions en temps real
+### **✅ Demo 2: Sistema de Contingut (M3)** - COMPLETAT
+**Setmana 5.5** - Gener 2026
+- ✅ Alta de vídeos amb URL Vimeo (M3a)
+- ✅ Upload directe amb Tus protocol (M3b)
+- ✅ Flux de moderació simplificat (M3c)
+- ✅ Validació en temps real
+- ⏳ Notificacions in-app (pendent futur)
 
-### **🟠 Demo 3: RSS & Llistes (M4)**
-**Setmana 8**
-- Feeds RSS mostrant-se amb rotació
+### **🔵 Demo 3: Llistes & RSS (M4-M5)** - PENDENT
+**Setmana 8.5** - Finals Febrer 2026 (estimat)
 - Playlists funcionals amb drag&drop
+- Feeds RSS mostrant-se amb rotació
+- Sistema de programació de llistes
 
-### **🎯 Demo 4: MVP Complet (M6)**
-**Setmana 10** ← **MILESTONE CRÍTIC**
+### **🎯 Demo 4: MVP Complet (M6)** - PENDENT
+**Setmana 10.5** - Finals Març 2026 (estimat) ← **MILESTONE CRÍTIC**
 - Pantalla principal amb 3 zones funcionant
 - Mode Display en TV real
 - Producte demo-able a stakeholders
 
-### **🚀 Demo 5: Producte Complet (M8)**
-**Setmana 13.5**
+### **🚀 Demo 5: Producte Complet (M8)** - PENDENT
+**Setmana 14** - Mitjans Abril 2026 (estimat)
 - Totes les funcionalitats implementades
 - Llest per producció
 
 ---
 
-## ⚠️ Riscos i Mitigacions
+## ⚠️ Riscos i Mitigacions (Actualitzat)
 
-| Risc | Probabilitat | Impacte | Mitigació |
-|------|--------------|---------|-----------|
-| **M1 s'allarga** | 🔴 Alta | 🔴 Molt alt | Split en M1a/M1b per desbloquejar M2 |
-| **Vimeo API canvia** | 🟡 Mitjana | 🟡 Mitjà | Abstraure en lib separada + tests |
-| **RSS feeds malformats** | 🟡 Mitjana | 🟢 Baix | Parser robust + gestió d'errors |
-| **Supabase Realtime lent** | 🟢 Baixa | 🟡 Mitjà | Polling fallback + caché |
-| **Sincronització 3 zones M6** | 🟡 Mitjana | 🟡 Mitjà | Desenvolupar zones per separat primer |
-| **RLS policies incorrectes** | 🟡 Mitjana | 🔴 Alt | Tests exhaustius per cada rol + script de validació automàtica |
-| **Mode Display inestable** | 🟢 Baixa | 🟡 Mitjà | Refresh automàtic + error recovery |
+| Risc | Probabilitat | Impacte | Estat | Mitigació |
+|------|--------------|---------|-------|-----------|
+| ~~M1 s'allarga~~ | - | - | ✅ MITIGAT | M1 completat amb èxit |
+| **Vimeo API canvia** | 🟡 Mitjana | 🟡 Mitjà | 🔄 ACTIU | Abstraure en lib separada + tests |
+| **Upload grans fitxers lent** | 🟡 Mitjana | 🟢 Baix | 🔄 ACTIU | Tus protocol + retry + cancel·lació |
+| **RSS feeds malformats** | 🟡 Mitjana | 🟢 Baix | ⏳ PENDENT | Parser robust + gestió d'errors (M5) |
+| **Supabase Realtime lent** | 🟢 Baixa | 🟡 Mitjà | ⏳ PENDENT | Polling fallback + caché (futur) |
+| **Sincronització 3 zones M6** | 🟡 Mitjana | 🟡 Mitjà | ⏳ PENDENT | Desenvolupar zones per separat primer |
+| ~~RLS policies incorrectes~~ | - | - | ✅ MITIGAT | Policies testejades i auditades (DB-AUDIT-REPORT.md) |
+| **Mode Display inestable** | 🟢 Baixa | 🟡 Mitjà | ⏳ PENDENT | Refresh automàtic + error recovery (M6) |
 
 ---
 
 ## 📊 Mètriques de Progrés
 
-### **Criteris d'Èxit Global**
+### **Criteris d'Èxit per Milestone**
 
-**M6 (MVP):**
+**M3 (Sistema de Contingut):** ✅ COMPLETAT
+- [x] Editor-profe pot crear vídeos amb URL Vimeo
+- [x] Editor-profe pot pujar vídeos directament (upload Tus)
+- [x] Validació Vimeo en temps real funciona
+- [x] Sistema de tags i hashtags operatiu
+- [x] Editor-alumne pot pujar vídeos (queden pendents)
+- [x] Editor-profe pot aprovar/rebutjar vídeos
+- [x] RLS policies correctes per cada rol
+- [x] Filtres i cerca funcionals
+- [ ] UI de notificacions in-app (pendent futur)
+
+**M6 (MVP):** ⏳ PENDENT
 - [ ] Usuari Display pot veure pantalla en TV 24/7
 - [ ] Vídeos es reprodueixen automàticament
 - [ ] Anuncis roten en bucle
@@ -922,26 +973,37 @@ Rebutjar → DELETE vídeo
 
 ---
 
-## 📝 Pròxims Passos
+## 📝 Pròxims Passos Immediats
 
-1. **Crear documents de milestone (Ultra-Split):**
-   - `M1-0-conventions.md`
-   - `M1-1-core-schema-min.md`
-   - `M1-2-rls-core-min.md`
-   - ... etc.
+### **Milestone M4: Llistes de Reproducció** ✅ COMPLETAT
 
-2. **Configurar entorn:**
-   - Vimeo API Access Token
-   - Supabase Storage buckets
-   - Cron jobs (Vercel/Supabase)
+**Implementat el 19 Gener 2026:**
+- Sistema complet de playlists amb @dnd-kit per drag&drop
+- 9 API routes per CRUD de playlists i items
+- 6 components React (PlaylistList, PlaylistCard, PlaylistEditor, DraggableVideoItem, AddVideosModal, PlaylistFormModal)
+- Pàgina `/llistes` amb llistat filtrable
+- Pàgina `/llistes/[id]/editar` amb editor drag & drop
+- Validació especial per llista Anuncis (només vídeos tipus announcement)
+- Permisos per rol (admin_global, editor_profe, editor_alumne)
+- Llistes globals creables per admin
 
-3. **Començar M1.0:**
-   - Definir convencions de naming i tipus
-   - Establir contracte multi-tenant
-   - Validar amb l'equip
+### **Milestone M5: Sistema RSS** 🎯 SEGÜENT
+
+**Objectiu:** Sistema de feeds RSS per mostrar notícies a la pantalla principal.
+
+**Tasques:**
+1. Pàgina `/rss` per gestió de feeds
+2. API routes per CRUD de feeds RSS
+3. Sistema de polling per actualitzar contingut
+4. Parsing i validació de feeds
+5. Integració amb la pantalla principal (M6)
+
+**Durada estimada:** 1.5 setmanes
+**Data inici estimada:** 20 Gener 2026
+**Data finalització estimada:** Inici Febrer 2026
 
 ---
 
-**Data d'actualització:** 23 desembre 2025  
-**Estat:** Roadmap definit amb estratègia M1 Ultra-Split, pendent inici M1.0  
-**Recomanació:** Utilitzar Opció B (Ultra-Split) per a una implementació més controlada i modular.
+**Data d'actualització:** 19 gener 2026
+**Estat:** M4 completat (Llistes de Reproducció) - Preparat per començar M5
+**Progrés:** 50% del projecte total (7 de 14 setmanes)
