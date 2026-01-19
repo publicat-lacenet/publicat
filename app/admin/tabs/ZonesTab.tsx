@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Modal from '@/app/components/ui/Modal';
-import Button from '@/app/components/ui/Button';
+import Button from '@/app/components/ui/button';
 
 interface Zone {
   id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Button from '@/app/components/ui/Button';
+import Button from '@/app/components/ui/button';
 import Modal from '@/app/components/ui/Modal';
 
 interface Center {

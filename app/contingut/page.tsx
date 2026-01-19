@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/app/components/layout/AdminLayout';
 import PageHeader from '@/app/components/ui/PageHeader';
@@ -12,6 +12,14 @@ import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/utils/supabase/useAuth';
 
 export default function ContingutPage() {
+  return (
+    <Suspense fallback={<div>Carregant...</div>}>
+      <ContingutContent />
+    </Suspense>
+  );
+}
+
+function ContingutContent() {
   const { role, centerId, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
