@@ -1,7 +1,8 @@
 # M3c: Moderació Alumnes - IMPLEMENTAT ✅
 
 **Data d'implementació:** 2026-01-12  
-**Estat:** ✅ Completat i funcional  
+**Data de finalització:** 2026-01-12  
+**Estat:** ✅ Completat, testat i desplegat  
 **Dependències:** M3a (Contingut Base), M3b (Vimeo Upload Direct)
 
 ---
@@ -12,21 +13,69 @@ S'ha implementat un sistema **simplificat** de moderació de vídeos que permet:
 
 1. **Editor-alumne** pot pujar vídeos que queden automàticament amb `status = 'pending_approval'`
 2. **Editor-profe** veu tots els vídeos (pendents i publicats) a la pàgina `/contingut`
-3. **Editor-profe** pot **editar** videos pendientes abans d'aprovar-los
+3. **Editor-profe** pot **editar** vídeos pendents abans d'aprovar-los
 4. **Editor-profe** pot **aprovar** vídeos amb un botó a la targeta del vídeo
 5. **Editor-profe** pot **rebutjar** (eliminar) vídeos pendents
 6. Els vídeos pendents es mostren amb **badge groc "⏳ Pendent"** per identificació visual
-7. El sistema utilitza triggers SQL per notificacions a la taula `notifications` (UI pendiente de implementar)
+7. El sistema utilitza triggers SQL per notificacions a la taula `notifications`
 
 **NO s'ha implementat:**
-- ❌ Página `/moderacio` separada (todo se gestiona desde `/contingut`)
-- ❌ Sistema de notificaciones in-app complejo (NotificationBadge, dropdowns, etc.)
-- ❌ Realtime subscriptions para notificaciones
-- ❌ Solo se usan iconos/colores para identificar videos pendientes
+- ❌ Página `/moderacio` separada (tot es gestiona des de `/contingut`)
+- ❌ Sistema de notificacions in-app complext (NotificationBadge, dropdowns, etc.)
+- ❌ Realtime subscriptions per notificacions (pendent)
+- ✅ Solo s'usen icones/colors per identificar vídeos pendents
 
 ---
 
-## ✅ Fitxers Implementats
+## ✅ Correccions Realitzades en aquesta Sessió
+
+### 1. **Rol d'usuari no es mostrava al header**
+**Problema:** El rol apareixia com "Carregant..." i no es actualitzava
+**Solució:**
+- ✅ Crear `AuthContext.tsx` - Context de React per compartir estat de autenticació
+- ✅ Crear `app/providers.tsx` - Wrapper de providers
+- ✅ Envolver aplicació amb `AuthProvider` en `app/layout.tsx`
+- ✅ Actualitzar `AppHeader.tsx` per mostrar rol correctament
+- ✅ Netejar sessionStorage que tenia dades cacheades
+
+### 2. **Vídeos d'alumnos es creaven com "published" en lloc de "pending_approval"**
+**Problema:** Tots els vídeos es creaven amb `status = 'published'`
+**Solució:**
+- ✅ Actualitzar `/api/videos/route.ts` POST per establir `status` segons rol:
+  - `editor_alumne` → `pending_approval`
+  - `editor_profe` / `admin_global` → `published`
+- ✅ Prioritzar rol de taula `users` sobre `user_metadata` de Supabase Auth
+
+### 3. **Noms de taules i camps incorrectes**
+**Problema:** Consultes feien referència a taules/camps no existents
+**Solució:**
+- ✅ Canviar `'centres'` → `'centers'` en totes les queries
+- ✅ Canviar `slug` → `name` (amb ilike) en cerques de centres
+- ✅ Canviar `active` → `is_active` per verificar centres actius
+- ✅ Actualitzar:
+  - `/api/auth/me/route.ts`
+  - `/app/api/videos/[id]/route.ts`
+  - `/app/api/videos/route.ts` (GET i POST)
+
+---
+
+## 📁 Fitxers Creats/Actualitzats en aquesta Sessió
+
+### Nous fitxers:
+- ✅ [utils/supabase/AuthContext.tsx](../../utils/supabase/AuthContext.tsx) - Context de autenticació global
+- ✅ [app/providers.tsx](../../app/providers.tsx) - Provider wrapper
+- ✅ [app/components/ui/alert.tsx](../../app/components/ui/alert.tsx) - Componente UI
+- ✅ [app/components/ui/badge.tsx](../../app/components/ui/badge.tsx) - Componente UI
+- ✅ [app/components/ui/card.tsx](../../app/components/ui/card.tsx) - Componente UI
+
+### Fitxers modificats:
+- ✅ [app/layout.tsx](../../app/layout.tsx) - Afegit Providers wrapper
+- ✅ [app/components/layout/AppHeader.tsx](../../app/components/layout/AppHeader.tsx) - Mostrar rol correctament
+- ✅ [app/api/auth/me/route.ts](../../app/api/auth/me/route.ts) - Prioritzar rol de DB
+- ✅ [app/api/videos/route.ts](../../app/api/videos/route.ts) - Fix status per rol, noms de taules
+- ✅ [app/api/videos/[id]/route.ts](../../app/api/videos/[id]/route.ts) - Fix noms de taules/camps
+
+---
 
 ### 1. **Migració SQL**
 📄 [supabase/migrations/20260112120000_m3c_moderation_system.sql](../../supabase/migrations/20260112120000_m3c_moderation_system.sql)
@@ -282,25 +331,29 @@ vercel --prod
 
 ## ✅ Definition of Done
 
-- [x] Editor-alumne pot crear vídeos (queden `pending_approval`)
-- [x] Editor-profe veu tots els vídeos pendents a `/contingut?status=pending`
-- [x] Editor-profe pot **editar** vídeos pendents abans d'aprovar-los
-- [x] Editor-profe pot aprovar vídeos amb botó verd a la targeta
-- [x] Editor-profe pot rebutjar vídeos (eliminar) amb confirmació
-- [x] Badge groc "⏳ Pendent" visible en vídeos amb `status = 'pending_approval'`
-- [x] Triggers SQL creen registres a taula `notifications`
-- [x] RLS policies permeten accés correcte segons rol
-- [x] Refetch automàtic després d'aprovar/rebutjar vídeos
-- [x] Zero errors crítics en consola
-- [x] Documentació completa i actualitzada
-- [ ] UI de notificacions in-app (pendent implementació futura)
-- [ ] Supabase Realtime per notificacions (pendent)
+- [x] **Autenticació Global** - AuthProvider en nivel raíz
+- [x] **Rol visible** - AppHeader mostra rol correctament (Editor Alumne / Editor Professor / Admin Global)
+- [x] **Crear vídeos** - Editor-alumne pot pujar vídeos
+- [x] **Status correcte** - Vídeos d'alumnos es creen amb `pending_approval`
+- [x] **Veure pendents** - Editor-profe pot veure vídeos pendents a `/contingut?status=pending`
+- [x] **Editar vídeos** - Editor-profe pot editar vídeos pendents
+- [x] **Aprovar vídeos** - Editor-profe pot aprovar vídeos amb botó verd
+- [x] **Rebutjar vídeos** - Editor-profe pot eliminar vídeos pendents
+- [x] **Badge visual** - Vídeos pendents mostren badge groc "⏳ Pendent"
+- [x] **Triggers SQL** - Sistema de notificacions creat a BD
+- [x] **RLS policies** - Permisos d'accés correctes per rol
+- [x] **Noms correctes** - Taules i camps de BD corregits (`centers`, `is_active`, `name`)
+- [x] **Zero errors** - Console neta, sense errors crítics
+- [x] **Testat** - Funcionalitat verificada manualment
+- [x] **Desplegat** - Canvis subits a GitHub (commit 294e54d)
+- [ ] **UI notificacions** - Component de notificacions in-app (futura)
+- [ ] **Realtime** - Supabase Realtime per actualitzacions (futura)
 
 ---
 
 **Data de creació:** 7 gener 2026  
-**Data actualització:** 12 gener 2026  
-**Versió:** 2.0 (Simplificada)  
+**Data finalització:** 12 gener 2026  
+**Versió:** 2.0 (Simplificada + Corregida)  
 **Autor:** GitHub Copilot  
-**Estat:** ✅ Funcional i desplegat
+**Estat:** ✅ Funcional, testat i desplegat a producció
 
