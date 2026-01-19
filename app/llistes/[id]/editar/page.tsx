@@ -3,7 +3,6 @@
 import { use } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/app/components/layout/AdminLayout';
-import Breadcrumb from '@/app/components/ui/Breadcrumb';
 import PlaylistEditor from '@/app/components/playlists/PlaylistEditor';
 
 interface EditarLlistaPageProps {
@@ -36,8 +35,6 @@ export default function EditarLlistaPage({ params }: EditarLlistaPageProps) {
           Tornar a les llistes
         </Link>
       </div>
-
-      <Breadcrumb items={['Llistes', 'Editar']} />
 
       <PlaylistEditor playlistId={id} />
     </AdminLayout>
