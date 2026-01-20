@@ -589,29 +589,30 @@ Rebutjar → DELETE vídeo (botó eliminar)
 
 **1. Layout de 3 Zones**
 ```
-┌─────────────────────────────────────────────────┐
-│ Barra Superior (logo + logout)                  │
-├────┬────────────────────────────────────────────┤
-│    │ ZONA PRINCIPAL (60% width, 70% height)     │
-│ M  │ Reproductor de vídeo                       │
-│ E  │ (Llista del dia)                           │
-│ N  │                                             │
-│ Ú  ├─────────────────┬──────────────────────────┤
-│    │ ZONA ANUNCIS    │ ZONA RSS                 │
-│ L  │ (30% w, 30% h)  │ (30% w, 30% h)           │
-│ A  │ (loop)          │ (rotació feeds)          │
-│ T  │                 │                          │
-│ E  │                 │                          │
-│ R  │                 │                          │
-│ A  │                 │                          │
-│ L  │                 │                          │
-└────┴─────────────────┴──────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ Barra Superior (logo + logout)                              │
+├────┬──────────────────────────────────┬─────────────────────┤
+│    │                                  │ ZONA ANUNCIS        │
+│ M  │                                  │ (30% width, 50% h)  │
+│ E  │   ZONA PRINCIPAL                 │ (loop automàtic)    │
+│ N  │   (70% width, 100% height)       │                     │
+│ Ú  │   Reproductor de vídeo           ├─────────────────────┤
+│    │   (Llista del dia)               │ ZONA RSS            │
+│ L  │                                  │ (30% width, 50% h)  │
+│ A  │                                  │ (rotació feeds)     │
+│ T  │                                  │                     │
+│ E  │                                  │                     │
+│ R  │                                  │                     │
+│ A  │                                  │                     │
+│ L  │                                  │                     │
+└────┴──────────────────────────────────┴─────────────────────┘
 ```
 
 **Proporcions (configurables en futur):**
-- Zona Principal: 60% width, 70% height
-- Zona Anuncis: 30% width, 30% height (inferior esquerra)
-- Zona RSS: 30% width, 30% height (inferior dreta)
+- Zona Principal: 70% width, 100% height de l'àrea de contingut
+- Columna dreta: 30% width, dividida verticalment:
+  - Zona Anuncis: 30% width, 50% height (dalt)
+  - Zona RSS: 30% width, 50% height (baix)
 
 **2. Reproductor Principal**
 - Component `VimeoPlayer` (iframe embed)
