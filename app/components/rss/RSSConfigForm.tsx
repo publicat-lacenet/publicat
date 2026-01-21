@@ -47,10 +47,10 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
 
   useEffect(() => {
     if (originalSettings) {
+      // Note: refresh_minutes excluded - disabled due to Vercel Hobby limitation
       const changed =
         settings.seconds_per_item !== originalSettings.seconds_per_item ||
-        settings.seconds_per_feed !== originalSettings.seconds_per_feed ||
-        settings.refresh_minutes !== originalSettings.refresh_minutes;
+        settings.seconds_per_feed !== originalSettings.seconds_per_feed;
       setHasChanges(changed);
     }
   }, [settings, originalSettings]);
@@ -61,10 +61,14 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
     setSaving(true);
 
     try {
+      // Only send editable settings (refresh_minutes disabled due to Vercel Hobby)
       const res = await fetch('/api/rss/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({
+          seconds_per_item: settings.seconds_per_item,
+          seconds_per_feed: settings.seconds_per_feed,
+        }),
       });
 
       const data = await res.json();
@@ -162,14 +166,14 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
           </p>
         </div>
 
-        {/* Refresh minutes */}
-        <div>
+        {/* Refresh minutes - DISABLED due to Vercel Hobby limitation */}
+        <div className="opacity-60">
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-medium text-gray-700">
               Interval d&apos;actualització
             </label>
-            <span className="text-sm font-semibold text-[var(--color-secondary)]">
-              {settings.refresh_minutes} minuts
+            <span className="text-sm font-semibold text-gray-500">
+              1 vegada/dia
             </span>
           </div>
           <input
@@ -177,15 +181,30 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
             min="15"
             max="180"
             step="15"
-            value={settings.refresh_minutes}
-            onChange={e =>
-              setSettings(prev => ({ ...prev, refresh_minutes: parseInt(e.target.value) }))
-            }
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[var(--color-secondary)]"
+            value={60}
+            disabled
+            className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-not-allowed"
           />
           <p className="text-xs text-[var(--color-gray)] mt-1">
-            Cada quant es refresca el contingut dels feeds (15-180 minuts)
+            Actualització automàtica diària (mitjanit UTC)
           </p>
+        </div>
+
+        {/* Vercel Hobby limitation warning */}
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <span className="text-amber-500 text-lg">⚠️</span>
+            <div>
+              <p className="text-sm font-medium text-amber-800">
+                Limitació del pla gratuït de Vercel
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                Amb el pla Hobby, els feeds RSS només s&apos;actualitzen una vegada al dia
+                (mitjanit UTC). Per habilitar actualitzacions més freqüents, cal actualitzar
+                a Vercel Pro.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

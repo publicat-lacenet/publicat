@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     success: 0,
     errors: 0,
     disabled: 0,
-    skipped: 0,
+    // Nota: 'skipped' eliminat - amb Vercel Hobby el cron només s'executa 1x/dia
     details: [] as Array<{ feed_id: string; name: string; status: string; items?: number; error?: string }>,
   };
 
@@ -54,16 +54,7 @@ export async function GET(request: NextRequest) {
     // Obtenir tots els feeds actius amb error_count < 5
     const { data: feeds, error: feedsError } = await supabaseAdmin
       .from('rss_feeds')
-      .select(
-        `
-        id,
-        name,
-        url,
-        center_id,
-        last_fetched_at,
-        error_count
-      `
-      )
+      .select('id, name, url, center_id, error_count')
       .eq('is_active', true)
       .lt('error_count', 5);
 
@@ -79,43 +70,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Per cada feed, obtenir la configuració del centre
-    const centerSettingsMap = new Map<string, { refresh_minutes: number }>();
-
+    // Processar tots els feeds
+    // Nota: Amb Vercel Hobby, el cron només s'executa 1x/dia (mitjanit UTC)
+    // Per tant, processem TOTS els feeds sense comprovar refresh_minutes
     for (const feed of feeds) {
       results.processed++;
-
-      // Obtenir settings del centre (si existeix)
-      if (feed.center_id && !centerSettingsMap.has(feed.center_id)) {
-        const { data: settings } = await supabaseAdmin
-          .from('rss_center_settings')
-          .select('refresh_minutes')
-          .eq('center_id', feed.center_id)
-          .single();
-
-        centerSettingsMap.set(feed.center_id, settings || { refresh_minutes: 60 });
-      }
-
-      const settings = feed.center_id
-        ? centerSettingsMap.get(feed.center_id) || { refresh_minutes: 60 }
-        : { refresh_minutes: 60 };
-
-      // Comprovar si cal actualitzar (respectar refresh_minutes)
-      if (feed.last_fetched_at) {
-        const lastFetched = new Date(feed.last_fetched_at);
-        const now = new Date();
-        const minutesSinceLastFetch = (now.getTime() - lastFetched.getTime()) / (1000 * 60);
-
-        if (minutesSinceLastFetch < settings.refresh_minutes) {
-          results.skipped++;
-          results.details.push({
-            feed_id: feed.id,
-            name: feed.name,
-            status: 'skipped',
-          });
-          continue;
-        }
-      }
 
       try {
         // Fetch i parse del feed
