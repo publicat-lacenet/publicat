@@ -71,7 +71,30 @@ export async function GET(request: NextRequest) {
     query = query.eq('is_in_rotation', true);
   }
 
-  const { data: feeds, error } = await query;
+  let { data: feeds, error } = await query;
+
+  // Si es demana només en rotació, ordenar segons l'ordre de rotació
+  if (onlyInRotation && centerId && feeds && feeds.length > 0) {
+    const { data: rotationOrderData } = await supabase
+      .from('rss_rotation_order')
+      .select('feed_id, position')
+      .eq('center_id', centerId)
+      .order('position', { ascending: true });
+
+    if (rotationOrderData && rotationOrderData.length > 0) {
+      // Crear un mapa de feed_id -> position
+      const positionMap = new Map(
+        rotationOrderData.map(r => [r.feed_id, r.position])
+      );
+
+      // Ordenar feeds segons la posició
+      feeds = feeds.sort((a, b) => {
+        const posA = positionMap.get(a.id) ?? 999;
+        const posB = positionMap.get(b.id) ?? 999;
+        return posA - posB;
+      });
+    }
+  }
 
   if (error) {
     console.error('Error fetching feeds:', error);

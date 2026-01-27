@@ -1,32 +1,45 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/utils/supabase/useAuth';
 import AdminLayout from '@/app/components/layout/AdminLayout';
-import Breadcrumb from '@/app/components/ui/Breadcrumb';
-import PageHeader from '@/app/components/ui/PageHeader';
+import VisorPreview from './VisorPreview';
 
 export default function VisorPage() {
-  return (
-    <AdminLayout>
-      <Breadcrumb items={['Visor']} />
-      
-      <PageHeader
-        title="Visor"
-        description="Reproducció de llistes, anuncis i feeds RSS del centre"
-      />
+  const router = useRouter();
+  const { role, centerId, loading } = useAuth();
 
-      <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <div className="text-6xl mb-6">📺</div>
-          <h3 className="text-2xl font-bold text-[var(--color-dark)] font-[family-name:var(--font-montserrat)]">
-            Visor en Desenvolupament
-          </h3>
-          <p className="text-[var(--color-gray)] font-[family-name:var(--font-inter)]">
-            Aquesta pàgina s&apos;implementarà al <strong>Milestone M6</strong>.
-          </p>
-          <p className="text-sm text-[var(--color-gray)] mt-6">
-            El Visor permetrà visualitzar les llistes de reproducció, anuncis del centre i feeds RSS
-            en temps real amb transicions automàtiques.
-          </p>
+  // Check permissions - editor_profe, editor_alumne and admin_global can access
+  useEffect(() => {
+    if (!loading && role !== 'editor_profe' && role !== 'editor_alumne' && role !== 'admin_global') {
+      router.push('/dashboard');
+    }
+  }, [role, loading, router]);
+
+  if (loading) {
+    return (
+      <AdminLayout noPadding>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-gray-500">Carregant...</div>
         </div>
-      </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!centerId) {
+    return (
+      <AdminLayout noPadding>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-red-500">No s&apos;ha pogut determinar el centre</div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout noPadding>
+      <VisorPreview centerId={centerId} />
     </AdminLayout>
   );
 }
