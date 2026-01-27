@@ -3,7 +3,13 @@
     "allow": [
       "Bash(node analyze-db.js:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(grep:*)",
+      "mcp__supabase__execute_sql"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

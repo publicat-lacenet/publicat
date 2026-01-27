@@ -57,10 +57,18 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Protegir ruta /pantalla - només display (si role està present en metadata)
+  // Protegir ruta /pantalla - display + editors poden previsualitzar
   if (request.nextUrl.pathname.startsWith('/pantalla') && user) {
     const role = (user.user_metadata as { role?: string })?.role;
-    if (role && role !== 'display') {
+
+    // /pantalla/config - només editors
+    if (request.nextUrl.pathname.startsWith('/pantalla/config')) {
+      if (role && !['editor_profe', 'admin_global'].includes(role)) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    }
+    // /pantalla - display + editors poden previsualitzar
+    else if (role && !['display', 'editor_profe', 'admin_global'].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }

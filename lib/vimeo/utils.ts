@@ -7,12 +7,40 @@ export function extractVimeoId(url: string): string | null {
     /vimeo\.com\/video\/(\d+)/,
     /player\.vimeo\.com\/video\/(\d+)/,
   ];
-  
+
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return match[1];
   }
-  
+
+  return null;
+}
+
+/**
+ * Extreu l'ID i el hash d'una URL de Vimeo (per vídeos unlisted)
+ * URL format: https://vimeo.com/1156841645/d354baa5d1
+ */
+export function extractVimeoIdAndHash(url: string): { id: string; hash: string | null } | null {
+  // Pattern per URLs amb hash: vimeo.com/ID/HASH
+  const hashPattern = /vimeo\.com\/(\d+)\/([a-zA-Z0-9]+)/;
+  const hashMatch = url.match(hashPattern);
+
+  if (hashMatch) {
+    return {
+      id: hashMatch[1],
+      hash: hashMatch[2],
+    };
+  }
+
+  // Fallback: només ID sense hash
+  const id = extractVimeoId(url);
+  if (id) {
+    return {
+      id,
+      hash: null,
+    };
+  }
+
   return null;
 }
 
