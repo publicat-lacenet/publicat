@@ -59,7 +59,6 @@ export async function GET(request: NextRequest) {
       show_clock: true,
       show_ticker: false,
       ticker_speed: 50,
-      primary_color: '#FEDD2C',
       standby_message: 'Pròximament...',
       announcement_volume: 0,
     };
@@ -126,7 +125,6 @@ export async function PATCH(request: NextRequest) {
     'show_clock',
     'show_ticker',
     'ticker_speed',
-    'primary_color',
     'standby_message',
     'announcement_volume',
   ];
@@ -155,16 +153,6 @@ export async function PATCH(request: NextRequest) {
     if (typeof volume !== 'number' || volume < 0 || volume > 100) {
       return NextResponse.json(
         { error: 'El volum dels anuncis ha de ser entre 0 i 100' },
-        { status: 400 }
-      );
-    }
-  }
-
-  if ('primary_color' in filteredUpdates) {
-    const color = filteredUpdates.primary_color as string;
-    if (typeof color !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
-      return NextResponse.json(
-        { error: 'El color primari ha de ser un codi hex vàlid (#RRGGBB)' },
         { status: 400 }
       );
     }

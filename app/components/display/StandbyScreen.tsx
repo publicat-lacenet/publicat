@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
+const PRIMARY_COLOR = '#FEDD2C';
+
 interface StandbyScreenProps {
   message?: string;
-  primaryColor?: string;
   centerLogo?: string | null;
   centerName?: string;
 }
 
 export default function StandbyScreen({
   message = 'Pròximament...',
-  primaryColor = '#FEDD2C',
   centerLogo,
   centerName = 'PUBLI*CAT',
 }: StandbyScreenProps) {
@@ -38,7 +38,7 @@ export default function StandbyScreen({
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800"
-      style={{ '--primary-color': primaryColor } as React.CSSProperties}
+      style={{ '--primary-color': PRIMARY_COLOR } as React.CSSProperties}
     >
       {/* Logo */}
       <div className="mb-8 animate-pulse">
@@ -53,7 +53,7 @@ export default function StandbyScreen({
         ) : (
           <div
             className="w-32 h-32 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: primaryColor }}
+            style={{ backgroundColor: PRIMARY_COLOR }}
           >
             <span className="text-4xl font-bold text-gray-900">
               {centerName.charAt(0)}
@@ -70,7 +70,7 @@ export default function StandbyScreen({
       {/* Missatge */}
       <p
         className="text-xl font-medium mb-8"
-        style={{ color: primaryColor }}
+        style={{ color: PRIMARY_COLOR }}
       >
         {message}
       </p>
@@ -85,7 +85,7 @@ export default function StandbyScreen({
         <div
           className="h-full animate-slide"
           style={{
-            background: `linear-gradient(90deg, transparent, ${primaryColor}, transparent)`,
+            background: `linear-gradient(90deg, transparent, ${PRIMARY_COLOR}, transparent)`,
             width: '200%',
             animation: 'slide 3s linear infinite',
           }}

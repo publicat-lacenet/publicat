@@ -177,7 +177,6 @@ export async function GET(request: NextRequest) {
       show_clock: true,
       show_ticker: false,
       ticker_speed: 50,
-      primary_color: '#FEDD2C',
       standby_message: 'Pròximament...',
       announcement_volume: 0,
     };

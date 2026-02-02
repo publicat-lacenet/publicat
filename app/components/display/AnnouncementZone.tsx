@@ -11,12 +11,13 @@ export interface AnnouncementVideo {
   vimeo_hash?: string | null;
 }
 
+const PRIMARY_COLOR = '#FEDD2C';
+
 interface AnnouncementZoneProps {
   videos: AnnouncementVideo[];
   volume?: number;
   showFallback?: boolean;
   centerLogo?: string | null;
-  primaryColor?: string;
 }
 
 export default function AnnouncementZone({
@@ -24,7 +25,6 @@ export default function AnnouncementZone({
   volume = 0,
   showFallback = true,
   centerLogo,
-  primaryColor = '#FEDD2C',
 }: AnnouncementZoneProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -69,7 +69,7 @@ export default function AnnouncementZone({
     return (
       <div
         className="w-full h-full flex items-center justify-center"
-        style={{ backgroundColor: primaryColor }}
+        style={{ backgroundColor: PRIMARY_COLOR }}
       >
         {centerLogo ? (
           <Image

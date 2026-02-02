@@ -13,7 +13,6 @@ interface DisplaySettings {
     show_clock: boolean;
     show_ticker: boolean;
     ticker_speed: number;
-    primary_color: string;
     standby_message: string;
     announcement_volume: number;
 }

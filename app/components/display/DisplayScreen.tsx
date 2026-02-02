@@ -35,7 +35,6 @@ interface DisplayConfig {
     show_clock: boolean;
     show_ticker: boolean;
     ticker_speed: number;
-    primary_color: string;
     standby_message: string;
     announcement_volume: number;
   };
@@ -230,7 +229,6 @@ export default function DisplayScreen({
       <div ref={containerRef} className={sizeClass} onDoubleClick={toggleFullscreen}>
         <StandbyScreen
           message={display_settings.standby_message}
-          primaryColor={display_settings.primary_color}
           centerLogo={center.logo_url}
           centerName={center.name}
         />
@@ -253,7 +251,6 @@ export default function DisplayScreen({
               centerLogo={center.logo_url}
               centerName={center.name}
               showClock={display_settings.show_clock}
-              primaryColor={display_settings.primary_color}
             />
           ) : undefined
         }
@@ -277,7 +274,6 @@ export default function DisplayScreen({
               volume={display_settings.announcement_volume}
               showFallback={true}
               centerLogo={center.logo_url}
-              primaryColor={display_settings.primary_color}
             />
           ) : undefined
         }

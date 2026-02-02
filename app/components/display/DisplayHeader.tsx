@@ -7,14 +7,12 @@ interface DisplayHeaderProps {
   centerLogo?: string | null;
   centerName?: string;
   showClock?: boolean;
-  primaryColor?: string;
 }
 
 export default function DisplayHeader({
   centerLogo,
   centerName = 'PUBLI*CAT',
   showClock = true,
-  primaryColor = '#FEDD2C',
 }: DisplayHeaderProps) {
   const [currentTime, setCurrentTime] = useState('');
 
@@ -38,7 +36,7 @@ export default function DisplayHeader({
   return (
     <header
       className="h-[50px] flex items-center px-6 relative"
-      style={{ backgroundColor: primaryColor }}
+      style={{ backgroundColor: '#FEDD2C' }}
     >
       {/* Logo i nom */}
       <div className="flex items-center gap-3">
