@@ -10,6 +10,29 @@ const parser = new Parser({
   },
 });
 
+// Compact rotation positions for a center so they are sequential (0, 1, 2, ...)
+async function compactRotationPositions(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  centerId: string
+) {
+  const { data: entries } = await supabase
+    .from('rss_rotation_order')
+    .select('id, position')
+    .eq('center_id', centerId)
+    .order('position', { ascending: true });
+
+  if (!entries || entries.length === 0) return;
+
+  for (let i = 0; i < entries.length; i++) {
+    if (entries[i].position !== i) {
+      await supabase
+        .from('rss_rotation_order')
+        .update({ position: i })
+        .eq('id', entries[i].id);
+    }
+  }
+}
+
 // GET /api/rss/[id] - Obtenir detalls d'un feed
 export async function GET(
   request: NextRequest,
@@ -204,6 +227,9 @@ export async function PATCH(
         .delete()
         .eq('center_id', existingFeed.center_id)
         .eq('feed_id', id);
+
+      // Compact remaining positions
+      await compactRotationPositions(supabase, existingFeed.center_id);
     }
   }
 
@@ -292,6 +318,11 @@ export async function DELETE(
   if (deleteError) {
     console.error('Error deleting feed:', deleteError);
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  // Compact remaining rotation positions for the center
+  if (existingFeed.center_id) {
+    await compactRotationPositions(supabase, existingFeed.center_id);
   }
 
   return NextResponse.json({

@@ -76,8 +76,8 @@ export default function RSSZone({
   useEffect(() => {
     fetchFeeds();
 
-    // Refresh feeds every 30 minutes
-    const refreshInterval = setInterval(fetchFeeds, 30 * 60 * 1000);
+    // Refresh feeds every 5 minutes
+    const refreshInterval = setInterval(fetchFeeds, 5 * 60 * 1000);
 
     return () => clearInterval(refreshInterval);
   }, [fetchFeeds]);

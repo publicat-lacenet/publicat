@@ -125,7 +125,7 @@ export default function VideoZone({
           vimeoHash={currentVideo.vimeo_hash}
           autoplay={true}
           muted={muted}
-          loop={false}
+          loop={videos.length === 1}
           controls={false}
           background={false}
           onEnded={handleVideoEnd}

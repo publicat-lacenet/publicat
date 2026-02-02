@@ -169,8 +169,11 @@ const VimeoPlayer = forwardRef<VimeoPlayerHandle, VimeoPlayerProps>(({
             if (isDestroyedRef.current || !playerRef.current) return;
             try {
               const paused = await playerRef.current.getPaused();
-              if (paused && !isDestroyedRef.current) {
-                // Autoplay was blocked, notify parent
+              if (paused && !isDestroyedRef.current && playerRef.current) {
+                // Autoplay was blocked — mute and retry playback so video starts
+                await playerRef.current.setMuted(true);
+                await playerRef.current.play().catch(() => {});
+                // Notify parent so it can show the "enable audio" button
                 callbacksRef.current.onAudioBlocked?.();
               }
             } catch (err) {
