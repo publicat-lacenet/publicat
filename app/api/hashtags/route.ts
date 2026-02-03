@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'centerId és obligatori' }, { status: 400 });
   }
 
-  // Only return hashtags that have at least 1 video linked
+  // Only return hashtags that have at least 1 video linked (!inner = INNER JOIN)
   const { data: hashtags, error } = await supabase
     .from('hashtags')
-    .select('id, name, video_hashtags(video_id)')
+    .select('id, name, video_hashtags!inner(video_id)')
     .eq('center_id', centerId)
     .eq('is_active', true)
     .order('name');
@@ -32,9 +32,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const used = (hashtags || [])
-    .filter((h: any) => h.video_hashtags && h.video_hashtags.length > 0)
-    .map(({ id, name }: any) => ({ id, name }));
+  const used = (hashtags || []).map(({ id, name }: any) => ({ id, name }));
 
   return NextResponse.json({ hashtags: used });
 }

@@ -42,6 +42,42 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '24');
 
+  // Pre-filtrar per tags/hashtags a nivell de BD (obtenir IDs de vídeos que coincideixen)
+  let tagVideoIds: string[] | null = null;
+  let hashtagVideoIds: string[] | null = null;
+
+  if (tagIds && tagIds.length > 0) {
+    const { data: matchingVT } = await supabase
+      .from('video_tags')
+      .select('video_id')
+      .in('tag_id', tagIds);
+    tagVideoIds = [...new Set(matchingVT?.map(vt => vt.video_id) || [])];
+  }
+
+  if (hashtagIds && hashtagIds.length > 0) {
+    const { data: matchingVH } = await supabase
+      .from('video_hashtags')
+      .select('video_id')
+      .in('hashtag_id', hashtagIds);
+    hashtagVideoIds = [...new Set(matchingVH?.map(vh => vh.video_id) || [])];
+  }
+
+  // Intersectar IDs si ambdós filtres estan actius
+  let filteredVideoIds: string[] | null = null;
+  if (tagVideoIds !== null && hashtagVideoIds !== null) {
+    const hashtagSet = new Set(hashtagVideoIds);
+    filteredVideoIds = tagVideoIds.filter(id => hashtagSet.has(id));
+  } else if (tagVideoIds !== null) {
+    filteredVideoIds = tagVideoIds;
+  } else if (hashtagVideoIds !== null) {
+    filteredVideoIds = hashtagVideoIds;
+  }
+
+  // Si el filtre retorna 0 resultats, retornar directament
+  if (filteredVideoIds !== null && filteredVideoIds.length === 0) {
+    return NextResponse.json({ videos: [], total: 0, page, totalPages: 0 });
+  }
+
   // Query base
   let query = supabase
     .from('videos')
@@ -75,6 +111,11 @@ export async function GET(request: NextRequest) {
     `, { count: 'exact' })
     .eq('is_active', true)
     .order('created_at', { ascending: false });
+
+  // Aplicar filtre de tags/hashtags a nivell de query
+  if (filteredVideoIds !== null) {
+    query = query.in('id', filteredVideoIds);
+  }
 
   // Filtre per centre
   if (centerId && !includeShared) {
@@ -155,21 +196,8 @@ export async function GET(request: NextRequest) {
     console.log(`🎓 [editor_alumne] User ID: ${user.id}`);
   }
 
-  // Filtrar per tags si cal (client-side ja que és relació many-to-many)
-  if (tagIds && tagIds.length > 0) {
-    filteredVideos = filteredVideos.filter(video => {
-      const videoTagIds = video.video_tags?.map((vt: any) => vt.tags?.id).filter(Boolean) || [];
-      return tagIds.some(tagId => videoTagIds.includes(tagId));
-    });
-  }
-
-  // Filtrar per hashtags si cal
-  if (hashtagIds && hashtagIds.length > 0) {
-    filteredVideos = filteredVideos.filter(video => {
-      const videoHashtagIds = video.video_hashtags?.map((vh: any) => vh.hashtags?.id).filter(Boolean) || [];
-      return hashtagIds.some(hashtagId => videoHashtagIds.includes(hashtagId));
-    });
-  }
+  // Nota: El filtratge per tags/hashtags es fa a nivell de BD (pre-query amb .in('id', ...))
+  // ja no cal filtrar client-side
 
   return NextResponse.json({
     videos: filteredVideos,
