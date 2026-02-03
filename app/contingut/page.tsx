@@ -7,8 +7,10 @@ import PageHeader from '@/app/components/ui/PageHeader';
 import VideoGrid from '@/app/components/videos/VideoGrid';
 import VideoFormModal from '@/app/components/videos/VideoFormModal';
 import VideoPreviewModal from '@/app/components/videos/VideoPreviewModal';
+import FilterDrawer from '@/app/components/videos/FilterDrawer';
 import { Video } from '@/app/components/videos/VideoCard';
 import { useVideos } from '@/hooks/useVideos';
+import { useVideoFilters } from '@/hooks/useVideoFilters';
 import { useAuth } from '@/utils/supabase/useAuth';
 
 export default function ContingutPage() {
@@ -31,6 +33,20 @@ function ContingutContent() {
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
 
+  const {
+    selectedTagIds,
+    selectedHashtagIds,
+    selectedZoneId,
+    activeFilterCount,
+    setTagIds,
+    setHashtagIds,
+    setZoneId,
+    clearAll: clearAdvancedFilters,
+    isDrawerOpen,
+    openDrawer,
+    closeDrawer,
+  } = useVideoFilters();
+
   // Llegir paràmetre status de la URL
   useEffect(() => {
     const statusParam = searchParams?.get('status');
@@ -46,11 +62,11 @@ function ContingutContent() {
     filters: {
       search,
       centerId: centerId || null,
-      zoneId: null,
+      zoneId: selectedZoneId,
       type: typeFilter,
       status: statusFilter,
-      tagIds: [],
-      hashtagIds: [],
+      tagIds: selectedTagIds,
+      hashtagIds: selectedHashtagIds,
       includeShared,
     },
     page,
@@ -174,7 +190,7 @@ function ContingutContent() {
 
       {/* Filtres bàsics */}
       <div className="mb-6 bg-white rounded-xl shadow-sm p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           {/* Cerca */}
           <input
             type="text"
@@ -213,6 +229,26 @@ function ContingutContent() {
               <option value="pending">Pendents d&apos;aprovació</option>
             </select>
           )}
+
+          {/* Botó filtres avançats */}
+          <button
+            onClick={openDrawer}
+            className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition-colors
+                       font-medium font-[family-name:var(--font-inter)]
+                       ${activeFilterCount > 0
+                         ? 'border-[#FEDD2C] bg-yellow-50 text-[var(--color-dark)]'
+                         : 'border-[var(--color-border)] text-[var(--color-dark)] hover:bg-gray-50'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+            </svg>
+            Filtres
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#F91248] rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
 
           {/* Botó crear */}
           {canEdit && (
@@ -307,6 +343,20 @@ function ContingutContent() {
         video={previewVideo}
         isOpen={!!previewVideo}
         onClose={() => setPreviewVideo(null)}
+      />
+
+      {/* Drawer de filtres avançats */}
+      <FilterDrawer
+        isOpen={isDrawerOpen}
+        onClose={closeDrawer}
+        selectedTagIds={selectedTagIds}
+        selectedHashtagIds={selectedHashtagIds}
+        selectedZoneId={selectedZoneId}
+        onTagsChange={(ids) => { setTagIds(ids); setPage(1); }}
+        onHashtagsChange={(ids) => { setHashtagIds(ids); setPage(1); }}
+        onZoneChange={(id) => { setZoneId(id); setPage(1); }}
+        onClearAll={() => { clearAdvancedFilters(); setPage(1); }}
+        centerId={centerId}
       />
     </AdminLayout>
   );

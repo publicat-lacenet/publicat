@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Modal from '@/app/components/ui/Modal';
+import FilterDrawer from '@/app/components/videos/FilterDrawer';
+import { useVideoFilters } from '@/hooks/useVideoFilters';
+import { useAuth } from '@/utils/supabase/useAuth';
 
 interface Video {
   id: string;
@@ -33,12 +36,27 @@ export default function AddVideosModal({
   onVideosAdded,
   existingVideoIds,
 }: AddVideosModalProps) {
+  const { centerId } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
+
+  const {
+    selectedTagIds,
+    selectedHashtagIds,
+    selectedZoneId,
+    activeFilterCount,
+    setTagIds,
+    setHashtagIds,
+    setZoneId,
+    clearAll: clearAdvancedFilters,
+    isDrawerOpen,
+    openDrawer,
+    closeDrawer,
+  } = useVideoFilters();
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -60,6 +78,17 @@ export default function AddVideosModal({
         params.append('type', 'announcement');
       }
 
+      // Advanced filters
+      if (selectedTagIds.length > 0) {
+        params.append('tagIds', selectedTagIds.join(','));
+      }
+      if (selectedHashtagIds.length > 0) {
+        params.append('hashtagIds', selectedHashtagIds.join(','));
+      }
+      if (selectedZoneId) {
+        params.append('zoneId', selectedZoneId);
+      }
+
       const res = await fetch(`/api/videos?${params.toString()}`);
       if (!res.ok) {
         const data = await res.json();
@@ -79,7 +108,8 @@ export default function AddVideosModal({
     } finally {
       setLoading(false);
     }
-  }, [search, playlistKind, existingVideoIds]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, playlistKind, existingVideoIds, selectedTagIds, selectedHashtagIds, selectedZoneId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -144,6 +174,7 @@ export default function AddVideosModal({
     setSelectedIds(new Set());
     setSearch('');
     setError(null);
+    clearAdvancedFilters();
     onClose();
   };
 
@@ -155,6 +186,7 @@ export default function AddVideosModal({
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -192,29 +224,47 @@ export default function AddVideosModal({
           </div>
         )}
 
-        {/* Search */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Cerca per títol..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 pl-10 border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-transparent"
-          />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--color-gray)]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        {/* Search + Filter button */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Cerca per títol..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-4 py-2 pl-10 border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-transparent"
             />
-          </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--color-gray)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <button
+            onClick={openDrawer}
+            className={`px-3 py-2 border rounded-lg flex items-center gap-1.5 transition-colors text-sm flex-shrink-0
+                       ${activeFilterCount > 0
+                         ? 'border-[#FEDD2C] bg-yellow-50 text-[var(--color-dark)]'
+                         : 'border-[var(--color-border)] text-[var(--color-gray)] hover:bg-gray-50'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+            </svg>
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#F91248] rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Error */}
@@ -329,6 +379,21 @@ export default function AddVideosModal({
         )}
       </div>
     </Modal>
+
+    {/* Drawer de filtres avançats */}
+    <FilterDrawer
+      isOpen={isDrawerOpen}
+      onClose={closeDrawer}
+      selectedTagIds={selectedTagIds}
+      selectedHashtagIds={selectedHashtagIds}
+      selectedZoneId={selectedZoneId}
+      onTagsChange={setTagIds}
+      onHashtagsChange={setHashtagIds}
+      onZoneChange={setZoneId}
+      onClearAll={clearAdvancedFilters}
+      centerId={centerId || null}
+    />
+    </>
   );
 }
 
