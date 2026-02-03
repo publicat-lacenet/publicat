@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { parseHashtagInput } from '@/lib/hashtags';
 
 // PATCH /api/videos/[id] - Actualitzar vídeo
 export async function PATCH(
@@ -168,11 +169,7 @@ export async function PATCH(
       await supabase.from('video_hashtags').delete().eq('video_id', id);
 
       if (hashtag_names) {
-        const hashtags = hashtag_names
-          .split(',')
-          .map((h: string) => h.trim().toLowerCase())
-          .filter((h: string) => h.startsWith('#'))
-          .map((h: string) => h.slice(1));
+        const hashtags = parseHashtagInput(hashtag_names);
 
         if (hashtags.length > 0) {
           // Obtenir hashtags existents

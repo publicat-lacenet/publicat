@@ -54,7 +54,7 @@ export default function TagFilterSelector({ selectedTagIds, onChange }: TagFilte
         <button
           key={tag.id}
           type="button"
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150
+          className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors duration-150
             ${selectedTagIds.includes(tag.id)
               ? 'bg-[#FEDD2C] text-[#111827] border border-[#FEDD2C]'
               : 'bg-[#F3F4F6] text-[#374151] border border-[#D1D5DB] hover:bg-gray-200'}

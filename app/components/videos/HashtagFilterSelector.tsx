@@ -64,7 +64,7 @@ export default function HashtagFilterSelector({ centerId, selectedHashtagIds, on
         <button
           key={hashtag.id}
           type="button"
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150
+          className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors duration-150
             ${selectedHashtagIds.includes(hashtag.id)
               ? 'bg-[#16AFAA] text-white border border-[#16AFAA]'
               : 'bg-[#F3F4F6] text-[#374151] border border-[#D1D5DB] hover:bg-gray-200'}

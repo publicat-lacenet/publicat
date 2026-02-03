@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractVimeoId } from '@/lib/vimeo/utils';
+import { parseHashtagInput } from '@/lib/hashtags';
 
 // GET /api/videos - Llistar vídeos amb filtres
 export async function GET(request: NextRequest) {
@@ -372,11 +373,7 @@ export async function POST(request: NextRequest) {
 
     // Processar hashtags
     if (hashtag_names) {
-      const hashtags = hashtag_names
-        .split(',')
-        .map((h: string) => h.trim().toLowerCase())
-        .filter((h: string) => h.startsWith('#'))
-        .map((h: string) => h.slice(1));
+      const hashtags = parseHashtagInput(hashtag_names);
 
       if (hashtags.length > 0) {
         // Obtenir hashtags existents

@@ -231,24 +231,38 @@ function ContingutContent() {
           )}
 
           {/* Botó filtres avançats */}
-          <button
-            onClick={openDrawer}
-            className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition-colors
-                       font-medium font-[family-name:var(--font-inter)]
-                       ${activeFilterCount > 0
-                         ? 'border-[#FEDD2C] bg-yellow-50 text-[var(--color-dark)]'
-                         : 'border-[var(--color-border)] text-[var(--color-dark)] hover:bg-gray-50'}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-            </svg>
-            Filtres
+          <div className="flex items-center gap-1">
+            <button
+              onClick={openDrawer}
+              className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition-colors
+                         font-medium font-[family-name:var(--font-inter)]
+                         ${activeFilterCount > 0
+                           ? 'border-[#FEDD2C] bg-yellow-50 text-[var(--color-dark)] rounded-r-none'
+                           : 'border-[var(--color-border)] text-[var(--color-dark)] hover:bg-gray-50'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+              </svg>
+              Filtres
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#F91248] rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
             {activeFilterCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#F91248] rounded-full">
-                {activeFilterCount}
-              </span>
+              <button
+                onClick={() => { clearAdvancedFilters(); setPage(1); }}
+                className="px-2 py-2 border border-l-0 border-[#FEDD2C] bg-yellow-50 rounded-lg rounded-l-none
+                         text-[var(--color-gray)] hover:text-[#F91248] transition-colors"
+                title="Netejar filtres"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
             )}
-          </button>
+          </div>
 
           {/* Botó crear */}
           {canEdit && (

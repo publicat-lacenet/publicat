@@ -5,6 +5,7 @@ import VideoUploader, { VimeoMetadata as UploadMetadata } from './VideoUploader'
 import TagSelector from './TagSelector';
 import HashtagInput from './HashtagInput';
 import { useAuth } from '@/utils/supabase/useAuth';
+import { parseHashtagInput, formatHashtagsForInput } from '@/lib/hashtags';
 
 interface VimeoMetadata {
   vimeo_id?: string;
@@ -65,11 +66,9 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       const videoTagIds = editVideo.video_tags?.map(vt => vt.tags.id) || [];
       setTagIds(videoTagIds);
       
-      // Carregar hashtags sense el símbol # per a l'input
-      const videoHashtags = editVideo.video_hashtags
-        ?.map(vh => vh.hashtags.name.replace(/^#/, '')) // Eliminar # inicial
-        .join(', ') || '';
-      setHashtags(videoHashtags);
+      // Carregar hashtags per a l'input
+      const hashtagNames = editVideo.video_hashtags?.map(vh => vh.hashtags.name) || [];
+      setHashtags(formatHashtagsForInput(hashtagNames));
     }
   }, [isEditMode, editVideo]);
 
@@ -138,12 +137,9 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setSubmitting(true);
 
     try {
-      // Processar hashtags: afegir # si no hi és
-      const processedHashtags = hashtags
-        .split(',')
-        .map(h => h.trim())
-        .filter(h => h.length > 0)
-        .map(h => h.startsWith('#') ? h : '#' + h)
+      // Processar hashtags amb parsing robust
+      const processedHashtags = parseHashtagInput(hashtags)
+        .map(h => '#' + h)
         .join(', ');
 
       const payload: Record<string, any> = {
