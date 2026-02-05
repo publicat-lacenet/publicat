@@ -10,12 +10,12 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Image
               src="/logo_videos.png"
-              alt="Logo PUBLI*CAT"
+              alt="Logo PUBLICAT"
               width={48}
               height={48}
             />
             <span className="text-xl font-semibold tracking-tight text-[#111827]">
-              PUBLI*CAT
+              PUBLICAT
             </span>
           </div>
 
@@ -36,7 +36,7 @@ export default function Home() {
                 PUBLICAT - Comunicant el futur
               </p>
               <h1 className="text-4xl font-bold tracking-tight text-[#111827] sm:text-5xl">
-                Projecte de periodisme digital per a centres educatius
+                Periodisme digital per a centres educatius
               </h1>
               <p className="max-w-xl text-base leading-relaxed text-[#4B5563]">
                 El projecte PUBLICAT proporciona estratègies i recursos per crear i difondre contingut en català, fomentant l’esperit crític i desenvolupant la pròpia opinió davant de les fake news i el nou panorama de manipulació informativa.
@@ -58,7 +58,7 @@ export default function Home() {
                   <div className="rounded-2xl bg-linear-to-br from-[#FEDD2C] to-[#FEDD2C]/60 p-6 shadow-lg">
                     <Image
                       src="/logo_videos.png"
-                      alt="Logo PUBLI*CAT"
+                      alt="Logo PUBLICAT"
                       width={120}
                       height={120}
                     />
@@ -67,7 +67,7 @@ export default function Home() {
 
                 <div className="space-y-5 text-center">
                   <h3 className="text-xl font-bold leading-tight text-[#111827]">
-                    PUBLI*CAT és una plataforma pensada per donar visibilitat a l&apos;aprenentatge dels centres.
+                    PUBLICAT és una plataforma pensada per donar visibilitat a l&apos;aprenentatge dels centres.
                   </h3>
 
                   <div className="space-y-4 text-left">
@@ -79,7 +79,7 @@ export default function Home() {
 
                     <div className="rounded-xl bg-[#F9FAFB] p-4">
                       <p className="text-sm leading-relaxed text-[#4B5563]">
-                        Amb una gestió senzilla i segura, PUBLI*CAT converteix el vídeo en una <span className="font-semibold text-[#16AFAA]">eina per compartir projectes</span>, fomentar la participació de l&apos;alumnat i impulsar la competència digital a tots els nivells.
+                        Amb una gestió senzilla i segura, PUBLICAT converteix el vídeo en una <span className="font-semibold text-[#16AFAA]">eina per compartir projectes</span>, fomentar la participació de l&apos;alumnat i impulsar la competència digital a tots els nivells.
                       </p>
                     </div>
                   </div>
@@ -94,53 +94,68 @@ export default function Home() {
           className="border-t border-[#E5E7EB] bg-white"
         >
           <div className="mx-auto max-w-6xl px-6 py-16">
-            <h2 className="mb-4 text-center text-3xl font-bold text-[#111827]">
-              Objectius de PUBLI*CAT
+            <h2 className="mb-10 text-center text-3xl font-bold text-[#111827]">
+              PUBLICAT (Visió pedagògica)
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-center text-sm text-[#4B5563]">
-              Donar als centres educatius una eina senzilla per gestionar
-              contingut audiovisual propi, fomentar la comunicació interna i
-              compartir projectes d’alumnat en espais visibles del centre.
-            </p>
 
-            <div className="grid gap-8 md:grid-cols-3">
-              <div className="rounded-2xl bg-[#F9FAFB] p-6 shadow-sm">
-                <div className="mb-3 inline-flex rounded-xl bg-[#FEDD2C]/30 p-2">
-                  <span className="text-lg">🎬</span>
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-[#111827]">
-                  Centralitzar vídeos
+            <div className="relative grid grid-cols-1 gap-3 md:grid-cols-2">
+              {/* LLENGUA CATALANA — top left */}
+              <div className="rounded-2xl bg-[#3ECDB0] p-7 text-white">
+                <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
+                  Llengua catalana
                 </h3>
-                <p className="text-sm text-[#4B5563]">
-                  Un únic espai per desar, catalogar i recuperar tots els vídeos
-                  educatius del centre, vinculats a matèries i projectes.
+                <p className="text-base leading-relaxed">
+                  Creació de continguts en català, desenvolupant l&apos;expressió oral i escrita, simulant contextos professionals en situacions pròximes i reals.
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-[#F9FAFB] p-6 shadow-sm">
-                <div className="mb-3 inline-flex rounded-xl bg-[#16AFAA]/20 p-2">
-                  <span className="text-lg">📺</span>
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-[#111827]">
-                  Llistes per pantalles
+              {/* PLA DIGITALITZACIÓ DE CENTRE — top right */}
+              <div className="rounded-2xl bg-[#F2D56A] p-7 text-white">
+                <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
+                  Pla digitalització de centre
                 </h3>
-                <p className="text-sm text-[#4B5563]">
-                  Crear playlists per al vestíbul, biblioteca o menjador amb
-                  contingut seleccionat i actualitzable fàcilment.
+                <p className="text-base leading-relaxed">
+                  Optimització i utilització dels recursos de la maleta digital per la producció de continguts en català i pel desenvolupament de la competència digital.
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-[#F9FAFB] p-6 shadow-sm">
-                <div className="mb-3 inline-flex rounded-xl bg-[#F91248]/15 p-2">
-                  <span className="text-lg">🔐</span>
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-[#111827]">
-                  Control d’accés
+              {/* ESPERIT CRÍTIC — bottom left */}
+              <div className="rounded-2xl bg-[#F07068] p-7 text-white">
+                <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
+                  Esperit crític
                 </h3>
-                <p className="text-sm text-[#4B5563]">
-                  Accés restringit a usuaris del centre i integració amb
-                  plataformes de vídeo com Vimeo per garantir la privadesa.
+                <p className="text-base leading-relaxed">
+                  Desenvolupar l&apos;esperit crític, creant oportunitats per conformar l&apos;opinió i el sentit comú davant les fake news i la manipulació informativa.
                 </p>
+              </div>
+
+              {/* IMPULS DELS PLANS D'ENTORN — bottom right */}
+              <div className="rounded-2xl bg-[#7B93D8] p-7 text-white">
+                <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
+                  Impuls dels plans d&apos;entorn
+                </h3>
+                <p className="text-base leading-relaxed">
+                  Vincular en un mateix programa centres educatius, ajuntaments, entitats locals i organitzacions culturals.
+                </p>
+              </div>
+
+              {/* Central gear "PER QUÈ?" */}
+              <div className="pointer-events-none absolute inset-0 hidden items-center justify-center md:flex">
+                <div className="relative flex h-32 w-32 items-center justify-center">
+                  <svg className="absolute h-32 w-32 text-[#374151] drop-shadow-xl" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64L19.43 12.97Z" />
+                  </svg>
+                  <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-[#374151]">
+                    <div className="text-center">
+                      <span className="block text-base font-extrabold leading-tight text-white">
+                        PER
+                      </span>
+                      <span className="block text-base font-extrabold leading-tight text-white">
+                        QUÈ?
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -149,11 +164,29 @@ export default function Home() {
         <footer
           className="border-t border-[#E5E7EB] bg-white text-sm text-[#6B7280]"
         >
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row">
-            <p>© {new Date().getFullYear()} PUBLI*CAT</p>
-            <p className="text-xs">
-              Plataforma pilot per a centres educatius · Desenvolupament intern
-            </p>
+          <div className="mx-auto max-w-6xl px-6 py-8">
+            <div className="flex flex-wrap items-center justify-center gap-8 mb-6">
+              <Image
+                src="/logo_lacenet.png"
+                alt="LaceNet"
+                width={180}
+                height={60}
+                className="h-14 w-auto object-contain"
+              />
+              <Image
+                src="/logo_gencat.png"
+                alt="Generalitat de Catalunya - Departament d'Educació i Formació Professional"
+                width={280}
+                height={60}
+                className="h-14 w-auto object-contain"
+              />
+            </div>
+            <div className="flex flex-col items-center justify-between gap-2 border-t border-[#E5E7EB] pt-4 md:flex-row">
+              <p>© {new Date().getFullYear()} PUBLICAT</p>
+              <p className="text-xs">
+                Plataforma pilot per a centres educatius · Desenvolupament intern
+              </p>
+            </div>
           </div>
         </footer>
       </main>

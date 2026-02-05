@@ -99,13 +99,42 @@ export async function GET(request: NextRequest) {
     }
 
     if (!currentPlaylist) {
-      // Buscar la playlist del dia actual
       const today = new Date();
+      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
       const dayOfWeek = today.getDay();
-      const dayName = WEEKDAY_NAMES[dayOfWeek];
 
-      // Per als caps de setmana, no hi ha playlist weekday
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      // Prioritat 2: schedule_overrides per la data d'avui
+      const { data: scheduleOverride } = await supabase
+        .from('schedule_overrides')
+        .select(`
+          playlist_id,
+          playlists (
+            id,
+            name,
+            kind,
+            is_active,
+            playlist_items (count)
+          )
+        `)
+        .eq('center_id', centerId)
+        .eq('date', todayStr)
+        .single();
+
+      if (scheduleOverride?.playlists && (scheduleOverride.playlists as any).is_active) {
+        const pl = scheduleOverride.playlists as any;
+        currentPlaylist = {
+          id: pl.id,
+          name: pl.name,
+          kind: pl.kind,
+          video_count: pl.playlist_items?.[0]?.count || 0,
+        };
+      }
+
+      // Prioritat 3: Weekday playlist (Dl-Dv) o fallback a Divendres (caps de setmana)
+      if (!currentPlaylist) {
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const dayName = isWeekend ? WEEKDAY_NAMES[5] : WEEKDAY_NAMES[dayOfWeek]; // Divendres per caps de setmana
+
         const { data: weekdayPlaylist } = await supabase
           .from('playlists')
           .select(`

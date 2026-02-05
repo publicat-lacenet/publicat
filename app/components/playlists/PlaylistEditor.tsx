@@ -20,6 +20,7 @@ import {
 import DraggableVideoItem, { PlaylistItem } from './DraggableVideoItem';
 import AddVideosModal from './AddVideosModal';
 import PlaylistFormModal from './PlaylistFormModal';
+import ScheduleCalendar from './ScheduleCalendar';
 import { useAuth } from '@/utils/supabase/useAuth';
 
 interface Playlist {
@@ -410,6 +411,24 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
             llista
           </p>
         </>
+      )}
+
+      {/* Schedule section for custom playlists */}
+      {playlist.kind === 'custom' && playlist.center_id && (role === 'admin_global' || role === 'editor_profe') && (
+        <div className="bg-white border border-[var(--color-border)] rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-[var(--color-dark)] font-[family-name:var(--font-montserrat)] mb-2">
+            Programació
+          </h2>
+          <p className="text-sm text-[var(--color-gray)] mb-4">
+            Selecciona els dies en què vols que aquesta llista substitueixi la llista del dia de la setmana.
+          </p>
+          <ScheduleCalendar
+            centerId={playlist.center_id}
+            playlistId={playlistId}
+            playlistName={playlist.name}
+            canEdit={userCanEdit}
+          />
+        </div>
       )}
 
       {/* Add videos modal */}
