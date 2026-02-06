@@ -365,6 +365,19 @@ function ContingutContent() {
         video={previewVideo}
         isOpen={!!previewVideo}
         onClose={() => setPreviewVideo(null)}
+        onApprove={role === 'editor_profe' ? (videoId) => {
+          const video = videos.find(v => v.id === videoId);
+          if (video) handleApprove(video);
+        } : undefined}
+        onReject={role === 'editor_profe' ? (videoId) => {
+          const video = videos.find(v => v.id === videoId);
+          if (video) handleDelete(video);
+        } : undefined}
+        showModerationActions={
+          role === 'editor_profe' &&
+          previewVideo?.status === 'pending_approval' &&
+          previewVideo?.centers?.id === centerId
+        }
       />
 
       {/* Drawer de filtres avançats */}

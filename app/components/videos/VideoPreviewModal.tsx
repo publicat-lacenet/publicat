@@ -10,11 +10,13 @@ interface Video {
   title: string;
   description: string | null;
   type: 'content' | 'announcement';
+  status?: string;
   vimeo_url: string;
   vimeo_hash?: string | null;
   duration_seconds: number | null;
   created_at: string;
   centers?: {
+    id?: string;
     name: string;
     zones?: {
       name: string;
@@ -100,6 +102,11 @@ export default function VideoPreviewModal({
             <div className="flex items-center gap-2">
               <Play className="w-6 h-6 text-[var(--color-secondary)]" />
               <h2 className="text-2xl font-bold text-[var(--color-dark)]">Previsualització de vídeo</h2>
+              {video.status === 'pending_approval' && (
+                <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm font-semibold">
+                  ⏳ Pendent d&apos;aprovació
+                </span>
+              )}
             </div>
             <button
               onClick={onClose}
