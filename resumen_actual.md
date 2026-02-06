@@ -111,7 +111,7 @@ documentacion/
 
 **Vinculación CLI:**
 ```bash
-npx supabase link --project-ref tvsafusrasfzubiujavk
+npx supabase link --project-ref <your-project-ref>
 ```
 
 ---
@@ -148,8 +148,11 @@ git push origin main
 
 **`.env.local` (local):**
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://tvsafu.....
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Veure .env.example per la llista completa de variables
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+VIMEO_ACCESS_TOKEN=your-vimeo-token
 ```
 
 **Vercel (producción):**
@@ -213,7 +216,7 @@ git push origin main            # Subir a GitHub
 
 - **Producción**: https://publicat-lovat.vercel.app
 - **GitHub**: https://github.com/publicat-lacenet/publicat
-- **Supabase**: https://supabase.com/dashboard/project/tvsafusrasfzubiujavk
+- **Supabase**: Veure dashboard del projecte
 - **Vercel**: Panel de deployments
 
 ---

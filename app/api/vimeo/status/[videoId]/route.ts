@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ videoId: string }> }
 ) {
+  // Verificar autenticació
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticat' }, { status: 401 });
+  }
+
   const { videoId } = await params;
-  
+
   try {
     const response = await fetch(`https://api.vimeo.com/videos/${videoId}`, {
       headers: {

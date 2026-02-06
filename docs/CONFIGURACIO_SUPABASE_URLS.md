@@ -7,7 +7,7 @@ Quan fas logout a Vercel, intenta redirigir a `http://localhost:3000/login` en l
 Configura les URLs de redirect al dashboard de Supabase:
 
 ### 1. Accedeix al Dashboard de Supabase
-https://app.supabase.com/project/tvsafusrasfzubiujavk
+https://app.supabase.com/project/<your-project-ref>
 
 ### 2. Configura les URLs de Redirect
 
@@ -31,7 +31,7 @@ https://*.vercel.app/**
 Assegura't que a Vercel tens configurada:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://tvsafusrasfzubiujavk.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<la_teva_anon_key>
 SUPABASE_SERVICE_ROLE_KEY=<la_teva_service_role_key>
 ```

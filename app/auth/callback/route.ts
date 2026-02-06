@@ -5,9 +5,15 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    const next = searchParams.get('next') ?? '/dashboard'
     const token_hash = searchParams.get('token_hash')
     const type = searchParams.get('type')
+
+    // Validar el paràmetre 'next' per evitar Open Redirect
+    // Només permetre paths relatius que comencin amb / (no // ni URLs externes)
+    let next = searchParams.get('next') ?? '/dashboard'
+    if (!next.startsWith('/') || next.startsWith('//')) {
+        next = '/dashboard'
+    }
 
     // Si es una invitación, redirigir a /auth/confirm con los parámetros
     if (type === 'invite' && token_hash) {
