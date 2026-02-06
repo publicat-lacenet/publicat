@@ -120,6 +120,13 @@ The connection string is already configured in `.env.local` under `DATABASE_URL`
 - `AppSidebar.tsx`: Dynamic sidebar that changes based on user role
 - `AppHeader.tsx`: Header with role indicator
 
+**Landing Components** (`app/components/landing/`):
+- `LandingVideoPlayer.tsx`: Embeddable video player for landing page (autoplay, muted, loop)
+
+**Display Components** (`app/components/display/`):
+- `VimeoPlayer.tsx`: Core Vimeo player wrapper with event handlers
+- `AnnouncementZone.tsx`: Displays announcement videos in display mode
+
 **Video Components** (`app/components/videos/`):
 - `VideoFormModal.tsx`: Reusable modal for create/edit video (handles both URL input and direct upload)
 - `VideoUploader.tsx`: Direct file upload to Vimeo with progress tracking
@@ -150,7 +157,13 @@ POST   /api/admin/users/[id]/resend-invite  # Resend invitation
 POST   /api/vimeo/validate      # Validate Vimeo URL
 POST   /api/vimeo/upload/ticket # Get Tus upload URL
 GET    /api/vimeo/status/[videoId] # Check processing status
+
+GET    /api/landing/playlist    # Get global playlist for landing (PUBLIC, no auth)
+POST   /api/playlists/[id]/copy # Copy global playlist to center
 ```
+
+**Public API (no authentication required):**
+- `/api/landing/playlist` - Returns global playlist videos for the landing page
 
 **Authentication pattern in API routes:**
 ```typescript
@@ -215,6 +228,11 @@ All database queries automatically respect RLS policies. The policies check:
 Example: An editor_profe can only see videos where:
 - `videos.center_id = user.center_id` OR
 - `videos.is_shared_with_other_centers = true`
+
+**Public (anon) access for landing page:**
+- Only videos in the global playlist are visible to anonymous users
+- Triple protection: must be in global playlist + shared + published
+- See `20260206190000_add_public_rls_for_landing.sql`
 
 ### 4. Next.js 16 Proxy Pattern
 
@@ -285,9 +303,11 @@ The same modal handles both create and edit modes by checking if an `initialVide
 - **Zona**: Geographic zone grouping multiple centers
 - **Tag**: Global, controlled vocabulary tag (managed by admins)
 - **Hashtag**: Center-specific, free-form tag
-- **Llista/Playlist**: Ordered collection of videos with different kinds (weekday, announcements, custom, global, landing)
+- **Llista/Playlist**: Ordered collection of videos with different kinds (weekday, announcements, custom, global)
+- **Llista Global**: Single predefined playlist visible on landing page. Only admin_global can edit. Editor_profe can copy to their center.
 - **Compartir**: Share video with other centers (cross-center visibility)
 - **Moderació**: Approval workflow for editor_alumne uploads
+- **Schedule Override**: Per-day playlist override for display screens (table: `schedule_overrides`)
 
 ## Documentation Structure
 
@@ -298,7 +318,7 @@ Comprehensive documentation in `docs/`:
 - `roles.md`: Role system details
 - `authentication.md`: Auth flow documentation
 - `vimeo-integration.md`: Vimeo integration guide
-- `milestones/`: Feature milestone specifications (M1, M2, M3a, M3b, M3c, M4)
+- `milestones/`: Feature milestone specifications (M1-M7)
 - `ui/`: UI design guidelines and component documentation
 
 **Important:** When working with database schema, always check `DB-AUDIT-REPORT.md` for the current state, including all applied migrations, RLS policies, triggers, and indexes.
@@ -330,21 +350,18 @@ Currently no automated test suite. Manual testing workflow:
 - ✅ M3b: Direct upload to Vimeo via Tus protocol
 - ✅ M3c: Moderation system for editor_alumne uploads
 - ✅ M4: Playlist management UI with @dnd-kit drag & drop
+- ✅ M6: Display mode with schedule overrides calendar
+- ✅ M7: Global playlist for landing page (public access)
 - ✅ **Database Audit (2026-01-19)**: Complete review of schema, RLS, triggers, and indexes
 
 **Database Status:**
-- ✅ 14 tables with proper RLS policies
-- ✅ 11 triggers for automation
-- ✅ 13 optimized indexes
-- ✅ 17 foreign keys with correct cascade rules
+- ✅ 14+ tables with proper RLS policies
+- ✅ Public RLS policies for landing page (anon access to global playlist only)
+- ✅ Triggers for automation (zone_id assignment, etc.)
 - ✅ All migrations applied and documented
 
 **In Progress / Next:**
 - 📡 M5: RSS feed integration (schema ready, UI pending)
-- 🖥️ M6: Display mode for TV screens (MVP Demo)
-
-**Pending Cleanup (to delete after verifying changes work):**
-- 🗑️ `app/visor/` folder - Old visor preview page. Post-login now redirects to `/pantalla/config` instead. Delete this folder once confirmed the new flow works correctly. (Added 2026-02-06)
 
 ## Quick Start for New Features
 
