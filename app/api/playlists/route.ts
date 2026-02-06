@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, is_student_editable, video_ids, is_global, center_id: bodyCenterId } = body;
+  const { name, is_student_editable, video_ids, center_id: bodyCenterId } = body;
 
   // Validacions
   if (!name || name.trim() === '') {
@@ -176,17 +176,13 @@ export async function POST(request: NextRequest) {
   // Determinar el centre
   let finalCenterId = userCenterId;
 
-  // Admin global pot crear llistes globals (sense centre) o per qualsevol centre
-  if (role === 'admin_global') {
-    if (is_global) {
-      finalCenterId = null;
-    } else if (bodyCenterId) {
-      finalCenterId = bodyCenterId;
-    }
+  // Admin global pot crear llistes per qualsevol centre
+  if (role === 'admin_global' && bodyCenterId) {
+    finalCenterId = bodyCenterId;
   }
 
   // Editor profe necessita centre
-  if (role === 'editor_profe' && !finalCenterId) {
+  if (!finalCenterId) {
     return NextResponse.json(
       { error: 'No s\'ha pogut determinar el centre' },
       { status: 400 }
@@ -195,12 +191,13 @@ export async function POST(request: NextRequest) {
 
   try {
     // Crear la llista
+    // Les noves llistes sempre són 'custom' (la llista global ja existeix i no es pot crear)
     const { data: playlist, error: playlistError } = await supabase
       .from('playlists')
       .insert({
         center_id: finalCenterId,
         name: name.trim(),
-        kind: is_global ? 'global' : 'custom',
+        kind: 'custom',
         is_deletable: true,
         is_student_editable: is_student_editable || false,
         created_by_user_id: user.id,

@@ -1,5 +1,6 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import Link from "next/link";
+import LandingVideoPlayer from "@/app/components/landing/LandingVideoPlayer";
 
 export default function Home() {
 
@@ -52,39 +53,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex-1">
-              <div className="relative mx-auto max-w-md rounded-3xl bg-white p-8 shadow-xl">
-                <div className="mb-6 flex justify-center">
-                  <div className="rounded-2xl bg-linear-to-br from-[#FEDD2C] to-[#FEDD2C]/60 p-6 shadow-lg">
-                    <Image
-                      src="/logo_videos.png"
-                      alt="Logo PUBLICAT"
-                      width={120}
-                      height={120}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-5 text-center">
-                  <h3 className="text-xl font-bold leading-tight text-[#111827]">
-                    PUBLICAT és una plataforma pensada per donar visibilitat a l&apos;aprenentatge dels centres.
-                  </h3>
-
-                  <div className="space-y-4 text-left">
-                    <div className="rounded-xl bg-[#F9FAFB] p-4">
-                      <p className="text-sm leading-relaxed text-[#4B5563]">
-                        <span className="font-semibold text-[#F91248]">Facilita la pujada i organització</span> de vídeos educatius, permet crear playlists per a pantalles del centre i reforça la comunicació interna.
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl bg-[#F9FAFB] p-4">
-                      <p className="text-sm leading-relaxed text-[#4B5563]">
-                        Amb una gestió senzilla i segura, PUBLICAT converteix el vídeo en una <span className="font-semibold text-[#16AFAA]">eina per compartir projectes</span>, fomentar la participació de l&apos;alumnat i impulsar la competència digital a tots els nivells.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="flex-1 group">
+              <LandingVideoPlayer />
             </div>
           </div>
         </section>

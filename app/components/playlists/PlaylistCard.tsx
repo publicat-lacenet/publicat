@@ -15,10 +15,6 @@ interface Playlist {
     id: string;
     name: string;
   };
-  created_by?: {
-    id: string;
-    full_name: string | null;
-  };
 }
 
 interface PlaylistCardProps {
@@ -172,12 +168,6 @@ export default function PlaylistCard({
           )}
         </div>
 
-        {/* Creator info for global playlists */}
-        {isGlobal && playlist.created_by?.full_name && (
-          <p className="text-xs text-[var(--color-gray)] mt-2">
-            Creada per: {playlist.created_by.full_name}
-          </p>
-        )}
       </div>
     </div>
   );

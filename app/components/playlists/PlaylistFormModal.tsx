@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Modal from '@/app/components/ui/Modal';
-import { useAuth } from '@/utils/supabase/useAuth';
 
 interface PlaylistFormModalProps {
   isOpen: boolean;
@@ -21,14 +20,12 @@ export default function PlaylistFormModal({
   onSuccess,
   initialData,
 }: PlaylistFormModalProps) {
-  const { role } = useAuth();
   const isEditing = !!initialData;
 
   const [name, setName] = useState(initialData?.name || '');
   const [isStudentEditable, setIsStudentEditable] = useState(
     initialData?.is_student_editable || false
   );
-  const [isGlobal, setIsGlobal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,11 +51,6 @@ export default function PlaylistFormModal({
         is_student_editable: isStudentEditable,
       };
 
-      // Only admin_global can create global playlists
-      if (!isEditing && role === 'admin_global' && isGlobal) {
-        body.is_global = true;
-      }
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -73,7 +65,6 @@ export default function PlaylistFormModal({
       // Reset form
       setName('');
       setIsStudentEditable(false);
-      setIsGlobal(false);
 
       onSuccess?.();
       onClose();
@@ -88,7 +79,6 @@ export default function PlaylistFormModal({
   const handleClose = () => {
     setName(initialData?.name || '');
     setIsStudentEditable(initialData?.is_student_editable || false);
-    setIsGlobal(false);
     setError(null);
     onClose();
   };
@@ -170,32 +160,6 @@ export default function PlaylistFormModal({
             </p>
           </div>
         </div>
-
-        {/* Global playlist checkbox (only for admin_global when creating) */}
-        {!isEditing && role === 'admin_global' && (
-          <div className="flex items-start gap-3 pt-2 border-t border-[var(--color-border)]">
-            <input
-              id="is-global"
-              type="checkbox"
-              checked={isGlobal}
-              onChange={(e) => setIsGlobal(e.target.checked)}
-              className="mt-1 w-4 h-4 text-[var(--color-secondary)] border-[var(--color-border)] rounded focus:ring-[var(--color-secondary)]"
-              disabled={loading}
-            />
-            <div>
-              <label
-                htmlFor="is-global"
-                className="text-sm font-medium text-[var(--color-dark)] cursor-pointer"
-              >
-                Llista global
-              </label>
-              <p className="text-xs text-[var(--color-gray)]">
-                Les llistes globals són visibles per tots els centres i es poden
-                copiar localment
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Helper text */}
         <p className="text-xs text-[var(--color-gray)]">

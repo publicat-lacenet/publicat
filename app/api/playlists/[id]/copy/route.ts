@@ -26,17 +26,23 @@ export async function POST(
     .single();
 
   const role = dbUser?.role || user.user_metadata?.role;
+  const userCenterId = dbUser?.center_id || user.user_metadata?.center_id;
 
-  // Només admin_global pot copiar llistes globals
-  if (role !== 'admin_global') {
+  // Només admin_global i editor_profe poden copiar llistes globals
+  if (role !== 'admin_global' && role !== 'editor_profe') {
     return NextResponse.json(
-      { error: 'Només l\'administrador global pot copiar llistes' },
+      { error: 'No tens permisos per copiar llistes' },
       { status: 403 }
     );
   }
 
   const body = await request.json();
-  const { center_id } = body;
+  let { center_id } = body;
+
+  // editor_profe només pot copiar al seu propi centre
+  if (role === 'editor_profe') {
+    center_id = userCenterId;
+  }
 
   if (!center_id) {
     return NextResponse.json(

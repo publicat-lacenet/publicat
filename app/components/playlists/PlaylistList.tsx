@@ -88,8 +88,29 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
   };
 
   const handleCopy = async (playlistId: string) => {
-    // TODO: Implement copy modal to select destination center
-    alert('Funcionalitat de còpia en desenvolupament');
+    if (!confirm('Vols copiar aquesta llista global al teu centre?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/playlists/${playlistId}/copy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), // center_id s'omple automàticament per editor_profe
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Error copiant la llista');
+      }
+
+      alert(data.message || 'Llista copiada correctament');
+      fetchPlaylists(); // Refresca la llista per mostrar la còpia
+    } catch (err: any) {
+      console.error('Error copying playlist:', err);
+      alert(err.message);
+    }
   };
 
   // Order for weekday playlists (only Monday to Friday)
@@ -313,16 +334,17 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
       {showGlobal && globalPlaylists.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold text-[var(--color-dark)] mb-3 font-[family-name:var(--font-montserrat)] flex items-center gap-2">
-            <span>🌍</span> Llistes Globals (Disponibles)
+            <span>🌍</span> Llista Global
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {globalPlaylists.map(playlist => (
               <PlaylistCard
                 key={playlist.id}
                 playlist={playlist}
-                onCopy={role === 'admin_global' ? handleCopy : undefined}
+                onEdit={role === 'admin_global' ? handleEdit : undefined}
+                onCopy={role === 'editor_profe' ? handleCopy : undefined}
                 isGlobal
-                canEdit={false}
+                canEdit={role === 'admin_global'}
                 canDelete={false}
               />
             ))}
@@ -338,7 +360,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
           <div className="bg-white border border-[var(--color-border)] rounded-xl p-8 text-center">
             <div className="text-4xl mb-3">🌍</div>
             <p className="text-[var(--color-gray)]">
-              No hi ha llistes globals disponibles
+              No hi ha llista global configurada
             </p>
           </div>
         )}

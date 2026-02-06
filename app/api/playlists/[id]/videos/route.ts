@@ -97,6 +97,33 @@ export async function POST(
     }
   }
 
+  // Validació especial per llista Global
+  if (playlist.kind === 'global') {
+    // Verificar que tots els vídeos estan compartits amb altres centres
+    const { data: videos, error: videosError } = await supabase
+      .from('videos')
+      .select('id, is_shared_with_other_centers, title')
+      .in('id', video_ids);
+
+    if (videosError) {
+      return NextResponse.json(
+        { error: 'Error al verificar els vídeos' },
+        { status: 500 }
+      );
+    }
+
+    const nonSharedVideos = videos?.filter(v => !v.is_shared_with_other_centers) || [];
+    if (nonSharedVideos.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'La llista global només accepta vídeos compartits amb altres centres',
+          invalid_videos: nonSharedVideos.map(v => v.title)
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   // Obtenir la posició màxima actual
   const { data: maxPositionData } = await supabase
     .from('playlist_items')
