@@ -8,10 +8,12 @@ interface UseVideoFiltersReturn {
   selectedTagIds: string[];
   selectedHashtagIds: string[];
   selectedZoneId: string | null;
+  selectedCenterId: string | null;
   activeFilterCount: number;
   setTagIds: (ids: string[]) => void;
   setHashtagIds: (ids: string[]) => void;
   setZoneId: (id: string | null) => void;
+  setCenterId: (id: string | null) => void;
   clearAll: () => void;
   isDrawerOpen: boolean;
   openDrawer: () => void;
@@ -22,11 +24,12 @@ export function useVideoFilters(_options?: UseVideoFiltersOptions): UseVideoFilt
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [selectedHashtagIds, setSelectedHashtagIds] = useState<string[]>([]);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [selectedCenterId, setSelectedCenterId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const activeFilterCount = useMemo(
-    () => selectedTagIds.length + selectedHashtagIds.length + (selectedZoneId ? 1 : 0),
-    [selectedTagIds, selectedHashtagIds, selectedZoneId]
+    () => selectedTagIds.length + selectedHashtagIds.length + (selectedZoneId ? 1 : 0) + (selectedCenterId ? 1 : 0),
+    [selectedTagIds, selectedHashtagIds, selectedZoneId, selectedCenterId]
   );
 
   const setTagIds = useCallback((ids: string[]) => {
@@ -41,10 +44,15 @@ export function useVideoFilters(_options?: UseVideoFiltersOptions): UseVideoFilt
     setSelectedZoneId(id);
   }, []);
 
+  const setCenterId = useCallback((id: string | null) => {
+    setSelectedCenterId(id);
+  }, []);
+
   const clearAll = useCallback(() => {
     setSelectedTagIds([]);
     setSelectedHashtagIds([]);
     setSelectedZoneId(null);
+    setSelectedCenterId(null);
   }, []);
 
   const openDrawer = useCallback(() => setIsDrawerOpen(true), []);
@@ -54,10 +62,12 @@ export function useVideoFilters(_options?: UseVideoFiltersOptions): UseVideoFilt
     selectedTagIds,
     selectedHashtagIds,
     selectedZoneId,
+    selectedCenterId,
     activeFilterCount,
     setTagIds,
     setHashtagIds,
     setZoneId,
+    setCenterId,
     clearAll,
     isDrawerOpen,
     openDrawer,

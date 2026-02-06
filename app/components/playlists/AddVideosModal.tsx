@@ -48,10 +48,12 @@ export default function AddVideosModal({
     selectedTagIds,
     selectedHashtagIds,
     selectedZoneId,
+    selectedCenterId,
     activeFilterCount,
     setTagIds,
     setHashtagIds,
     setZoneId,
+    setCenterId,
     clearAll: clearAdvancedFilters,
     isDrawerOpen,
     openDrawer,
@@ -401,11 +403,14 @@ export default function AddVideosModal({
       selectedTagIds={selectedTagIds}
       selectedHashtagIds={selectedHashtagIds}
       selectedZoneId={selectedZoneId}
+      selectedCenterId={selectedCenterId}
       onTagsChange={setTagIds}
       onHashtagsChange={setHashtagIds}
       onZoneChange={setZoneId}
+      onCenterChange={setCenterId}
       onClearAll={clearAdvancedFilters}
       centerId={centerId || null}
+      hideCenterFilter={true}
     />
     </>
   );

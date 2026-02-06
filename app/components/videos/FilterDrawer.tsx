@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import TagFilterSelector from './TagFilterSelector';
 import HashtagFilterSelector from './HashtagFilterSelector';
 import ZoneSelector from './ZoneSelector';
+import CenterSelector from './CenterSelector';
 
 interface FilterDrawerProps {
   isOpen: boolean;
@@ -11,12 +12,15 @@ interface FilterDrawerProps {
   selectedTagIds: string[];
   selectedHashtagIds: string[];
   selectedZoneId: string | null;
+  selectedCenterId: string | null;
   onTagsChange: (tagIds: string[]) => void;
   onHashtagsChange: (hashtagIds: string[]) => void;
   onZoneChange: (zoneId: string | null) => void;
+  onCenterChange: (centerId: string | null) => void;
   onClearAll: () => void;
   centerId: string | null;
   hideZoneFilter?: boolean;
+  hideCenterFilter?: boolean;
 }
 
 export default function FilterDrawer({
@@ -25,14 +29,17 @@ export default function FilterDrawer({
   selectedTagIds,
   selectedHashtagIds,
   selectedZoneId,
+  selectedCenterId,
   onTagsChange,
   onHashtagsChange,
   onZoneChange,
+  onCenterChange,
   onClearAll,
   centerId,
   hideZoneFilter,
+  hideCenterFilter,
 }: FilterDrawerProps) {
-  const activeCount = selectedTagIds.length + selectedHashtagIds.length + (selectedZoneId ? 1 : 0);
+  const activeCount = selectedTagIds.length + selectedHashtagIds.length + (selectedZoneId ? 1 : 0) + (selectedCenterId ? 1 : 0);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -119,6 +126,24 @@ export default function FilterDrawer({
               <ZoneSelector
                 selectedZoneId={selectedZoneId}
                 onChange={onZoneChange}
+              />
+            </div>
+          )}
+
+          {/* Centre */}
+          {!hideCenterFilter && (
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--color-dark)] mb-2 font-[family-name:var(--font-montserrat)]">
+                Centre
+                {selectedCenterId && (
+                  <span className="ml-2 text-xs font-normal text-[var(--color-gray)]">
+                    (1 seleccionat)
+                  </span>
+                )}
+              </h3>
+              <CenterSelector
+                selectedCenterId={selectedCenterId}
+                onChange={onCenterChange}
               />
             </div>
           )}

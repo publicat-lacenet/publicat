@@ -37,10 +37,12 @@ function ContingutContent() {
     selectedTagIds,
     selectedHashtagIds,
     selectedZoneId,
+    selectedCenterId,
     activeFilterCount,
     setTagIds,
     setHashtagIds,
     setZoneId,
+    setCenterId,
     clearAll: clearAdvancedFilters,
     isDrawerOpen,
     openDrawer,
@@ -58,16 +60,22 @@ function ContingutContent() {
   // Solo habilitar useVideos cuando tengamos centerId (evita llamadas prematuras)
   const shouldFetchVideos = !authLoading && !!centerId;
 
+  // Determinar si filtrar per centre específic
+  // Si l'usuari selecciona un centre al filtre, mostrem només vídeos d'aquell centre
+  // Si no, mostrem vídeos del seu centre (+ compartits si el checkbox està actiu)
+  const filterCenterId = selectedCenterId || centerId || null;
+  const filterIncludeShared = selectedCenterId ? false : includeShared;
+
   const { videos, loading, total, totalPages, refetch } = useVideos({
     filters: {
       search,
-      centerId: centerId || null,
+      centerId: filterCenterId,
       zoneId: selectedZoneId,
       type: typeFilter,
       status: statusFilter,
       tagIds: selectedTagIds,
       hashtagIds: selectedHashtagIds,
-      includeShared,
+      includeShared: filterIncludeShared,
     },
     page,
     limit: 24,
@@ -366,9 +374,11 @@ function ContingutContent() {
         selectedTagIds={selectedTagIds}
         selectedHashtagIds={selectedHashtagIds}
         selectedZoneId={selectedZoneId}
+        selectedCenterId={selectedCenterId}
         onTagsChange={(ids) => { setTagIds(ids); setPage(1); }}
         onHashtagsChange={(ids) => { setHashtagIds(ids); setPage(1); }}
         onZoneChange={(id) => { setZoneId(id); setPage(1); }}
+        onCenterChange={(id) => { setCenterId(id); setPage(1); }}
         onClearAll={() => { clearAdvancedFilters(); setPage(1); }}
         centerId={centerId}
       />
