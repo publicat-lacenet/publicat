@@ -228,6 +228,35 @@ export default function PantallaConfigPage() {
                 <PageHeader
                     title="Configuració de Pantalla"
                     description="Personalitza l'aparença de la pantalla de display"
+                    action={
+                        <Link
+                            href="/pantalla"
+                            target="_blank"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FEDD2C] hover:bg-yellow-400 text-gray-900 font-medium rounded-lg text-sm transition-colors shadow-sm"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                            </svg>
+                            Previsualitzar
+                        </Link>
+                    }
                 />
 
                 {/* Error/Success messages */}
@@ -359,22 +388,8 @@ export default function PantallaConfigPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="p-6 flex items-center justify-between bg-gray-50 rounded-b-xl">
-                        <Link
-                            href="/pantalla"
-                            target="_blank"
-                            className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                        >
-                            Obrir previsualització en nova pestanya
-                        </Link>
-
+                    <div className="p-6 flex items-center justify-end bg-gray-50 rounded-b-xl">
                         <div className="flex items-center gap-3">
-                            <Link
-                                href="/visor"
-                                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
-                            >
-                                Tornar
-                            </Link>
                             {isEditor && (
                                 <button
                                     onClick={handleSave}

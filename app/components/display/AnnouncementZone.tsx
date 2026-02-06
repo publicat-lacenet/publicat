@@ -117,11 +117,6 @@ export default function AnnouncementZone({
           />
         )}
       </div>
-
-      {/* Badge indicador */}
-      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white/80">
-        Anunci
-      </div>
     </div>
   );
 }

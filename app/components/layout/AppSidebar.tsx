@@ -17,7 +17,7 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-  { id: 'visor', icon: '📺', label: 'Visor', href: '/visor' },
+  { id: 'visor', icon: '📺', label: 'Visor', href: '/pantalla/config' },
   { id: 'contingut', icon: '📹', label: 'Contingut', href: '/contingut', roles: ['editor_profe', 'editor_alumne', 'admin_global'], showBadge: true },
   { id: 'llistes', icon: '📋', label: 'Llistes', href: '/llistes', roles: ['editor_profe', 'editor_alumne', 'admin_global'] },
   { id: 'rss', icon: '📡', label: 'RSS', href: '/rss', roles: ['editor_profe', 'admin_global'] },

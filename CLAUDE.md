@@ -343,6 +343,9 @@ Currently no automated test suite. Manual testing workflow:
 - 📡 M5: RSS feed integration (schema ready, UI pending)
 - 🖥️ M6: Display mode for TV screens (MVP Demo)
 
+**Pending Cleanup (to delete after verifying changes work):**
+- 🗑️ `app/visor/` folder - Old visor preview page. Post-login now redirects to `/pantalla/config` instead. Delete this folder once confirmed the new flow works correctly. (Added 2026-02-06)
+
 ## Quick Start for New Features
 
 1. Check if database schema changes are needed → create migration in `supabase/migrations/`
