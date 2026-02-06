@@ -1,10 +1,10 @@
 # Roadmap — Publicat
 
 **Data inicial:** 16 desembre 2025
-**Estat actual:** M3 completat (Sistema de Contingut complet)
-**Data actualització:** 19 gener 2026
-**Durada estimada total:** 13-14 setmanes (~3.5 mesos)
-**MVP demo-able:** M6 (Pantalla Principal)
+**Estat actual:** M6c completat + Revisió Seguretat completada
+**Data actualització:** 6 febrer 2026
+**Durada estimada total:** 15-16 setmanes (~4 mesos)
+**MVP demo-able:** M6 (Pantalla Principal) ✅ COMPLETAT
 
 ---
 
@@ -38,14 +38,23 @@ M3  ✅ Sistema de Contingut            [COMPLETAT - Gener 2026] [2.5 setmanes]
 M4  ✅ Llistes de Reproducció          [COMPLETAT - Gener 2026] [1.5 setmanes]
      └─> Playlist management + drag&drop ✅
 
-M5  🟢 Sistema RSS                     [1.5 setmanes] PENDENT
+M5  ✅ Sistema RSS                      [COMPLETAT - Febrer 2026]
      └─> Feeds + validació + rotació
 
-M6  🎯 Pantalla Principal (MVP)        [2 setmanes] DEMO - PENDENT
+M6  ✅ Pantalla Principal (MVP)         [COMPLETAT - Febrer 2026] 🎯 DEMO
      └─> 3 zones + Mode Display + Reproducció
 
-M7  🟢 Features Avançades              [2 setmanes] PENDENT
+M6b ✅ Filtre Avançat de Vídeos        [COMPLETAT - Febrer 2026]
+     └─> Drawer filtres (tags, hashtags, zones) a /contingut
+
+M6c ✅ Gestió Usuaris del Centre       [COMPLETAT - Febrer 2026]
+     └─> CRUD usuaris per Editor-profe (/usuaris)
+
+M7  ✅ Features Avançades              [COMPLETAT - Febrer 2026]
      └─> Calendari + Landing Playlist + Llistes Globals
+
+🔒  ✅ Revisió de Seguretat            [COMPLETAT - 6 Febrer 2026]
+     └─> Auditoria completa: RLS, Auth, Secrets, Vimeo, OWASP
 
 M8  🟢 Multi-tenant Avançat            [1.5 setmanes] PENDENT
      └─> Convidats + Compartició + Auditoria
@@ -509,11 +518,12 @@ Rebutjar → DELETE vídeo (botó eliminar)
 
 ---
 
-### **M5: Sistema RSS** 🟢
+### **M5: Sistema RSS** ✅ COMPLETAT
 
 **Objectiu:** Gestió de feeds RSS amb validació, caché i rotació automàtica.
 
 **Durada:** 1.5 setmanes
+**Data completació:** Febrer 2026
 
 **Entregables:**
 
@@ -562,12 +572,13 @@ Rebutjar → DELETE vídeo (botó eliminar)
 - Hook: `useRSSFeeds`
 
 **Criteris d'Acceptació:**
-- [ ] Validació de feed funciona en temps real
-- [ ] Feeds es guarden amb metadades
-- [ ] Background job actualitza feeds periòdicament
-- [ ] Errors gestionats (retry + desactivació automàtica)
-- [ ] Configuració de timings editable
-- [ ] Ordre de rotació modificable amb drag&drop
+- [x] Validació de feed funciona en temps real
+- [x] Feeds es guarden amb metadades
+- [x] Background job actualitza feeds periòdicament
+- [x] Errors gestionats (retry + desactivació automàtica)
+- [x] Configuració de timings editable
+- [x] Ordre de rotació modificable amb drag&drop
+- [x] Compactació de posicions de rotació en toggle/delete de feeds
 
 **Dependències:**
 - ✅ M1b completat (taules RSS)
@@ -577,11 +588,12 @@ Rebutjar → DELETE vídeo (botó eliminar)
 
 ---
 
-### **M6: Pantalla Principal (MVP)** 🎯 DEMO-ABLE
+### **M6: Pantalla Principal (MVP)** ✅ COMPLETAT
 
 **Objectiu:** Vista principal amb reproducció de vídeos, anuncis i RSS funcionant. Mode Display per TV.
 
 **Durada:** 2 setmanes
+**Data completació:** Febrer 2026
 
 **Importància:** Aquest és el milestone més important. Aquí tens un producte **funcionalment complet** i mostrable.
 
@@ -670,19 +682,21 @@ Rebutjar → DELETE vídeo (botó eliminar)
 - Hook: `useDisplayMode`
 
 **Criteris d'Acceptació:**
-- [ ] 3 zones visibles i funcionals
-- [ ] Reproductor principal reprodueix llista del dia
-- [ ] Selector de llista funciona
-- [ ] Zona anuncis reprodueix en loop
-- [ ] Zona RSS rota feeds automàticament
-- [ ] Mode Display funciona (fullscreen + autoplay)
-- [ ] Sessió Display persistent
-- [ ] Mode editor permet navegació
-- [ ] Botó fullscreen funciona
-- [ ] **Uptime Display mode:** >99% durant 48h contínues
-- [ ] **Temps càrrega pantalla:** <2s
-- [ ] **Errors JS:** 0 errors crítics en consola
-- [ ] **Reproducció vídeos:** >95% èxit (sense 404/403)
+- [x] 3 zones visibles i funcionals
+- [x] Reproductor principal reprodueix llista del dia
+- [x] Selector de llista funciona
+- [x] Zona anuncis reprodueix en loop
+- [x] Zona RSS rota feeds automàticament
+- [x] Mode Display funciona (fullscreen + autoplay)
+- [x] Sessió Display persistent
+- [x] Mode editor permet navegació
+- [x] Botó fullscreen funciona
+- [x] Loop de vídeo únic a playlist (Vimeo native loop)
+- [x] Fallback autoplay amb mute + botó "Activar àudio" quan browser bloqueja
+- [ ] **Uptime Display mode:** >99% durant 48h contínues (pendent validació)
+- [ ] **Temps càrrega pantalla:** <2s (pendent validació)
+- [ ] **Errors JS:** 0 errors crítics en consola (pendent validació)
+- [ ] **Reproducció vídeos:** >95% èxit (pendent validació)
 
 **Dependències:**
 - ✅ M3a completat (vídeos)
@@ -693,56 +707,241 @@ Rebutjar → DELETE vídeo (botó eliminar)
 
 ---
 
-### **M7: Features Avançades** 🟢
+### **M6b: Filtre Avançat de Vídeos** 🎯 SEGÜENT
 
-**Objectiu:** Calendari de llistes, Landing Playlist i Llistes Globals.
+**Objectiu:** Sistema de filtratge complet per tags globals i hashtags del centre, reutilitzable a `/contingut` i al modal "Afegir vídeos a la llista".
 
-**Durada:** 2 setmanes
+**Durada:** 1 setmana
 
 **Entregables:**
 
-**1. Calendari de Llistes (ScheduleOverride)**
-- Pàgina `/llistes/calendari`
-- Vista calendari (mes)
-- Click en dia → assignar llista
-- Guardar planificació
-- Lògica: Si dia té assignació → usa assignació, sinó → usa llista per defecte del dia
-- Afecta reproductor principal
+**1. Component `FilterDrawer` (drawer lateral dret)**
+- Panel que es desplega des de la dreta amb un botó "Filtrar"
+- Inclou tots els filtres de vídeos:
+  - Tags globals (selector múltiple amb badges)
+  - Hashtags del centre (selector múltiple amb badges)
+  - Zona (selector)
+  - Tipus (Content / Announcement)
+  - Estat (Tots / Publicats / Pendents)
+  - Checkbox "Incloure vídeos compartits d'altres centres"
+- Botó "Netejar filtres" per reinicialitzar
+- Comptador de filtres actius visible al botó d'obertura
+- Disseny responsive (drawer en mòbil, panel lateral en desktop)
 
-**2. Landing Playlist**
-- Pàgina `/admin/landing-playlist`
-- Llista única gestionada per Admin global
-- Només pot contenir vídeos amb `isSharedWithOtherCenters = true`
-- Drag & drop per reordenar
-- Afegir/eliminar vídeos
-- Si vídeo passa a `isShared = false` → es retira automàticament
+**2. Integració a `/contingut`**
+- Mantenir filtres existents a la part superior (cerca per títol, filtres ràpids)
+- Afegir botó "Filtrar" que obre el `FilterDrawer` amb tags i hashtags
+- Els filtres del drawer s'apliquen en combinació amb els existents
+- URL params per persistir filtres actius (deep-linking)
 
-**3. Llistes Globals (completar funcionalitat)**
-- Admin global crea llista global
-- Centres visualitzen i creen còpia local
-- Botó "Restaurar a versió global" (opcional)
+**3. Integració a `AddVideosModal` (Llistes de reproducció)**
+- Afegir botó "Filtrar" dins del modal d'afegir vídeos
+- Obre el `FilterDrawer` amb els mateixos filtres
+- Respecta restriccions existents (ex: llista Anuncis només mostra `type = announcement`)
+- Permet trobar vídeos ràpidament entre un catàleg gran
 
-**4. Millores UI**
-- Sidebar col·lapsable (només icones en mode compacte)
-- Animacions de transició amb framer-motion
-- Breadcrumbs per navegació (`Admin > Centres > Editar Centre X`)
-- Millores de responsive (funciona en tablet/móvil)
-- Feedback visual millorat (toasts, loading states)
-- Dark mode (opcional, baix prioritat)
+**4. API: Suport de filtres per tags/hashtags**
+- Verificar que `GET /api/videos` accepta paràmetres `tags[]` i `hashtags[]`
+- Filtrar via joins amb `video_tags` i `video_hashtags`
+- Combinar filtres amb AND (un vídeo ha de tenir TOTS els tags seleccionats)
+
+**5. Components**
+- `FilterDrawer` — Component drawer reutilitzable
+- `TagFilter` — Selector múltiple de tags globals
+- `HashtagFilter` — Selector múltiple de hashtags del centre
+- Hook: `useVideoFilters` — Gestió d'estat dels filtres
 
 **Criteris d'Acceptació:**
-- [ ] Calendari permet assignar llistes per data
-- [ ] Llista del dia respecta assignacions del calendari
-- [ ] Landing Playlist editable per Admin global
-- [ ] Landing Playlist respecta regla de `isShared = true`
-- [ ] Llistes globals completament funcionals
+- [ ] Drawer de filtres s'obre i tanca correctament
+- [ ] Filtrar per tags globals funciona a `/contingut`
+- [ ] Filtrar per hashtags del centre funciona a `/contingut`
+- [ ] Filtres combinats (tags + hashtags + zona + tipus) funcionen
+- [ ] `AddVideosModal` permet filtrar per tags i hashtags
+- [ ] Comptador de filtres actius visible
+- [ ] Netejar filtres reinicialitza tots els camps
+- [ ] URL params persisteixen filtres a `/contingut`
+
+**Dependències:**
+- ✅ M3a completat (tags, hashtags, filtres bàsics)
+- ✅ M4 completat (AddVideosModal)
+
+**Risc:** 🟢 Baix (funcionalitat UI sense canvis de schema)
+
+---
+
+### **M6c: Gestió d'Usuaris del Centre** 🟢
+
+**Objectiu:** Permetre que Editor-profe gestioni els usuaris (editor_profe, editor_alumne, display) del seu centre des de la pestanya `/usuaris`.
+
+**Durada:** 1 setmana
+
+**Entregables:**
+
+**1. Pàgina `/usuaris`**
+- Visible només per `editor_profe` i `admin_global`
+- Llistat d'usuaris del centre actual (taula)
+- Columnes: Nom, Email, Rol, Estat (actiu/inactiu), Data creació
+- Cerca per nom o email
+- Filtre per rol (editor_profe, editor_alumne, display)
+- Filtre per estat (actiu/inactiu)
+
+**2. Crear usuari del centre**
+- Formulari modal amb:
+  - Email (obligatori)
+  - Nom complet (obligatori)
+  - Rol: editor_profe, editor_alumne, display
+  - `center_id` assignat automàticament al centre del professor
+- Invitació per email automàtica (reutilitzar sistema M2)
+- Validació: email únic al sistema
+
+**3. Editar usuari del centre**
+- Modal d'edició amb:
+  - Nom complet
+  - Rol (canviable dins dels 3 rols permesos)
+  - Estat actiu/inactiu
+- Restricció: No pot canviar el seu propi rol
+- Restricció: No pot desactivar-se a ell mateix
+
+**4. Reenviar invitació**
+- Botó "Reenviar invitació" per usuaris pendents d'onboarding
+- Cooldown entre reenviaments (reutilitzar lògica M2)
+
+**5. Restriccions de seguretat**
+- Editor-profe NOMÉS veu i gestiona usuaris del seu centre
+- No pot deixar el centre sense cap editor_profe actiu (validació server-side)
+- No pot crear admin_global (només admin_global pot fer-ho)
+- Editor-profe pot crear altres editor_profe per al seu centre
+- API routes validen permisos server-side
+
+**6. API Routes**
+- `GET /api/center/users` — Llistat d'usuaris del centre
+- `POST /api/center/users` — Crear usuari al centre
+- `PATCH /api/center/users/[id]` — Editar usuari del centre
+- `POST /api/center/users/[id]/resend-invite` — Reenviar invitació
+
+**7. Components**
+- `CenterUserList` — Taula d'usuaris del centre
+- `CenterUserFormModal` — Modal crear/editar usuari
+- Hook: `useCenterUsers` — Gestió d'estat
+
+**Criteris d'Acceptació:**
+- [ ] Editor-profe veu `/usuaris` al sidebar
+- [ ] Pot crear usuaris editor_profe, editor_alumne i display del seu centre
+- [ ] Pot editar nom, rol i estat dels usuaris del centre
+- [ ] Pot reenviar invitació a usuaris pendents
+- [ ] No pot deixar el centre sense cap editor_profe actiu
+- [ ] No pot desactivar-se ni canviar-se el rol a ell mateix
+- [ ] Admin_global també pot accedir a `/usuaris` (veu usuaris del centre seleccionat)
+- [ ] Invitació per email s'envia correctament
+- [ ] RLS policies impedeixen accés a usuaris d'altres centres
+
+**Dependències:**
+- ✅ M2 completat (sistema d'invitació, UserForm base)
+- ✅ Taula `users` amb RLS (M1)
+
+**Risc:** 🟢 Baix (reutilitza patrons existents de M2)
+
+---
+
+### **M7: Features Avançades** 🟡 EN PROGRÉS
+
+**Objectiu:** Calendari de llistes i Llista Global a Landing Page.
+
+**Durada:** 1.5 setmanes
+
+**Entregables:**
+
+**1. Calendari de Llistes (ScheduleOverride)** ✅ COMPLETAT
+- Calendari integrat a l'editor de llistes `custom`
+- Click en dia → assignar/desassignar llista
+- Lògica: URL override → schedule_override → weekday playlist → Friday fallback
+
+**2. Llista Global a Landing Page** 🎯 EN PROGRÉS
+- **Decisió de disseny:** Landing Playlist i Llistes Globals s'unifiquen en una sola funcionalitat
+- Una única llista global (`kind: 'global'`) es mostra a la landing page
+- Reproductor 16:9 amb autoplay (muted) i loop infinit
+- Botó "Ampliar" per obrir a pantalla completa en nova pestanya
+- Només admin_global pot editar la llista global
+- Només pot contenir vídeos amb `is_shared_with_other_centers = true`
+- editor_profe pot copiar la llista global al seu centre
+- Veure: `docs/milestones/M7-llista-global-landing.md`
+
+**3. Millores UI** (opcional, baix prioritat)
+- Sidebar col·lapsable (només icones en mode compacte)
+- Animacions de transició amb framer-motion
+- Breadcrumbs per navegació
+- Dark mode
+
+**Criteris d'Acceptació:**
+- [x] Calendari permet assignar llistes per data
+- [x] Llista del dia respecta assignacions del calendari
+- [ ] Landing page mostra la llista global amb reproductor 16:9
+- [ ] Autoplay + loop infinit
+- [ ] Botó ampliar a pantalla completa
+- [ ] Validació: només vídeos compartits a la llista global
+- [ ] editor_profe pot copiar la llista global
 
 **Dependències:**
 - ✅ M4 completat (llistes)
 - ✅ M6 completat (pantalla principal)
-- ✅ Taula `schedule_overrides` (M1)
+- ✅ Taula `schedule_overrides` amb RLS
 
 **Risc:** 🟢 Baix
+
+---
+
+### **🔒 Revisió de Seguretat Completa** ✅ COMPLETAT
+
+**Objectiu:** Auditoria exhaustiva de seguretat del projecte en 5 fases.
+
+**Durada:** 1 dia (6 febrer 2026)
+
+**Fases Completades:**
+
+#### **Fase 1: Database & RLS** ✅
+- Auditoria de 20 taules amb RLS habilitat
+- **Vulnerabilitat crítica corregida:** Polítiques `users` permetien INSERT/DELETE a qualsevol usuari autenticat
+- Migració aplicada: `20260206200000_fix_users_rls_security.sql`
+
+#### **Fase 2: Autenticació i Autorització** ✅
+- Verificat patró de doble verificació (BD > metadata)
+- Tots els endpoints comproven rol des de taula `users`
+- Service role usat correctament per operacions admin
+- Investigat: Invitacions Supabase caduquen en 24h (tots els plans)
+
+#### **Fase 3: Gestió de Secrets** ✅
+- Creat `.env.example` complet amb totes les variables
+- Eliminat project-ref de documentació (`resumen_actual.md`, `CONFIGURACIO_SUPABASE_URLS.md`)
+- Renombrat SVG per eliminar identificadors sensibles
+- Actualitzat `.gitignore` per permetre `.env.example`
+
+#### **Fase 4: Integració Vimeo** ✅
+- Afegida autenticació a `/api/vimeo/status/[videoId]`
+- Verificat que token només s'usa server-side
+- Validació de mida i format de fitxers correcta
+
+#### **Fase 5: OWASP (XSS, CSRF, Open Redirect)** ✅
+- **Open Redirect corregit** a `/auth/callback` (validació paràmetre `next`)
+- **Security Headers afegits** a `next.config.ts`:
+  - `X-Frame-Options: SAMEORIGIN`
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- Verificat: Cap ús de `dangerouslySetInnerHTML` ni `eval()`
+- Verificat: Supabase usa queries parametritzades (no SQL injection)
+
+**Commits de Seguretat:**
+- `09aa7c8` - security: fix critical RLS vulnerabilities in users table
+- `e6e43ef` - security: comprehensive security audit fixes (Phases 3-5)
+
+**Fitxers Modificats:**
+- `supabase/migrations/20260206200000_fix_users_rls_security.sql`
+- `app/api/vimeo/status/[videoId]/route.ts`
+- `app/auth/callback/route.ts`
+- `next.config.ts`
+- `.env.example`
+- `.gitignore`
+- Documentació netejada de project-refs
 
 ---
 
@@ -769,13 +968,7 @@ Rebutjar → DELETE vídeo (botó eliminar)
 - Editor-profe pot activar/desactivar compartició
 - Landing Playlist pot incloure vídeos compartits
 
-**3. Usuaris del Centre (Editor-profe)**
-- Pàgina `/usuaris` (només Editor-profe)
-- Llistat d'usuaris del seu centre
-- Crear usuaris del centre (Editor-profe, Editor-alumne, Display)
-- Activar/desactivar usuaris
-- Reenviar invitació
-- Restricció: No pot deixar el centre sense cap Editor-profe actiu
+**3. ~~Usuaris del Centre (Editor-profe)~~** → Mogut a **M6c**
 
 **4. Auditoria i Supervisió**
 - Pàgina `/admin/auditoria`
@@ -794,7 +987,7 @@ Rebutjar → DELETE vídeo (botó eliminar)
 - [ ] Enllaços caduquen correctament
 - [ ] Convidats només veuen contingut publicat
 - [ ] Compartició intercentres funciona als filtres
-- [ ] Editor-profe pot gestionar usuaris del centre
+- [ ] ~~Editor-profe pot gestionar usuaris del centre~~ → M6c
 - [ ] Històric d'auditoria accessible
 
 **Dependències:**
@@ -806,7 +999,7 @@ Rebutjar → DELETE vídeo (botó eliminar)
 
 ---
 
-## 📅 Timeline Real (Actualitzat 19 Gener 2026)
+## 📅 Timeline Real (Actualitzat 2 Febrer 2026)
 
 ### **Estat Actual del Projecte**
 
@@ -820,17 +1013,24 @@ Rebutjar → DELETE vídeo (botó eliminar)
 | M3b: Direct Upload ✅ | 1 setmana | 5 | ✅ COMPLETAT | 12 Gener 2026 - NOVA |
 | M3c: Moderació ✅ | 0.5 setmanes | 5.5 | ✅ COMPLETAT | 12 Gener 2026 - Simplificada |
 | M4: Llistes ✅ | 1.5 setmanes | 7 | ✅ COMPLETAT | 19 Gener 2026 |
-| **M5: RSS** | 1.5 setmanes | **8.5** | 🔵 SEGÜENT | **Pendent** |
-| M6: Pantalla Principal 🎯 | 2 setmanes | **10.5** | 🎯 MVP DEMO | **Pendent** |
-| M7: Features Avançades | 2 setmanes | 12.5 | 🔵 PENDENT | - |
-| M8: Multi-tenant | 1.5 setmanes | **14** | 🔵 PENDENT | ← Complet |
+| M5: RSS ✅ | 1.5 setmanes | 8.5 | ✅ COMPLETAT | Febrer 2026 |
+| M6: Pantalla Principal ✅ | 2 setmanes | 10.5 | ✅ COMPLETAT | Febrer 2026 - 🎯 MVP DEMO |
+| M6b: Filtre Avançat ✅ | 1 setmana | 11.5 | ✅ COMPLETAT | Febrer 2026 |
+| M6c: Usuaris Centre ✅ | 1 setmana | 12.5 | ✅ COMPLETAT | Febrer 2026 |
+| M7: Features Avançades ✅ | 1.5 setmanes | 14 | ✅ COMPLETAT | Febrer 2026 |
+| 🔒 Revisió Seguretat ✅ | 0.5 setmanes | 14.5 | ✅ COMPLETAT | 6 Febrer 2026 |
+| M8: Multi-tenant | 1.5 setmanes | **16** | 🔵 PENDENT | ← Últim milestone |
 
-**Total estimat:** ~14 setmanes (~3.5 mesos)
-**Completat fins ara:** 7 setmanes (50%)
-**MVP Demo estimat:** Setmana 10.5 (final Març 2026)
-**Completat final estimat:** Setmana 14 (mitjans Abril 2026)
+**Total estimat:** ~16 setmanes (~4 mesos)
+**Completat fins ara:** 14.5 setmanes (90%)
+**MVP Demo:** ✅ Completat (Febrer 2026)
+**Revisió Seguretat:** ✅ Completada (6 Febrer 2026)
+**Completat final estimat:** Setmana 16 (Març 2026)
 
-**Nota:** M3 va durar 2.5 setmanes (en lloc de 2) degut a l'addició de M3b (Direct Upload)
+**Notes:**
+- M3 va durar 2.5 setmanes (en lloc de 2) degut a l'addició de M3b (Direct Upload)
+- M6b i M6c afegits el 2 Febrer 2026 (filtratge avançat i gestió usuaris)
+- Revisió de seguretat completa realitzada el 6 Febrer 2026 (5 fases)
 
 ---
 
@@ -877,21 +1077,37 @@ Aquest era el timeline inicial del projecte. S'ha substituït pel timeline real 
 - ✅ Validació en temps real
 - ⏳ Notificacions in-app (pendent futur)
 
-### **🔵 Demo 3: Llistes & RSS (M4-M5)** - PENDENT
-**Setmana 8.5** - Finals Febrer 2026 (estimat)
-- Playlists funcionals amb drag&drop
-- Feeds RSS mostrant-se amb rotació
-- Sistema de programació de llistes
+### **✅ Demo 3: Llistes & RSS (M4-M5)** - COMPLETAT
+**Setmana 8.5** - Febrer 2026
+- ✅ Playlists funcionals amb drag&drop
+- ✅ Feeds RSS mostrant-se amb rotació
+- ✅ Configuració de timings RSS per centre
 
-### **🎯 Demo 4: MVP Complet (M6)** - PENDENT
-**Setmana 10.5** - Finals Març 2026 (estimat) ← **MILESTONE CRÍTIC**
-- Pantalla principal amb 3 zones funcionant
-- Mode Display en TV real
-- Producte demo-able a stakeholders
+### **✅ Demo 4: MVP Complet (M6)** - COMPLETAT
+**Setmana 10.5** - Febrer 2026 ← **MILESTONE CRÍTIC ASSOLIT**
+- ✅ Pantalla principal amb 3 zones funcionant
+- ✅ Mode Display en TV real
+- ✅ Producte demo-able a stakeholders
+- ✅ Loop de vídeo únic + fallback autoplay amb mute
 
-### **🚀 Demo 5: Producte Complet (M8)** - PENDENT
-**Setmana 14** - Mitjans Abril 2026 (estimat)
-- Totes les funcionalitats implementades
+### **✅ Demo 5: UX Complet (M6b-M6c)** - COMPLETAT
+**Setmana 12.5** - Febrer 2026
+- ✅ Filtres avançats per tags i hashtags (drawer lateral)
+- ✅ Gestió d'usuaris del centre per Editor-profe
+- ✅ Calendari de llistes (schedule overrides)
+- ✅ Llista global a landing page
+
+### **✅ Demo 5.5: Seguretat (Auditoria)** - COMPLETAT
+**Setmana 14.5** - 6 Febrer 2026
+- ✅ Auditoria RLS completa
+- ✅ Correcció vulnerabilitats crítiques
+- ✅ Security headers implementats
+- ✅ Documentació de secrets actualitzada
+
+### **🚀 Demo 6: Producte Complet (M8)** - PENDENT
+**Setmana 16** - Març 2026 (estimat)
+- Convidats temporals
+- Auditoria i logs
 - Llest per producció
 
 ---
@@ -903,11 +1119,14 @@ Aquest era el timeline inicial del projecte. S'ha substituït pel timeline real 
 | ~~M1 s'allarga~~ | - | - | ✅ MITIGAT | M1 completat amb èxit |
 | **Vimeo API canvia** | 🟡 Mitjana | 🟡 Mitjà | 🔄 ACTIU | Abstraure en lib separada + tests |
 | **Upload grans fitxers lent** | 🟡 Mitjana | 🟢 Baix | 🔄 ACTIU | Tus protocol + retry + cancel·lació |
-| **RSS feeds malformats** | 🟡 Mitjana | 🟢 Baix | ⏳ PENDENT | Parser robust + gestió d'errors (M5) |
+| ~~RSS feeds malformats~~ | - | - | ✅ MITIGAT | Parser robust + gestió d'errors implementats (M5) |
 | **Supabase Realtime lent** | 🟢 Baixa | 🟡 Mitjà | ⏳ PENDENT | Polling fallback + caché (futur) |
-| **Sincronització 3 zones M6** | 🟡 Mitjana | 🟡 Mitjà | ⏳ PENDENT | Desenvolupar zones per separat primer |
+| ~~Sincronització 3 zones M6~~ | - | - | ✅ MITIGAT | Zones independents funcionant correctament |
 | ~~RLS policies incorrectes~~ | - | - | ✅ MITIGAT | Policies testejades i auditades (DB-AUDIT-REPORT.md) |
-| **Mode Display inestable** | 🟢 Baixa | 🟡 Mitjà | ⏳ PENDENT | Refresh automàtic + error recovery (M6) |
+| ~~Mode Display inestable~~ | - | - | ✅ MITIGAT | Autoplay fallback + loop single video + error recovery |
+| ~~Open Redirect~~ | - | - | ✅ MITIGAT | Validació paràmetre `next` a auth callback |
+| ~~Security Headers~~ | - | - | ✅ MITIGAT | Headers afegits a next.config.ts (6 Feb 2026) |
+| ~~Secrets exposats~~ | - | - | ✅ MITIGAT | Project-refs eliminats, .env.example documentat |
 
 ---
 
@@ -926,13 +1145,13 @@ Aquest era el timeline inicial del projecte. S'ha substituït pel timeline real 
 - [x] Filtres i cerca funcionals
 - [ ] UI de notificacions in-app (pendent futur)
 
-**M6 (MVP):** ⏳ PENDENT
-- [ ] Usuari Display pot veure pantalla en TV 24/7
-- [ ] Vídeos es reprodueixen automàticament
-- [ ] Anuncis roten en bucle
-- [ ] RSS mostra notícies actualitzades
-- [ ] Editor-profe pot gestionar tot el contingut
-- [ ] Sistema de moderació funcional
+**M6 (MVP):** ✅ COMPLETAT
+- [x] Usuari Display pot veure pantalla en TV 24/7
+- [x] Vídeos es reprodueixen automàticament
+- [x] Anuncis roten en bucle
+- [x] RSS mostra notícies actualitzades
+- [x] Editor-profe pot gestionar tot el contingut
+- [x] Sistema de moderació funcional
 
 **M8 (Complet):**
 - [ ] Multi-tenant complet (**5+ centres** actius)
@@ -976,35 +1195,26 @@ Aquest era el timeline inicial del projecte. S'ha substituït pel timeline real 
 
 ## 📝 Pròxims Passos Immediats
 
-### **Milestone M4: Llistes de Reproducció** ✅ COMPLETAT
+### **Milestone M8: Multi-tenant Avançat** 🎯 SEGÜENT
 
-**Implementat el 19 Gener 2026:**
-- Sistema complet de playlists amb @dnd-kit per drag&drop
-- 9 API routes per CRUD de playlists i items
-- 6 components React (PlaylistList, PlaylistCard, PlaylistEditor, DraggableVideoItem, AddVideosModal, PlaylistFormModal)
-- Pàgina `/llistes` amb llistat filtrable
-- Pàgina `/llistes/[id]/editar` amb editor drag & drop
-- Validació especial per llista Anuncis (només vídeos tipus announcement)
-- Permisos per rol (admin_global, editor_profe, editor_alumne)
-- Llistes globals creables per admin
+**Objectiu:** Convidats temporals, compartició intercentres i auditoria.
 
-### **Milestone M5: Sistema RSS** 🎯 SEGÜENT
+**Tasques pendents:**
+1. Sistema de convidats temporals (`guest_access_links`)
+2. Compartició intercentres millorada
+3. Pàgina d'auditoria amb logs d'accions
+4. Exportació CSV de logs
 
-**Objectiu:** Sistema de feeds RSS per mostrar notícies a la pantalla principal.
+### **Manteniment Continu**
 
-**Tasques:**
-1. Pàgina `/rss` per gestió de feeds
-2. API routes per CRUD de feeds RSS
-3. Sistema de polling per actualitzar contingut
-4. Parsing i validació de feeds
-5. Integració amb la pantalla principal (M6)
-
-**Durada estimada:** 1.5 setmanes
-**Data inici estimada:** 20 Gener 2026
-**Data finalització estimada:** Inici Febrer 2026
+**Tasques recurrents:**
+- Monitorització d'errors en producció
+- Validació de RLS amb nous rols/funcionalitats
+- Actualització de dependències de seguretat
+- Revisió periòdica de logs d'accés
 
 ---
 
-**Data d'actualització:** 19 gener 2026
-**Estat:** M4 completat (Llistes de Reproducció) - Preparat per començar M5
-**Progrés:** 50% del projecte total (7 de 14 setmanes)
+**Data d'actualització:** 6 febrer 2026
+**Estat:** Revisió de seguretat completada - M6b i M6c completats
+**Progrés:** 78% del projecte total (12.5 de 16 setmanes)
