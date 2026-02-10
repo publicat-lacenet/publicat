@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import VimeoPlayer from './VimeoPlayer';
+import VimeoPlayerUniversal from './VimeoPlayerUniversal';
 
 export interface DisplayVideo {
   id: string;
@@ -18,6 +19,7 @@ interface VideoZoneProps {
   showTitle?: boolean;
   titleDuration?: number;
   muted?: boolean;
+  useUniversalPlayer?: boolean;
   onVideoChange?: (index: number, video: DisplayVideo) => void;
   onPlaylistEnd?: () => void;
   onError?: (error: Error, video: DisplayVideo) => void;
@@ -30,6 +32,7 @@ export default function VideoZone({
   showTitle = true,
   titleDuration = 5000,
   muted = true,
+  useUniversalPlayer = false,
   onVideoChange,
   onPlaylistEnd,
   onError,
@@ -119,20 +122,37 @@ export default function VideoZone({
           isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
       >
-        <VimeoPlayer
-          key={currentVideo.id}
-          vimeoId={currentVideo.vimeo_id}
-          vimeoHash={currentVideo.vimeo_hash}
-          autoplay={true}
-          muted={muted}
-          loop={videos.length === 1}
-          controls={false}
-          background={false}
-          onEnded={handleVideoEnd}
-          onError={handleVideoError}
-          onAudioBlocked={onAudioBlocked}
-          className="w-full h-full"
-        />
+        {useUniversalPlayer ? (
+          <VimeoPlayerUniversal
+            key={currentVideo.id}
+            vimeoId={currentVideo.vimeo_id}
+            vimeoHash={currentVideo.vimeo_hash}
+            autoplay={true}
+            muted={muted}
+            loop={videos.length === 1}
+            controls={false}
+            background={false}
+            onEnded={handleVideoEnd}
+            onError={handleVideoError}
+            onAudioBlocked={onAudioBlocked}
+            className="w-full h-full"
+          />
+        ) : (
+          <VimeoPlayer
+            key={currentVideo.id}
+            vimeoId={currentVideo.vimeo_id}
+            vimeoHash={currentVideo.vimeo_hash}
+            autoplay={true}
+            muted={muted}
+            loop={videos.length === 1}
+            controls={false}
+            background={false}
+            onEnded={handleVideoEnd}
+            onError={handleVideoError}
+            onAudioBlocked={onAudioBlocked}
+            className="w-full h-full"
+          />
+        )}
       </div>
 
       {/* Title Overlay */}

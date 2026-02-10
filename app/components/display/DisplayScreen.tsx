@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DisplayLayout from './DisplayLayout';
 import DisplayHeader from './DisplayHeader';
 import VideoZone, { DisplayVideo } from './VideoZone';
@@ -53,6 +54,8 @@ export default function DisplayScreen({
   embedded = false,
 }: DisplayScreenProps) {
   const sizeClass = embedded ? 'w-full h-full' : 'w-screen h-screen';
+  const searchParams = useSearchParams();
+  const useUniversalPlayer = searchParams.get('player') === 'universal';
   const [config, setConfig] = useState<DisplayConfig | null>(null);
   const [mainVideos, setMainVideos] = useState<DisplayVideo[]>([]);
   const [announcementVideos, setAnnouncementVideos] = useState<AnnouncementVideo[]>([]);
@@ -260,6 +263,7 @@ export default function DisplayScreen({
             showTitle={true}
             titleDuration={5000}
             muted={embedded || !audioEnabled}
+            useUniversalPlayer={useUniversalPlayer}
             onAudioBlocked={() => {
               // Browser blocked autoplay with sound, fallback to muted
               setAudioBlocked(true);

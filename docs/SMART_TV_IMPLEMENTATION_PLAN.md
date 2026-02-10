@@ -1,7 +1,8 @@
 # Pla d'Implementació: Compatibilitat Smart TV
 
 **Data**: 2026-02-06
-**Estat**: Pendent d'implementació
+**Implementat**: 2026-02-10
+**Estat**: Implementat
 
 ## Context
 
@@ -188,8 +189,28 @@ L'iframe de Vimeo envia events via postMessage. Si no funciona bé:
 1. Usar polling amb `getDuration` (més complex)
 2. O simplement usar timer basat en duració coneguda del vídeo
 
-## Comanda per Començar
+## Ús
 
+### Mode per defecte (SDK `@vimeo/player`)
 ```
-Implementa el pla de Smart TV segons docs/SMART_TV_IMPLEMENTATION_PLAN.md
+/pantalla
 ```
+Utilitza el SDK JavaScript de Vimeo. Funciona bé en navegadors d'escriptori i la majoria de dispositius moderns.
+
+### Mode universal (iframe directe) — per Smart TVs
+```
+/pantalla?player=universal
+```
+Utilitza un iframe directe sense SDK. Més compatible amb navegadors de Smart TVs (webOS/LG, Tizen/Samsung, etc.).
+
+### Tornar a la versió anterior
+Simplement treure `?player=universal` de la URL. El comportament per defecte no ha canviat.
+
+## Detalls d'Implementació (2026-02-10)
+
+### Fitxers creats
+- `app/components/display/VimeoPlayerUniversal.tsx` — Reproductor basat en iframe amb API postMessage de Vimeo per detectar events (`ready`, `ended`). Subscriu als events via `postMessage({ method: 'addEventListener', value: 'ended' })`.
+
+### Fitxers modificats
+- `app/components/display/VideoZone.tsx` — Nova prop `useUniversalPlayer` per seleccionar entre `VimeoPlayer` (SDK) i `VimeoPlayerUniversal` (iframe).
+- `app/components/display/DisplayScreen.tsx` — Llegeix `?player=universal` via `useSearchParams()` i el passa a `VideoZone`.
