@@ -117,8 +117,8 @@ The connection string is already configured in `.env.local` under `DATABASE_URL`
 
 **Layout Components** (`app/components/layout/`):
 - `AdminLayout.tsx`: Admin panel wrapper with tabs
-- `AppSidebar.tsx`: Dynamic sidebar that changes based on user role
-- `AppHeader.tsx`: Header with role indicator
+- `AppSidebar.tsx`: Dynamic sidebar that changes based on user role. Order: Contingut → Llistes → Visor → RSS → Usuaris → Admin. Uses Lucide icons.
+- `AppHeader.tsx`: Header with role indicator and logout button (no search bar)
 
 **Landing Components** (`app/components/landing/`):
 - `LandingVideoPlayer.tsx`: Embeddable video player for landing page (autoplay, muted, loop)
@@ -191,6 +191,7 @@ if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   - Text: `#111827`
 - **Typography**: Montserrat (headings), Inter (body)
 - **Responsive design**: Mobile-first with responsive grids
+- **Icons**: `lucide-react` (^0.562.0) — all UI icons use Lucide components, no emojis
 - **Style guide**: See `docs/ui/guia-estil.md` for detailed design guidelines
 
 ## Critical Implementation Patterns
