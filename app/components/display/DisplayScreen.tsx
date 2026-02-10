@@ -55,7 +55,7 @@ export default function DisplayScreen({
 }: DisplayScreenProps) {
   const sizeClass = embedded ? 'w-full h-full' : 'w-screen h-screen';
   const searchParams = useSearchParams();
-  const useUniversalPlayer = searchParams.get('player') === 'universal';
+  const useUniversalPlayer = searchParams.get('player') !== 'sdk';
   const [config, setConfig] = useState<DisplayConfig | null>(null);
   const [mainVideos, setMainVideos] = useState<DisplayVideo[]>([]);
   const [announcementVideos, setAnnouncementVideos] = useState<AnnouncementVideo[]>([]);

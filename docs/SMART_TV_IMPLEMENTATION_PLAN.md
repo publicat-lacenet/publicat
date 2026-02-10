@@ -191,20 +191,17 @@ L'iframe de Vimeo envia events via postMessage. Si no funciona bé:
 
 ## Ús
 
-### Mode per defecte (SDK `@vimeo/player`)
+### Mode per defecte (iframe directe — universal)
 ```
 /pantalla
 ```
-Utilitza el SDK JavaScript de Vimeo. Funciona bé en navegadors d'escriptori i la majoria de dispositius moderns.
-
-### Mode universal (iframe directe) — per Smart TVs
-```
-/pantalla?player=universal
-```
 Utilitza un iframe directe sense SDK. Més compatible amb navegadors de Smart TVs (webOS/LG, Tizen/Samsung, etc.).
 
-### Tornar a la versió anterior
-Simplement treure `?player=universal` de la URL. El comportament per defecte no ha canviat.
+### Mode SDK (fallback)
+```
+/pantalla?player=sdk
+```
+Utilitza el SDK JavaScript `@vimeo/player`. Disponible com a fallback si el mode universal dóna problemes en algun cas concret.
 
 ## Detalls d'Implementació (2026-02-10)
 
