@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Pencil, Power } from 'lucide-react';
 import Button from '@/app/components/ui/button';
 import Modal from '@/app/components/ui/Modal';
 
@@ -215,14 +216,14 @@ export default function CentresTab() {
                         className="p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors"
                         title="Editar"
                       >
-                        ✏️
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleActive(center)}
-                        className="p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors"
+                        className={`p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors ${center.is_active ? 'text-green-600' : 'text-[var(--color-gray)]'}`}
                         title={center.is_active ? 'Desactivar' : 'Activar'}
                       >
-                        {center.is_active ? '🔴' : '⚪'}
+                        <Power className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Video, Clock, Megaphone, Globe, Play, Pencil, Trash2, X } from 'lucide-react';
 import { extractVimeoId } from '@/lib/vimeo/utils';
 
 interface Video {
@@ -106,16 +107,16 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">
-            📹
+          <div className="w-full h-full flex items-center justify-center">
+            <Video className="w-10 h-10 text-[var(--color-gray)]" />
           </div>
         )}
         
         {/* Badges */}
         <div className="absolute top-2 right-2 flex gap-1">
           {video.status === 'pending_approval' && (
-            <span className="px-2 py-1 rounded-md text-xs font-semibold bg-yellow-500 text-white">
-              ⏳ Pendent
+            <span className="px-2 py-1 rounded-md text-xs font-semibold bg-yellow-500 text-white inline-flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Pendent
             </span>
           )}
           <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
@@ -123,11 +124,11 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
               ? 'bg-white/95 text-[var(--color-accent)]'
               : 'bg-white/95 text-[var(--color-secondary)]'
           }`}>
-            {video.type === 'announcement' ? '🎬 Anunci' : '📹 Contingut'}
+            {video.type === 'announcement' ? <><Megaphone className="w-3 h-3 inline" /> Anunci</> : <><Video className="w-3 h-3 inline" /> Contingut</>}
           </span>
           {video.is_shared_with_other_centers && (
-            <span className="px-2 py-1 rounded-md text-xs font-semibold bg-[var(--color-secondary)] text-white">
-              🌐 Compartit
+            <span className="px-2 py-1 rounded-md text-xs font-semibold bg-[var(--color-secondary)] text-white inline-flex items-center gap-1">
+              <Globe className="w-3 h-3" /> Compartit
             </span>
           )}
         </div>
@@ -200,7 +201,7 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
                 onClick={() => onPreview(video)}
                 className={`${onApprove && video.status === 'pending_approval' && isOwnCenterVideo ? '' : 'flex-1'} px-3 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1`}
               >
-                ▶️ Veure
+                <Play className="w-4 h-4" /> Veure
               </button>
             )}
 
@@ -210,7 +211,7 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
                 onClick={() => onEdit(video)}
                 className="px-3 py-2 bg-[var(--color-light-bg)] hover:bg-[var(--color-secondary)] hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"
               >
-                ✏️
+                <Pencil className="w-4 h-4" />
               </button>
             )}
 
@@ -221,7 +222,7 @@ export default function VideoCard({ video, onEdit, onDelete, onPreview, onApprov
                 className="px-3 py-2 bg-[var(--color-light-bg)] hover:bg-red-500 hover:text-white text-[var(--color-dark)] rounded-lg text-sm font-medium transition-colors"
                 title={video.status === 'pending_approval' ? 'Rebutjar vídeo' : 'Eliminar vídeo'}
               >
-                {video.status === 'pending_approval' ? '✕' : '🗑️'}
+                {video.status === 'pending_approval' ? <X className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
               </button>
             )}
           </div>

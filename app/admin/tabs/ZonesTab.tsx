@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Search, CheckCircle, XCircle, Pencil, Power, Trash2 } from 'lucide-react';
 import Modal from '@/app/components/ui/Modal';
 import Button from '@/app/components/ui/button';
 
@@ -157,7 +158,7 @@ export default function ZonesTab() {
                          font-[family-name:var(--font-inter)] text-sm"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-gray)]">
-              🔍
+              <Search className="w-4 h-4" />
             </div>
           </div>
         </div>
@@ -209,7 +210,7 @@ export default function ZonesTab() {
                         }
                       `}
                     >
-                      {zone.is_active ? '✅ Activa' : '🔴 Inactiva'}
+                      {zone.is_active ? <><CheckCircle className="w-3.5 h-3.5" /> Activa</> : <><XCircle className="w-3.5 h-3.5" /> Inactiva</>}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -219,21 +220,21 @@ export default function ZonesTab() {
                         className="p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors"
                         title="Editar"
                       >
-                        ✏️
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleActive(zone)}
-                        className="p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors"
+                        className={`p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors ${zone.is_active ? 'text-green-600' : 'text-[var(--color-gray)]'}`}
                         title={zone.is_active ? 'Desactivar' : 'Activar'}
                       >
-                        {zone.is_active ? '🔴' : '✅'}
+                        <Power className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(zone)}
                         className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                         title="Eliminar"
                       >
-                        🗑️
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

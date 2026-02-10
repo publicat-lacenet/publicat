@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/utils/supabase/useAuth';
+import { AlertTriangle, LogOut } from 'lucide-react';
 
 const ROLE_LABELS: Record<string, string> = {
   admin_global: 'Admin Global',
@@ -27,7 +28,8 @@ export default function AppHeader() {
       {error && (
         <div className="fixed top-0 left-0 right-0 bg-red-50 border-b-2 border-red-300 px-6 py-2 z-[60] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-red-600 text-sm font-medium">⚠️ {error}</span>
+            <AlertTriangle className="w-4 h-4 text-red-600" />
+            <span className="text-red-600 text-sm font-medium">{error}</span>
           </div>
           <div className="flex gap-2">
             <button
@@ -63,21 +65,8 @@ export default function AppHeader() {
           </span>
         </Link>
 
-        {/* Search Bar (placeholder) */}
-        <div className="flex-1 max-w-md mx-8">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Cerca... (Cmd+K)"
-              className="w-full px-4 py-2 pr-10 border border-[var(--color-border)] rounded-lg 
-                         focus:outline-none focus:border-[var(--color-secondary)] 
-                         font-[family-name:var(--font-inter)] text-sm"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-gray)]">
-              🔍
-            </div>
-          </div>
-        </div>
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Right side: User + Logout */}
         <div className="flex items-center gap-4">
@@ -86,7 +75,7 @@ export default function AppHeader() {
             <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-[var(--color-dark)] font-semibold">
               {user?.email?.[0].toUpperCase() || '?'}
             </div>
-            <span 
+            <span
               className="text-sm font-[family-name:var(--font-inter)] text-[var(--color-dark)]"
               suppressHydrationWarning
             >
@@ -107,9 +96,10 @@ export default function AppHeader() {
           >
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium bg-[#16AFAA] text-white rounded-full hover:bg-[#14998F] transition-colors font-[family-name:var(--font-inter)]"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--color-gray)] hover:text-[var(--color-dark)] transition-colors font-[family-name:var(--font-inter)]"
             >
-              Sortir
+              <LogOut className="w-4 h-4" />
+              <span>Sortir</span>
             </button>
           </form>
         </div>

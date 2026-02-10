@@ -1,6 +1,6 @@
 'use client';
 
-import { X, CheckCircle, XCircle, User, Clock, Play } from 'lucide-react';
+import { X, CheckCircle, XCircle, User, Clock, Play, Megaphone, Video, MapPin } from 'lucide-react';
 import { extractVimeoId } from '@/lib/vimeo/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ca } from 'date-fns/locale';
@@ -103,8 +103,8 @@ export default function VideoPreviewModal({
               <Play className="w-6 h-6 text-[var(--color-secondary)]" />
               <h2 className="text-2xl font-bold text-[var(--color-dark)]">Previsualització de vídeo</h2>
               {video.status === 'pending_approval' && (
-                <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm font-semibold">
-                  ⏳ Pendent d&apos;aprovació
+                <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm font-semibold inline-flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" /> Pendent d&apos;aprovació
                 </span>
               )}
             </div>
@@ -146,8 +146,8 @@ export default function VideoPreviewModal({
                 <span>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true, locale: ca })}</span>
               </div>
               {video.duration_seconds && (
-                <span className="px-2 py-1 bg-gray-100 rounded text-xs font-semibold">
-                  ⏱️ {formatDuration(video.duration_seconds)}
+                <span className="px-2 py-1 bg-gray-100 rounded text-xs font-semibold inline-flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" /> {formatDuration(video.duration_seconds)}
                 </span>
               )}
               <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -155,14 +155,14 @@ export default function VideoPreviewModal({
                   ? 'bg-[var(--color-accent)] text-white'
                   : 'bg-[var(--color-secondary)] text-white'
               }`}>
-                {video.type === 'announcement' ? '🎬 Anunci' : '📹 Contingut'}
+                {video.type === 'announcement' ? <><Megaphone className="w-3.5 h-3.5 inline" /> Anunci</> : <><Video className="w-3.5 h-3.5 inline" /> Contingut</>}
               </span>
             </div>
 
             {/* Center and Zone */}
             {video.centers && (
-              <div className="text-sm text-gray-600">
-                📍 {video.centers.name} · {video.centers.zones?.name || 'Zona desconeguda'}
+              <div className="text-sm text-gray-600 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" /> {video.centers.name} · {video.centers.zones?.name || 'Zona desconeguda'}
               </div>
             )}
 

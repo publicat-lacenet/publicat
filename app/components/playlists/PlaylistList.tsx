@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Calendar, Megaphone, LayoutList, Globe } from 'lucide-react';
 import PlaylistCard, { Playlist } from './PlaylistCard';
 import { useAuth } from '@/utils/supabase/useAuth';
 
@@ -220,7 +221,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
       {showWeekday && weekdayPlaylists.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold text-[var(--color-dark)] mb-3 font-[family-name:var(--font-montserrat)] flex items-center gap-2">
-            <span>📅</span> Llistes Predefinides (Dies de la setmana)
+            <Calendar className="w-5 h-5" /> Llistes Predefinides (Dies de la setmana)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {weekdayPlaylists.map(playlist => (
@@ -240,7 +241,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
       {showWeekday && announcementsPlaylists.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold text-[var(--color-dark)] mb-3 font-[family-name:var(--font-montserrat)] flex items-center gap-2">
-            <span>📢</span> Llista d&apos;Anuncis
+            <Megaphone className="w-5 h-5" /> Llista d&apos;Anuncis
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {announcementsPlaylists.map(playlist => (
@@ -261,7 +262,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-[var(--color-dark)] font-[family-name:var(--font-montserrat)] flex items-center gap-2">
-              <span>📋</span> Llistes Personalitzades
+              <LayoutList className="w-5 h-5" /> Llistes Personalitzades
             </h2>
             {canCreatePlaylist && onCreatePlaylist && (
               <button
@@ -275,7 +276,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
 
           {customPlaylists.length === 0 ? (
             <div className="bg-white border border-[var(--color-border)] rounded-xl p-8 text-center">
-              <div className="text-4xl mb-3">📋</div>
+              <LayoutList className="w-10 h-10 text-[var(--color-gray)] mx-auto mb-3" />
               <p className="text-[var(--color-gray)] mb-4">
                 Encara no tens llistes personalitzades
               </p>
@@ -334,7 +335,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
       {showGlobal && globalPlaylists.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold text-[var(--color-dark)] mb-3 font-[family-name:var(--font-montserrat)] flex items-center gap-2">
-            <span>🌍</span> Llista Global
+            <Globe className="w-5 h-5" /> Llista Global
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {globalPlaylists.map(playlist => (
@@ -358,7 +359,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
         filter === 'global' &&
         globalPlaylists.length === 0 && (
           <div className="bg-white border border-[var(--color-border)] rounded-xl p-8 text-center">
-            <div className="text-4xl mb-3">🌍</div>
+            <Globe className="w-10 h-10 text-[var(--color-gray)] mx-auto mb-3" />
             <p className="text-[var(--color-gray)]">
               No hi ha llista global configurada
             </p>

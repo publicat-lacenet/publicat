@@ -7,13 +7,13 @@ import AdminTabs from '@/app/components/ui/AdminTabs';
 import ZonesTab from './tabs/ZonesTab';
 import CentresTab from './tabs/CentresTab';
 import UsersTab from './tabs/UsersTab';
+import { School, Users, MapPin, BarChart3 } from 'lucide-react';
 
 const tabs = [
-  { id: 'centres', label: 'Centres', icon: '🏫' },
-  { id: 'usuaris', label: 'Usuaris', icon: '👥' },
-  { id: 'zones', label: 'Zones', icon: '🗺️' },
-  { id: 'landing', label: 'LandingPlaylist', icon: '🎬' },
-  { id: 'supervisio', label: 'Supervisió', icon: '📊' },
+  { id: 'centres', label: 'Centres', icon: School },
+  { id: 'usuaris', label: 'Usuaris', icon: Users },
+  { id: 'zones', label: 'Zones', icon: MapPin },
+  { id: 'supervisio', label: 'Supervisió', icon: BarChart3 },
 ];
 
 export default function AdminPage() {
@@ -36,11 +36,6 @@ export default function AdminPage() {
         {activeTab === 'centres' && <CentresTab />}
         {activeTab === 'usuaris' && <UsersTab />}
         {activeTab === 'zones' && <ZonesTab />}
-        {activeTab === 'landing' && (
-          <div className="text-center py-12 text-[var(--color-gray)]">
-            Tab LandingPlaylist (pendent implementació)
-          </div>
-        )}
         {activeTab === 'supervisio' && (
           <div className="text-center py-12 text-[var(--color-gray)]">
             Tab Supervisió (pendent implementació)

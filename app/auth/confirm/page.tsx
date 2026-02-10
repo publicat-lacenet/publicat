@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { XCircle, PartyPopper } from 'lucide-react';
 import Image from "next/image";
 import Link from "next/link";
 
@@ -76,7 +77,7 @@ function ConfirmInviteContent() {
       <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-6">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-            <span className="text-4xl">❌</span>
+            <XCircle className="w-8 h-8 text-red-500" />
           </div>
           <h2 className="text-xl font-bold text-[#111827]">Enllaç invàlid</h2>
           <p className="text-[#4B5563]">
@@ -115,7 +116,7 @@ function ConfirmInviteContent() {
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full space-y-6">
           <div className="text-center space-y-2">
             <div className="mx-auto w-16 h-16 bg-[#16AFAA]/10 rounded-full flex items-center justify-center mb-4">
-              <span className="text-4xl">🎉</span>
+              <PartyPopper className="w-8 h-8 text-[var(--color-secondary)]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827]">Benvingut a PUBLI*CAT!</h1>
             <p className="text-sm text-[#4B5563]">

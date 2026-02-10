@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Lock } from 'lucide-react';
 import AdminLayout from '@/app/components/layout/AdminLayout';
 import Breadcrumb from '@/app/components/ui/Breadcrumb';
 import PageHeader from '@/app/components/ui/PageHeader';
@@ -76,7 +77,7 @@ export default function RSSPage() {
       <AdminLayout>
         <Breadcrumb items={['RSS']} />
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
-          <div className="text-4xl mb-4">🔒</div>
+          <Lock className="w-10 h-10 text-yellow-600 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-yellow-800 mb-2">
             Accés restringit
           </h2>

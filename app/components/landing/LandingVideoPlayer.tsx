@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { Monitor } from 'lucide-react';
 import VimeoPlayer from '@/app/components/display/VimeoPlayer';
 
 interface Video {
@@ -80,7 +81,7 @@ export default function LandingVideoPlayer() {
     return (
       <div className="relative w-full aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden flex items-center justify-center">
         <div className="text-center text-white/80 p-8">
-          <div className="text-4xl mb-4">📺</div>
+          <Monitor className="w-10 h-10 mx-auto mb-4" />
           <p className="text-lg font-medium">Contingut en preparació</p>
           <p className="text-sm text-white/60 mt-2">Aviat podràs veure vídeos dels centres educatius</p>
         </div>

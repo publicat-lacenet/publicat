@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { ca } from 'date-fns/locale';
+import { AlertTriangle, Newspaper, RefreshCw, RotateCw, Pencil, Trash2 } from 'lucide-react';
 
 interface RSSFeed {
   id: string;
@@ -66,9 +67,7 @@ export default function RSSFeedCard({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">
-              {hasErrors ? '⚠️' : '📰'}
-            </span>
+            {hasErrors ? <AlertTriangle className="w-5 h-5 text-red-500" /> : <Newspaper className="w-5 h-5 text-[var(--color-secondary)]" />}
             <h3 className="font-semibold text-[var(--color-dark)] truncate font-[family-name:var(--font-montserrat)]">
               {feed.name}
             </h3>
@@ -132,22 +131,7 @@ export default function RSSFeedCard({
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               title="Reintentar"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
-                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                <path d="M16 16h5v5" />
-              </svg>
+              <RefreshCw className="w-[18px] h-[18px]" />
             </button>
           )}
 
@@ -161,19 +145,7 @@ export default function RSSFeedCard({
               }`}
               title={feed.is_in_rotation ? 'Treure de la rotació' : 'Afegir a la rotació'}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill={feed.is_in_rotation ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
+              <RotateCw className="w-[18px] h-[18px]" />
             </button>
           )}
 
@@ -182,20 +154,7 @@ export default function RSSFeedCard({
             className="p-2 text-[var(--color-gray)] hover:text-[var(--color-dark)] hover:bg-gray-100 rounded-lg transition-colors"
             title="Editar"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
+            <Pencil className="w-[18px] h-[18px]" />
           </button>
 
           <button
@@ -203,21 +162,7 @@ export default function RSSFeedCard({
             className="p-2 text-[var(--color-gray)] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             title="Eliminar"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>
+            <Trash2 className="w-[18px] h-[18px]" />
           </button>
         </div>
       </div>

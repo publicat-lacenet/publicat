@@ -1,5 +1,7 @@
 'use client';
 
+import { AlertTriangle, Info } from 'lucide-react';
+
 interface SessionConflictModalProps {
   isOpen: boolean;
   currentUserEmail: string | null;
@@ -29,8 +31,8 @@ export default function SessionConflictModal({
           {/* Header */}
           <div className="px-6 py-5 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl">
-                ⚠️
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-yellow-500" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-[var(--color-dark)] font-[family-name:var(--font-montserrat)]">
@@ -55,7 +57,7 @@ export default function SessionConflictModal({
             </p>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-xs text-yellow-800 font-[family-name:var(--font-inter)]">
-                ℹ️ <strong>Nota:</strong> Només pots tenir una sessió activa al mateix temps en aquest navegador.
+                <Info className="w-4 h-4 inline" /> <strong>Nota:</strong> Només pots tenir una sessió activa al mateix temps en aquest navegador.
               </p>
             </div>
           </div>

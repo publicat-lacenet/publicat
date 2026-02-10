@@ -3,7 +3,7 @@
 interface Tab {
   id: string;
   label: string;
-  icon?: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 interface AdminTabsProps {
@@ -21,7 +21,7 @@ export default function AdminTabs({ tabs, activeTab, onChange }: AdminTabsProps)
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={`
-              flex items-center gap-2 px-6 py-3 
+              flex items-center gap-2 px-6 py-3
               font-[family-name:var(--font-montserrat)] font-medium text-base
               border-b-[3px] transition-all duration-200
               ${activeTab === tab.id
@@ -30,7 +30,7 @@ export default function AdminTabs({ tabs, activeTab, onChange }: AdminTabsProps)
               }
             `}
           >
-            {tab.icon && <span className="text-lg">{tab.icon}</span>}
+            {tab.icon && <tab.icon className="w-4 h-4" />}
             <span>{tab.label}</span>
           </button>
         ))}

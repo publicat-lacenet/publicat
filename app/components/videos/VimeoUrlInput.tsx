@@ -2,6 +2,7 @@
 
 import { useVimeoValidation } from '@/hooks/useVimeoValidation';
 import { useEffect, useRef } from 'react';
+import { XCircle, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
 interface VimeoMetadata {
@@ -75,7 +76,7 @@ export default function VimeoUrlInput({ value, onChange, onValidationChange }: V
 
       {state.status === 'error' && state.error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">❌ {state.error}</p>
+          <p className="text-sm text-red-700 flex items-center gap-1"><XCircle className="w-4 h-4" /> {state.error}</p>
         </div>
       )}
 
@@ -96,7 +97,7 @@ export default function VimeoUrlInput({ value, onChange, onValidationChange }: V
             {/* Metadata */}
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium text-green-800">
-                ✅ Vídeo vàlid
+                <CheckCircle className="w-4 h-4 inline" /> Vídeo vàlid
               </p>
               {state.title && (
                 <p className="text-sm text-gray-700">

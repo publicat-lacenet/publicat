@@ -31,14 +31,10 @@ export default async function DashboardPage() {
     .single();
 
   // Redirigir segons el rol
-  if (profile?.role === 'admin_global') {
-    redirect('/pantalla/config');
-  } else if (profile?.role === 'display') {
+  if (profile?.role === 'display') {
     redirect('/pantalla');
-  } else if (profile?.role === 'editor_profe' || profile?.role === 'editor_alumne') {
-    redirect('/pantalla/config');
   }
 
-  // Fallback per si no té rol assignat
-  redirect('/pantalla/config');
+  // Tots els altres rols van a Contingut
+  redirect('/contingut');
 }

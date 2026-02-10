@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, Filter, X, Video } from 'lucide-react';
 import Modal from '@/app/components/ui/Modal';
 import FilterDrawer from '@/app/components/videos/FilterDrawer';
 import { useVideoFilters } from '@/hooks/useVideoFilters';
@@ -236,20 +237,7 @@ export default function AddVideosModal({
               onChange={(e) => setSearch(e.target.value)}
               className="w-full px-4 py-2 pl-10 border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-transparent"
             />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--color-gray)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-gray)]" />
           </div>
           <div className="flex items-center flex-shrink-0">
             <button
@@ -259,9 +247,7 @@ export default function AddVideosModal({
                            ? 'border-[#FEDD2C] bg-yellow-50 text-[var(--color-dark)] rounded-r-none'
                            : 'border-[var(--color-border)] text-[var(--color-gray)] hover:bg-gray-50'}`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-              </svg>
+              <Filter className="w-4 h-4" />
               {activeFilterCount > 0 && (
                 <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#F91248] rounded-full">
                   {activeFilterCount}
@@ -275,9 +261,7 @@ export default function AddVideosModal({
                          text-[var(--color-gray)] hover:text-[#F91248] transition-colors"
                 title="Netejar filtres"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -305,7 +289,7 @@ export default function AddVideosModal({
         {/* No videos available */}
         {!loading && videos.length === 0 && (
           <div className="text-center py-8">
-            <div className="text-4xl mb-2">📹</div>
+            <Video className="w-10 h-10 text-[var(--color-gray)] mx-auto mb-2" />
             <p className="text-[var(--color-gray)]">
               {search
                 ? 'No s\'han trobat vídeos'
@@ -360,8 +344,8 @@ export default function AddVideosModal({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl">
-                        📹
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Video className="w-5 h-5 text-[var(--color-gray)]" />
                       </div>
                     )}
                   </div>

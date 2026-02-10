@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Monitor } from 'lucide-react';
 import VimeoPlayer from '@/app/components/display/VimeoPlayer';
 
 interface Video {
@@ -72,7 +73,7 @@ export default function PantallaLandingPage() {
     return (
       <div className="w-screen h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
         <div className="text-center text-white/80 p-8">
-          <div className="text-6xl mb-6">📺</div>
+          <Monitor className="w-16 h-16 mx-auto mb-6" />
           <p className="text-2xl font-medium">Contingut en preparació</p>
           <p className="text-lg text-white/60 mt-4">Aviat podràs veure vídeos dels centres educatius</p>
         </div>

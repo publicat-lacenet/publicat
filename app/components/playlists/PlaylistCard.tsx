@@ -1,5 +1,7 @@
 'use client';
 
+import { Calendar, Megaphone, LayoutList, Globe, Home, Trash2, type LucideIcon } from 'lucide-react';
+
 interface Playlist {
   id: string;
   name: string;
@@ -27,12 +29,12 @@ interface PlaylistCardProps {
   isGlobal?: boolean;
 }
 
-const kindIcons: Record<string, string> = {
-  weekday: '📅',
-  announcements: '📢',
-  custom: '📋',
-  global: '🌍',
-  landing: '🏠',
+const kindIcons: Record<string, LucideIcon> = {
+  weekday: Calendar,
+  announcements: Megaphone,
+  custom: LayoutList,
+  global: Globe,
+  landing: Home,
 };
 
 const kindLabels: Record<string, string> = {
@@ -66,7 +68,7 @@ export default function PlaylistCard({
     return date.toLocaleDateString('ca-ES');
   };
 
-  const icon = kindIcons[playlist.kind] || '📋';
+  const Icon = kindIcons[playlist.kind] || LayoutList;
   const kindLabel = kindLabels[playlist.kind] || playlist.kind;
   const showDeleteButton = canDelete && playlist.is_deletable && onDelete;
   const showCopyButton = isGlobal && onCopy;
@@ -77,7 +79,7 @@ export default function PlaylistCard({
         {/* Header with name and actions */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{icon}</span>
+            <Icon className="w-6 h-6 text-[var(--color-secondary)]" />
             <h3 className="font-semibold text-[var(--color-dark)] font-[family-name:var(--font-montserrat)] line-clamp-1">
               {playlist.name}
             </h3>
@@ -102,18 +104,7 @@ export default function PlaylistCard({
                 className="p-1.5 text-[var(--color-gray)] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 title="Eliminar llista"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Trash2 className="w-5 h-5" />
               </button>
             )}
 

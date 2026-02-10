@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Mail, Pencil, Power, XCircle, Clock, Info } from 'lucide-react';
 import Button from '@/app/components/ui/button';
 import Modal from '@/app/components/ui/Modal';
 
@@ -356,9 +357,9 @@ export default function UsersTab() {
                     {user.onboarding_status === 'active' ? (
                       <span className="text-green-600 text-sm">✓ Actiu</span>
                     ) : user.onboarding_status === 'disabled' ? (
-                      <span className="text-red-600 text-sm">🔴 Desactivat</span>
+                      <span className="inline-flex items-center gap-1 text-red-600 text-sm"><XCircle className="w-3.5 h-3.5" /> Desactivat</span>
                     ) : (
-                      <span className="text-yellow-600 text-sm">⏳ Convidat</span>
+                      <span className="inline-flex items-center gap-1 text-yellow-600 text-sm"><Clock className="w-3.5 h-3.5" /> Convidat</span>
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -369,7 +370,7 @@ export default function UsersTab() {
                           className="p-2 hover:bg-yellow-50 rounded-lg transition-colors"
                           title="Reenviar invitació"
                         >
-                          📧
+                          <Mail className="w-4 h-4" />
                         </button>
                       )}
                       <button
@@ -377,14 +378,14 @@ export default function UsersTab() {
                         className="p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors"
                         title="Editar"
                       >
-                        ✏️
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleActive(user)}
-                        className="p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors"
+                        className={`p-2 hover:bg-[var(--color-light-bg)] rounded-lg transition-colors ${user.is_active ? 'text-green-600' : 'text-[var(--color-gray)]'}`}
                         title={user.is_active ? 'Desactivar' : 'Activar'}
                       >
-                        {user.is_active ? '🔴' : '⚪'}
+                        <Power className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -499,7 +500,7 @@ export default function UsersTab() {
           {!editingUser && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                ℹ️ S'enviarà un email d'invitació a l'usuari per completar el registre
+                <Info className="w-4 h-4 inline" /> S'enviarà un email d'invitació a l'usuari per completar el registre
               </p>
             </div>
           )}

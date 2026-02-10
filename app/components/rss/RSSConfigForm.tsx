@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 interface RSSSettings {
   seconds_per_item: number;
@@ -193,7 +194,7 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
         {/* Vercel Hobby limitation warning */}
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-3">
-            <span className="text-amber-500 text-lg">⚠️</span>
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-amber-800">
                 Limitació del pla gratuït de Vercel

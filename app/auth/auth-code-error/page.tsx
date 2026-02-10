@@ -1,10 +1,12 @@
+import { AlertTriangle } from 'lucide-react';
+
 export default function AuthCodeError() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
                 <div className="mb-6">
                     <div className="mx-auto w-16 h-16 bg-[#F91248]/10 rounded-full flex items-center justify-center">
-                        <span className="text-3xl">⚠️</span>
+                        <AlertTriangle className="w-8 h-8 text-red-500" />
                     </div>
                 </div>
 

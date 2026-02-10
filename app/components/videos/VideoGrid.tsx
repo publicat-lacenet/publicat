@@ -1,3 +1,4 @@
+import { Video as VideoIcon } from 'lucide-react';
 import VideoCard, { Video } from './VideoCard';
 
 interface VideoGridProps {
@@ -41,7 +42,7 @@ export default function VideoGrid({
   if (videos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="text-6xl mb-4">📹</div>
+        <VideoIcon className="w-16 h-16 text-[var(--color-gray)] mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-[var(--color-dark)] mb-2 font-[family-name:var(--font-montserrat)]">
           No s'han trobat vídeos
         </h3>

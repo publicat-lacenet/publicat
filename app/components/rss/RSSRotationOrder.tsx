@@ -16,6 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { RefreshCw, AlertTriangle, Newspaper } from 'lucide-react';
 import DraggableRSSFeedItem, { RSSFeedInRotation } from './DraggableRSSFeedItem';
 
 interface RSSFeed {
@@ -237,7 +238,7 @@ export default function RSSRotationOrder({ refreshKey = 0 }: RSSRotationOrderPro
       {/* Feeds in rotation */}
       {rotation.length === 0 ? (
         <div className="bg-white border border-[var(--color-border)] rounded-xl p-8 text-center">
-          <div className="text-4xl mb-3">🔄</div>
+          <RefreshCw className="w-10 h-10 text-[var(--color-gray)] mx-auto mb-3" />
           <p className="text-[var(--color-gray)]">
             Cap feed a la rotació
           </p>
@@ -288,8 +289,8 @@ export default function RSSRotationOrder({ refreshKey = 0 }: RSSRotationOrderPro
                   feed.error_count >= 5 || !feed.is_active ? 'opacity-60' : ''
                 }`}
               >
-                <span className="text-xl flex-shrink-0">
-                  {feed.error_count >= 5 || !feed.is_active ? '⚠️' : '📰'}
+                <span className="flex-shrink-0">
+                  {feed.error_count >= 5 || !feed.is_active ? <AlertTriangle className="w-5 h-5 text-red-500" /> : <Newspaper className="w-5 h-5 text-[var(--color-secondary)]" />}
                 </span>
 
                 <div className="flex-1 min-w-0">
