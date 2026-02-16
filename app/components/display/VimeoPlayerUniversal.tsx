@@ -40,13 +40,16 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const endedTriggeredRef = useRef(false);
-  // Track playback progress from timeupdate events
+  // Track playback progress — maxDuration prevents false positives from buffering
   const progressRef = useRef({ seconds: 0, duration: 0, percent: 0 });
+  const maxDurationRef = useRef(0);
   // Track whether a 'play' event was received (for autoplay blocking detection)
   const playReceivedRef = useRef(false);
   const autoplayCheckRef = useRef<NodeJS.Timeout | null>(null);
   // Polling interval for getDuration/getCurrentTime fallback
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  // Mount time for logging
+  const mountTimeRef = useRef(Date.now());
 
   // Store callbacks in refs to avoid re-registering the message listener
   const callbacksRef = useRef({ onReady, onEnded, onError, onAudioBlocked });
@@ -54,16 +57,45 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
 
   useImperativeHandle(ref, () => ({}), []);
 
+  const log = useCallback((msg: string, data?: unknown) => {
+    const elapsed = ((Date.now() - mountTimeRef.current) / 1000).toFixed(1);
+    const prefix = `[VPU ${vimeoId} +${elapsed}s]`;
+    if (data !== undefined) {
+      console.log(prefix, msg, data);
+    } else {
+      console.log(prefix, msg);
+    }
+  }, [vimeoId]);
+
+  // Check if progress confirms we are truly near the end
+  const isConfirmedNearEnd = useCallback(() => {
+    const { seconds, duration } = progressRef.current;
+    const maxDur = maxDurationRef.current;
+    // Use the largest duration we've ever seen to avoid buffering false positives
+    const trueDuration = Math.max(duration, maxDur);
+    if (trueDuration <= 0) return false;
+    const percent = seconds / trueDuration;
+    return percent > 0.95 || (trueDuration - seconds) < 1;
+  }, []);
+
   // Trigger ended only when confirmed near the end
-  const triggerEnded = useCallback(() => {
+  const triggerEnded = useCallback((source: string) => {
     if (endedTriggeredRef.current) return;
+    const { seconds, duration } = progressRef.current;
+    const maxDur = maxDurationRef.current;
+    log(`triggerEnded called from "${source}" — seconds=${seconds.toFixed(1)}, duration=${duration.toFixed(1)}, maxDuration=${maxDur.toFixed(1)}`);
+    if (!isConfirmedNearEnd()) {
+      log(`BLOCKED — not near end (using maxDuration=${maxDur.toFixed(1)})`);
+      return;
+    }
     endedTriggeredRef.current = true;
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
     }
+    log('VIDEO ENDED — advancing to next');
     callbacksRef.current.onEnded?.();
-  }, []);
+  }, [log, isConfirmedNearEnd]);
 
   // Send a postMessage command to our iframe
   const postCommand = useCallback((method: string, value?: unknown) => {
@@ -83,7 +115,6 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
       controls: controls ? '1' : '0',
       background: background ? '1' : '0',
       dnt: '1',
-      // Enable the postMessage API for event listening
       api: '1',
     });
 
@@ -96,7 +127,7 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
 
   // Subscribe to Vimeo events via postMessage after iframe loads
   const subscribeToEvents = useCallback(() => {
-    const events = ['ended', 'play', 'pause', 'timeupdate', 'playProgress'];
+    const events = ['ended', 'play', 'pause', 'timeupdate', 'playProgress', 'finish'];
     for (const evt of events) {
       postCommand('addEventListener', evt);
     }
@@ -116,29 +147,37 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
   useEffect(() => {
     endedTriggeredRef.current = false;
     progressRef.current = { seconds: 0, duration: 0, percent: 0 };
+    maxDurationRef.current = 0;
     playReceivedRef.current = false;
+    mountTimeRef.current = Date.now();
+
+    log('Effect setup — listening for messages');
 
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== VIMEO_ORIGIN) return;
 
       // CRITICAL: Only process messages from OUR iframe, not other Vimeo iframes on the page
-      // (e.g. AnnouncementZone also has Vimeo players that send postMessage events)
       if (event.source !== iframeRef.current?.contentWindow) return;
 
       try {
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+        // Log ALL events (throttle timeupdate/playProgress to every ~10s)
+        const eventName = data.event || data.method || 'unknown';
+        if (eventName !== 'timeupdate' && eventName !== 'playProgress'
+            && eventName !== 'getCurrentTime' && eventName !== 'getDuration') {
+          log(`event: ${eventName}`, data);
+        }
 
         if (data.event === 'ready') {
           callbacksRef.current.onReady?.();
           subscribeToEvents();
           startPolling();
 
-          // Autoplay blocking detection: if not muted and autoplay is requested,
-          // check if 'play' fires within 2 seconds
           if (autoplay && !muted) {
             autoplayCheckRef.current = setTimeout(() => {
               if (!playReceivedRef.current && !endedTriggeredRef.current) {
-                // Autoplay with sound was likely blocked — mute and retry
+                log('Autoplay with sound blocked — muting and retrying');
                 postCommand('setMuted', true);
                 postCommand('play');
                 callbacksRef.current.onAudioBlocked?.();
@@ -147,50 +186,44 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
           }
         } else if (data.event === 'play') {
           playReceivedRef.current = true;
-        } else if (data.event === 'timeupdate' && data.data) {
-          // Track playback progress from timeupdate events
+        } else if ((data.event === 'timeupdate' || data.event === 'playProgress') && data.data) {
           const { seconds, duration, percent } = data.data;
-          progressRef.current = {
-            seconds: seconds ?? 0,
-            duration: duration ?? 0,
-            percent: percent ?? 0,
-          };
-          if (duration > 0 && (percent > 0.99 || (duration - seconds) < 0.5)) {
-            triggerEnded();
+          const s = seconds ?? 0;
+          const d = duration ?? 0;
+          const p = percent ?? 0;
+          progressRef.current = { seconds: s, duration: d, percent: p };
+          if (d > maxDurationRef.current) {
+            maxDurationRef.current = d;
+            log(`Duration updated: ${d.toFixed(1)}s`);
           }
-        } else if (data.event === 'playProgress' && data.data) {
-          // Vimeo postMessage API may send playProgress instead of timeupdate
-          const { seconds, duration, percent } = data.data;
-          progressRef.current = {
-            seconds: seconds ?? 0,
-            duration: duration ?? 0,
-            percent: percent ?? 0,
-          };
-          if (duration > 0 && (percent > 0.99 || (duration - seconds) < 0.5)) {
-            triggerEnded();
+          // Log progress every ~10 seconds
+          if (Math.floor(s) % 10 === 0 && s > 0 && Math.floor(s) !== Math.floor(s - 0.3)) {
+            log(`Progress: ${s.toFixed(1)}/${d.toFixed(1)}s (${(p * 100).toFixed(1)}%)`);
+          }
+          if (d > 0 && (p > 0.99 || (d - s) < 0.5)) {
+            triggerEnded('timeupdate/playProgress event');
           }
         } else if (data.method === 'getCurrentTime' && typeof data.value === 'number') {
-          // Response to polling getCurrentTime
           progressRef.current.seconds = data.value;
-          // Check end if we have duration
-          const { duration } = progressRef.current;
-          if (duration > 0) {
-            const percent = data.value / duration;
-            progressRef.current.percent = percent;
-            if (percent > 0.99 || (duration - data.value) < 0.5) {
-              triggerEnded();
+          const maxDur = maxDurationRef.current;
+          const dur = progressRef.current.duration;
+          const trueDur = Math.max(dur, maxDur);
+          if (trueDur > 0) {
+            const pct = data.value / trueDur;
+            progressRef.current.percent = pct;
+            if (pct > 0.99 || (trueDur - data.value) < 0.5) {
+              triggerEnded('getCurrentTime polling');
             }
           }
         } else if (data.method === 'getDuration' && typeof data.value === 'number') {
-          // Response to polling getDuration
           progressRef.current.duration = data.value;
-        } else if (data.event === 'ended') {
-          // Only trust 'ended' if progress confirms we're near the end
-          const { percent, duration } = progressRef.current;
-          if (duration > 0 && percent > 0.9) {
-            triggerEnded();
+          if (data.value > maxDurationRef.current) {
+            maxDurationRef.current = data.value;
+            log(`Duration (polling): ${data.value.toFixed(1)}s`);
           }
-          // If no progress data (duration === 0), ignore — rely on polling fallback
+        } else if (data.event === 'ended' || data.event === 'finish') {
+          log(`"${data.event}" event received — checking progress...`);
+          triggerEnded(`${data.event} event`);
         }
       } catch {
         // Ignore non-JSON messages
@@ -199,6 +232,7 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
 
     window.addEventListener('message', handleMessage);
     return () => {
+      log('Effect cleanup');
       window.removeEventListener('message', handleMessage);
       if (autoplayCheckRef.current) {
         clearTimeout(autoplayCheckRef.current);
@@ -209,18 +243,18 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
         pollingRef.current = null;
       }
     };
-  }, [vimeoId, vimeoHash, autoplay, muted, subscribeToEvents, startPolling, triggerEnded, postCommand]);
+  }, [vimeoId, vimeoHash, autoplay, muted, subscribeToEvents, startPolling, triggerEnded, postCommand, log]);
 
   const handleIframeLoad = useCallback(() => {
-    // Fallback: if postMessage 'ready' event doesn't fire (some Smart TVs),
-    // trigger ready from the iframe onLoad event
+    log('iframe onLoad fired');
     subscribeToEvents();
     startPolling();
-  }, [subscribeToEvents, startPolling]);
+  }, [subscribeToEvents, startPolling, log]);
 
   const handleIframeError = useCallback(() => {
+    log('iframe onError fired!');
     callbacksRef.current.onError?.(new Error('Failed to load Vimeo player iframe'));
-  }, []);
+  }, [log]);
 
   return (
     <iframe
