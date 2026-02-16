@@ -92,13 +92,12 @@ export default function VideoZone({
   }, [videos.length, onPlaylistEnd]);
 
   const handleVideoEnd = useCallback(() => {
-    console.log(`[VideoZone] handleVideoEnd — video ${currentIndex + 1}/${videos.length}: "${currentVideo?.title}"`);
     errorCountRef.current = 0;
     goToNextVideo();
-  }, [goToNextVideo, currentIndex, videos.length, currentVideo]);
+  }, [goToNextVideo]);
 
   const handleVideoError = useCallback((error: Error) => {
-    console.error(`[VideoZone] handleVideoError — video ${currentIndex + 1}/${videos.length}: "${currentVideo?.title}"`, error);
+    console.error('Video error:', error, currentVideo);
     onError?.(error, currentVideo);
 
     errorCountRef.current += 1;
@@ -108,7 +107,7 @@ export default function VideoZone({
     if (errorCountRef.current < videos.length) {
       goToNextVideo();
     }
-  }, [currentVideo, currentIndex, videos.length, onError, goToNextVideo]);
+  }, [currentVideo, videos.length, onError, goToNextVideo]);
 
   // No videos to display
   if (!videos.length || !currentVideo) {
