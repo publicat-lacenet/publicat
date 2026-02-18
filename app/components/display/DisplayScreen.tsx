@@ -239,15 +239,24 @@ export default function DisplayScreen({
     );
   }
 
-  const handleEnableAudio = () => {
-    if (audioBlocked && !audioEnabled) {
-      setAudioBlocked(false);
-      setAudioEnabled(true);
+  const initialClickDoneRef = useRef(false);
+
+  const handleClick = () => {
+    // First click: enable audio + enter fullscreen (useful for TVs)
+    if (!initialClickDoneRef.current) {
+      initialClickDoneRef.current = true;
+      if (audioBlocked && !audioEnabled) {
+        setAudioBlocked(false);
+        setAudioEnabled(true);
+      }
+      if (!document.fullscreenElement) {
+        containerRef.current?.requestFullscreen?.();
+      }
     }
   };
 
   return (
-    <div ref={containerRef} className={`${sizeClass} select-none`} onClick={handleEnableAudio} onDoubleClick={toggleFullscreen}>
+    <div ref={containerRef} className={`${sizeClass} select-none`} onClick={handleClick} onDoubleClick={toggleFullscreen}>
       <DisplayLayout
         showHeader={display_settings.show_header}
         headerContent={
