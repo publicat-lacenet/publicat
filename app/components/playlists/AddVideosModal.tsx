@@ -394,7 +394,7 @@ export default function AddVideosModal({
       onCenterChange={setCenterId}
       onClearAll={clearAdvancedFilters}
       centerId={centerId || null}
-      hideCenterFilter={true}
+      hideCenterFilter={false}
     />
     </>
   );
