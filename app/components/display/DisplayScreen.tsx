@@ -290,12 +290,10 @@ export default function DisplayScreen({
           />
         }
         tickerZone={
-          display_settings.show_ticker ? (
-            <TickerBar
-              centerId={center.id}
-              speed={display_settings.ticker_speed}
-            />
-          ) : undefined
+          <TickerBar
+            centerId={center.id}
+            speed={display_settings.ticker_speed}
+          />
         }
       />
 
