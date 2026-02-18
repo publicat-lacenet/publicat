@@ -66,6 +66,7 @@ export default function DisplayScreen({
   const [audioBlocked, setAudioBlocked] = useState(false);
   const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialClickDoneRef = useRef(false);
 
   // Fetch display config
   const fetchConfig = useCallback(async () => {
@@ -238,8 +239,6 @@ export default function DisplayScreen({
       </div>
     );
   }
-
-  const initialClickDoneRef = useRef(false);
 
   const handleClick = () => {
     // First click: enable audio + enter fullscreen (useful for TVs)
