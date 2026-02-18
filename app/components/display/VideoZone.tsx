@@ -42,6 +42,7 @@ export default function VideoZone({
   const [isShowingTitle, setIsShowingTitle] = useState(showTitle);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const watchdogRef = useRef<NodeJS.Timeout | null>(null);
   const errorCountRef = useRef(0);
 
   const currentVideo = videos[currentIndex];
@@ -108,6 +109,33 @@ export default function VideoZone({
       goToNextVideo();
     }
   }, [currentVideo, videos.length, onError, goToNextVideo]);
+
+  // Watchdog timer: if a video doesn't end naturally within the expected time,
+  // force advance to the next video. This prevents the display from getting stuck.
+  useEffect(() => {
+    if (!currentVideo || videos.length <= 1) return;
+
+    // Calculate timeout: use duration_seconds * 1.5 if available, otherwise 120s default
+    // Minimum 15s, maximum 180s
+    const duration = currentVideo.duration_seconds;
+    const timeoutMs = duration
+      ? Math.min(Math.max(duration * 1.5 * 1000, 15000), 180000)
+      : 120000;
+
+    console.log(`[VideoZone] watchdog armed for "${currentVideo.title}" — ${(timeoutMs / 1000).toFixed(0)}s timeout`);
+
+    watchdogRef.current = setTimeout(() => {
+      console.warn(`[VideoZone] watchdog triggered for "${currentVideo.title}" — forcing advance`);
+      goToNextVideo();
+    }, timeoutMs);
+
+    return () => {
+      if (watchdogRef.current) {
+        clearTimeout(watchdogRef.current);
+        watchdogRef.current = null;
+      }
+    };
+  }, [currentIndex, currentVideo, videos.length, goToNextVideo]);
 
   // No videos to display
   if (!videos.length || !currentVideo) {

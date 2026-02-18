@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import VimeoPlayer, { VimeoPlayerHandle } from './VimeoPlayer';
+import { useState, useCallback } from 'react';
+import VimeoPlayerUniversal from './VimeoPlayerUniversal';
 import Image from 'next/image';
 
 export interface AnnouncementVideo {
@@ -28,16 +28,8 @@ export default function AnnouncementZone({
 }: AnnouncementZoneProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const playerRef = useRef<VimeoPlayerHandle>(null);
 
   const currentVideo = videos[currentIndex];
-
-  // Set volume when it changes
-  useEffect(() => {
-    if (playerRef.current) {
-      playerRef.current.setVolume(volume);
-    }
-  }, [volume]);
 
   const goToNextVideo = useCallback(() => {
     if (videos.length <= 1) return;
@@ -57,7 +49,7 @@ export default function AnnouncementZone({
     goToNextVideo();
   }, [goToNextVideo]);
 
-  const handleVideoError = useCallback(() => {
+  const handleVideoError = useCallback((_error: Error) => {
     // Skip to next video on error
     goToNextVideo();
   }, [goToNextVideo]);
@@ -100,8 +92,7 @@ export default function AnnouncementZone({
         }`}
       >
         {currentVideo && (
-          <VimeoPlayer
-            ref={playerRef}
+          <VimeoPlayerUniversal
             key={currentVideo.id}
             vimeoId={currentVideo.vimeo_id}
             vimeoHash={currentVideo.vimeo_hash}
@@ -113,7 +104,7 @@ export default function AnnouncementZone({
             background={false}
             onEnded={handleVideoEnd}
             onError={handleVideoError}
-            className="w-full h-full [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:object-cover"
+            className="w-full h-full"
           />
         )}
       </div>
