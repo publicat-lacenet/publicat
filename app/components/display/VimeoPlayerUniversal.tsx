@@ -48,6 +48,8 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
   const playReceivedRef = useRef(false);
   const readyReceivedRef = useRef(false);
   const autoplayCheckRef = useRef<NodeJS.Timeout | null>(null);
+  // Guard to prevent double subscription to Vimeo events
+  const subscribedRef = useRef(false);
   // Stall detection: if no events arrive after iframe load
   const stallCheckRef = useRef<NodeJS.Timeout | null>(null);
   const stallRetryRef = useRef<NodeJS.Timeout | null>(null);
@@ -117,6 +119,8 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
 
   // Subscribe to Vimeo events via postMessage after iframe loads
   const subscribeToEvents = useCallback(() => {
+    if (subscribedRef.current) return;
+    subscribedRef.current = true;
     const events = ['ended', 'play', 'pause', 'timeupdate', 'playProgress', 'finish'];
     for (const evt of events) {
       postCommand('addEventListener', evt);
@@ -140,6 +144,7 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
     maxDurationRef.current = 0;
     playReceivedRef.current = false;
     readyReceivedRef.current = false;
+    subscribedRef.current = false;
 
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== VIMEO_ORIGIN) return;
@@ -158,9 +163,9 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
           subscribeToEvents();
           startPolling();
 
-          // Set volume if specified
+          // Set volume if specified (normalize 0-100 → 0.0-1.0)
           if (volume !== undefined) {
-            postCommand('setVolume', volume);
+            postCommand('setVolume', volume / 100);
           }
 
           // Autoplay blocking detection: if not muted and autoplay is requested,
@@ -246,6 +251,11 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
     subscribeToEvents();
     startPolling();
 
+    // Set volume in iframe load fallback too (for Smart TVs where 'ready' doesn't fire)
+    if (volume !== undefined) {
+      postCommand('setVolume', volume / 100);
+    }
+
     // Stall detection: if no ready/play event arrives within 5s of iframe load,
     // the player may be completely stuck (common on display devices with no user interaction)
     if (stallCheckRef.current) clearTimeout(stallCheckRef.current);
@@ -267,7 +277,7 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
         }, 5000);
       }
     }, 5000);
-  }, [vimeoId, subscribeToEvents, startPolling, postCommand]);
+  }, [vimeoId, volume, subscribeToEvents, startPolling, postCommand]);
 
   const handleIframeError = useCallback(() => {
     callbacksRef.current.onError?.(new Error('Failed to load Vimeo player iframe'));

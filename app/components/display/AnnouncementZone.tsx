@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import VimeoPlayerUniversal from './VimeoPlayerUniversal';
 import Image from 'next/image';
 
@@ -28,6 +28,14 @@ export default function AnnouncementZone({
 }: AnnouncementZoneProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const audioBlockedLoggedRef = useRef(false);
+
+  const handleAudioBlocked = useCallback(() => {
+    if (!audioBlockedLoggedRef.current) {
+      console.log('[AnnouncementZone] autoplay with audio blocked by browser');
+      audioBlockedLoggedRef.current = true;
+    }
+  }, []);
 
   const currentVideo = videos[currentIndex];
 
@@ -104,6 +112,7 @@ export default function AnnouncementZone({
             background={false}
             onEnded={handleVideoEnd}
             onError={handleVideoError}
+            onAudioBlocked={handleAudioBlocked}
             className="w-full h-full"
           />
         )}
