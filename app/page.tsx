@@ -70,17 +70,17 @@ export default function Home() {
 
             <div className="relative grid grid-cols-1 gap-3 md:grid-cols-2">
               {/* LLENGUA CATALANA — top left */}
-              <div className="rounded-2xl bg-[#3ECDB0] p-7 text-white">
+              <div className="rounded-2xl bg-gradient-to-l from-[#3ECDB0] to-[#1E8C72] p-7 text-white">
                 <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
                   Llengua catalana
                 </h3>
                 <p className="text-base leading-relaxed">
-                  Creació de continguts en català, desenvolupant l&apos;expressió oral i escrita, simulant contextos professionals en situacions pròximes i reals.
+                  Creació de continguts en català, desenvolupant l&apos;expressió oral i escrita, simulant contextos professionals en situacions pròximes i reals, explorant el nou format digital signage educatiu.
                 </p>
               </div>
 
               {/* PLA DIGITALITZACIÓ DE CENTRE — top right */}
-              <div className="rounded-2xl bg-[#F2D56A] p-7 text-white">
+              <div className="rounded-2xl bg-gradient-to-l from-[#FEDD2C] to-[#C9A020] p-7 text-white">
                 <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
                   Pla digitalització de centre
                 </h3>
@@ -90,7 +90,7 @@ export default function Home() {
               </div>
 
               {/* ESPERIT CRÍTIC — bottom left */}
-              <div className="rounded-2xl bg-[#F07068] p-7 text-white">
+              <div className="rounded-2xl bg-gradient-to-l from-[#F07068] to-[#B83A32] p-7 text-white">
                 <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
                   Esperit crític
                 </h3>
@@ -100,7 +100,7 @@ export default function Home() {
               </div>
 
               {/* IMPULS DELS PLANS D'ENTORN — bottom right */}
-              <div className="rounded-2xl bg-[#7B93D8] p-7 text-white">
+              <div className="rounded-2xl bg-gradient-to-l from-[#7B93D8] to-[#3E59A8] p-7 text-white">
                 <h3 className="mb-3 text-xl font-extrabold uppercase tracking-wide">
                   Impuls dels plans d&apos;entorn
                 </h3>
@@ -147,6 +147,13 @@ export default function Home() {
                 src="/logo_gencat.png"
                 alt="Generalitat de Catalunya - Departament d'Educació i Formació Professional"
                 width={280}
+                height={60}
+                className="h-14 w-auto object-contain"
+              />
+              <Image
+                src="/logo_crp_bages.png"
+                alt="Servei Educatiu del Bages - CRP"
+                width={180}
                 height={60}
                 className="h-14 w-auto object-contain"
               />
