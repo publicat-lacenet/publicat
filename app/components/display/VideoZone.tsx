@@ -146,7 +146,7 @@ export default function VideoZone({
     <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
       {/* Video Player - centrat verticalment amb aspect ratio 16:9 */}
       <div
-        className={`w-full max-h-full aspect-video transition-opacity duration-300 ${
+        className={`w-full max-h-full aspect-video transition-opacity duration-300 pointer-events-none ${
           isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
       >

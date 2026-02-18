@@ -9,7 +9,6 @@ import AnnouncementZone, { AnnouncementVideo } from './AnnouncementZone';
 import RSSZone from './RSSZone';
 import TickerBar from './TickerBar';
 import StandbyScreen from './StandbyScreen';
-import { VolumeX } from 'lucide-react';
 
 interface DisplayConfig {
   center: {
@@ -230,7 +229,7 @@ export default function DisplayScreen({
   // Standby if no main videos
   if (mainVideos.length === 0) {
     return (
-      <div ref={containerRef} className={sizeClass} onDoubleClick={toggleFullscreen}>
+      <div ref={containerRef} className={`${sizeClass} select-none`} onDoubleClick={toggleFullscreen}>
         <StandbyScreen
           message={display_settings.standby_message}
           centerLogo={center.logo_url}
@@ -241,12 +240,14 @@ export default function DisplayScreen({
   }
 
   const handleEnableAudio = () => {
-    setAudioBlocked(false);
-    setAudioEnabled(true);
+    if (audioBlocked && !audioEnabled) {
+      setAudioBlocked(false);
+      setAudioEnabled(true);
+    }
   };
 
   return (
-    <div ref={containerRef} className={sizeClass} onDoubleClick={toggleFullscreen}>
+    <div ref={containerRef} className={`${sizeClass} select-none`} onClick={handleEnableAudio} onDoubleClick={toggleFullscreen}>
       <DisplayLayout
         showHeader={display_settings.show_header}
         headerContent={
@@ -296,18 +297,6 @@ export default function DisplayScreen({
           />
         }
       />
-
-      {/* Audio enable button - only show if browser blocked autoplay with sound */}
-      {!embedded && audioBlocked && !audioEnabled && (
-        <button
-          onClick={handleEnableAudio}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-white/90 hover:bg-white text-gray-900 rounded-lg shadow-lg transition-all hover:scale-105"
-          title="Activar àudio"
-        >
-          <VolumeX className="h-6 w-6" />
-          <span className="font-medium">Activar àudio</span>
-        </button>
-      )}
     </div>
   );
 }

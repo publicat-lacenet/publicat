@@ -56,6 +56,9 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
   // Polling interval for getDuration/getCurrentTime fallback
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Capture initial muted value so iframe URL doesn't change on muted toggle
+  const initialMutedRef = useRef(muted);
+
   // Store callbacks in refs to avoid re-registering the message listener
   const callbacksRef = useRef({ onReady, onEnded, onError, onAudioBlocked });
   callbacksRef.current = { onReady, onEnded, onError, onAudioBlocked };
@@ -98,11 +101,11 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
     iframe.contentWindow.postMessage(JSON.stringify(msg), VIMEO_ORIGIN);
   }, []);
 
-  // Build Vimeo player URL with all params
+  // Build Vimeo player URL with all params (uses initial muted value to avoid iframe reload)
   const buildSrc = useCallback(() => {
     const params = new URLSearchParams({
       autoplay: autoplay ? '1' : '0',
-      muted: muted ? '1' : '0',
+      muted: initialMutedRef.current ? '1' : '0',
       loop: loop ? '1' : '0',
       controls: controls ? '1' : '0',
       background: background ? '1' : '0',
@@ -115,7 +118,7 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
     }
 
     return `${VIMEO_ORIGIN}/video/${vimeoId}?${params.toString()}`;
-  }, [vimeoId, vimeoHash, autoplay, muted, loop, controls, background]);
+  }, [vimeoId, vimeoHash, autoplay, loop, controls, background]);
 
   // Subscribe to Vimeo events via postMessage after iframe loads
   const subscribeToEvents = useCallback(() => {
@@ -242,7 +245,16 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
         pollingRef.current = null;
       }
     };
-  }, [vimeoId, vimeoHash, autoplay, muted, subscribeToEvents, startPolling, triggerEnded, postCommand]);
+  }, [vimeoId, vimeoHash, autoplay, subscribeToEvents, startPolling, triggerEnded, postCommand]);
+
+  // Handle muted changes without reloading the iframe (same pattern as VimeoPlayer SDK)
+  useEffect(() => {
+    postCommand('setMuted', muted);
+    if (!muted) {
+      // When unmuting, ensure volume is audible
+      postCommand('setVolume', volume !== undefined ? volume / 100 : 1);
+    }
+  }, [muted, postCommand, volume]);
 
   const handleIframeLoad = useCallback(() => {
     // Fallback: if postMessage 'ready' event doesn't fire (some Smart TVs),

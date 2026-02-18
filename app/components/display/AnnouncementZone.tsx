@@ -95,7 +95,7 @@ export default function AnnouncementZone({
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
       <div
-        className={`w-full h-full transition-opacity duration-200 ${
+        className={`w-full h-full transition-opacity duration-200 pointer-events-none ${
           isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
       >
