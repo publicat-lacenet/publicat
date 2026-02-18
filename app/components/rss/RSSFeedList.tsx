@@ -69,27 +69,6 @@ export default function RSSFeedList({
     }
   };
 
-  const handleToggleRotation = async (feed: RSSFeed) => {
-    try {
-      const res = await fetch(`/api/rss/${feed.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_in_rotation: !feed.is_in_rotation }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Error actualitzant el feed');
-      }
-
-      // Refresh list
-      await fetchFeeds();
-    } catch (err: any) {
-      console.error('Error toggling rotation:', err);
-      alert('Error: ' + err.message);
-    }
-  };
-
   const handleDeleteClick = (feedId: string) => {
     if (deleteConfirm === feedId) {
       onDelete(feedId);
@@ -166,9 +145,8 @@ export default function RSSFeedList({
                   feed={feed}
                   onEdit={() => onEdit(feed)}
                   onDelete={() => handleDeleteClick(feed.id)}
-                  onToggleRotation={() => handleToggleRotation(feed)}
-                  onRetry={retrying === feed.id ? undefined : () => handleRetry(feed.id)}
-                  showRetry={feed.error_count > 0}
+                  onRetry={() => handleRetry(feed.id)}
+                  isRetrying={retrying === feed.id}
                 />
                 {/* Delete confirmation overlay */}
                 {deleteConfirm === feed.id && (
@@ -213,8 +191,8 @@ export default function RSSFeedList({
                   feed={feed}
                   onEdit={() => onEdit(feed)}
                   onDelete={() => handleDeleteClick(feed.id)}
-                  onRetry={retrying === feed.id ? undefined : () => handleRetry(feed.id)}
-                  showRetry={true}
+                  onRetry={() => handleRetry(feed.id)}
+                  isRetrying={retrying === feed.id}
                 />
                 {/* Delete confirmation overlay */}
                 {deleteConfirm === feed.id && (

@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { ca } from 'date-fns/locale';
-import { AlertTriangle, Newspaper, RefreshCw, RotateCw, Pencil, Trash2 } from 'lucide-react';
+import { AlertTriangle, Newspaper, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 
 interface RSSFeed {
   id: string;
@@ -26,8 +26,7 @@ interface RSSFeedCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onRetry?: () => void;
-  onToggleRotation?: () => void;
-  showRetry?: boolean;
+  isRetrying?: boolean;
 }
 
 export default function RSSFeedCard({
@@ -35,8 +34,7 @@ export default function RSSFeedCard({
   onEdit,
   onDelete,
   onRetry,
-  onToggleRotation,
-  showRetry = false,
+  isRetrying = false,
 }: RSSFeedCardProps) {
   const hasErrors = feed.error_count >= 5 || !feed.is_active;
   const isWarning = feed.error_count > 0 && feed.error_count < 5;
@@ -125,27 +123,14 @@ export default function RSSFeedCard({
 
         {/* Actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          {showRetry && onRetry && (
+          {onRetry && (
             <button
               onClick={onRetry}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Reintentar"
+              disabled={isRetrying}
+              className="p-2 text-[var(--color-gray)] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+              title="Actualitzar feed"
             >
-              <RefreshCw className="w-[18px] h-[18px]" />
-            </button>
-          )}
-
-          {onToggleRotation && (
-            <button
-              onClick={onToggleRotation}
-              className={`p-2 rounded-lg transition-colors ${
-                feed.is_in_rotation
-                  ? 'text-blue-600 hover:bg-blue-50'
-                  : 'text-gray-400 hover:bg-gray-100'
-              }`}
-              title={feed.is_in_rotation ? 'Treure de la rotació' : 'Afegir a la rotació'}
-            >
-              <RotateCw className="w-[18px] h-[18px]" />
+              <RefreshCw className={`w-[18px] h-[18px] ${isRetrying ? 'animate-spin' : ''}`} />
             </button>
           )}
 
