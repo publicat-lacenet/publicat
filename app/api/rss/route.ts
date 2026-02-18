@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
 
@@ -9,6 +10,18 @@ const parser = new Parser({
     Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
   },
 });
+
+function extractImage(item: Parser.Item): string | null {
+  const anyItem = item as any;
+  if (anyItem.enclosure?.url) return anyItem.enclosure.url;
+  if (anyItem['media:content']?.['$']?.url) return anyItem['media:content']['$'].url;
+  if (anyItem['media:thumbnail']?.['$']?.url)
+    return anyItem['media:thumbnail']['$'].url;
+  const content = item.content || item.contentSnippet || '';
+  const imgMatch = content.match(/<img[^>]+src="([^"]+)"/);
+  if (imgMatch) return imgMatch[1];
+  return null;
+}
 
 // GET /api/rss - Llistar feeds RSS del centre
 export async function GET(request: NextRequest) {
@@ -226,10 +239,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Re-validar el feed abans de guardar
+  // Re-validar el feed abans de guardar (conservem el resultat per fer el fetch inicial)
+  let parsedFeed: Parser.Output<Parser.Item>;
   try {
-    const feed = await parser.parseURL(url);
-    if (!feed.items || feed.items.length === 0) {
+    parsedFeed = await parser.parseURL(url);
+    if (!parsedFeed.items || parsedFeed.items.length === 0) {
       return NextResponse.json(
         { error: 'El feed no conté cap ítem' },
         { status: 400 }
@@ -284,9 +298,41 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Fetch inicial d'ítems amb admin client (rss_items no té INSERT policy per usuaris)
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const itemsToUpsert = parsedFeed.items.slice(0, 50).map(item => ({
+      feed_id: newFeed.id,
+      guid: item.guid || item.link || item.title || `${Date.now()}-${Math.random()}`,
+      title: item.title || 'Sense títol',
+      description: item.contentSnippet?.substring(0, 1000) || item.content?.substring(0, 1000) || null,
+      link: item.link || '',
+      pub_date: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+      image_url: extractImage(item),
+      fetched_at: new Date().toISOString(),
+    }));
+
+    let itemsFetched = 0;
+    for (const item of itemsToUpsert) {
+      const { error: upsertError } = await supabaseAdmin
+        .from('rss_items')
+        .upsert(item, { onConflict: 'feed_id,guid' });
+      if (!upsertError) itemsFetched++;
+    }
+
+    // Actualitzar last_fetched_at
+    await supabaseAdmin
+      .from('rss_feeds')
+      .update({ last_fetched_at: new Date().toISOString() })
+      .eq('id', newFeed.id);
+
     return NextResponse.json(
       {
-        feed: newFeed,
+        feed: { ...newFeed, last_fetched_at: new Date().toISOString() },
+        items_fetched: itemsFetched,
         message: 'Feed creat correctament',
       },
       { status: 201 }

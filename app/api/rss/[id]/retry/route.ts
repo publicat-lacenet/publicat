@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
 
@@ -99,15 +100,21 @@ export async function POST(
       fetched_at: new Date().toISOString(),
     }));
 
+    // Usar admin client per bypassing RLS (rss_items no té INSERT policy per usuaris)
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Inserir o actualitzar ítems
     for (const item of itemsToUpsert) {
-      await supabase
+      await supabaseAdmin
         .from('rss_items')
         .upsert(item, { onConflict: 'feed_id,guid' });
     }
 
     // Actualitzar el feed - reset errors i marcar com actiu
-    const { data: updatedFeed, error: updateError } = await supabase
+    const { data: updatedFeed, error: updateError } = await supabaseAdmin
       .from('rss_feeds')
       .update({
         is_active: true,
@@ -132,8 +139,12 @@ export async function POST(
   } catch (error: any) {
     console.error('Error retrying feed:', error);
 
-    // Actualitzar l'error però no desactivar
-    await supabase
+    // Actualitzar l'error però no desactivar (admin client per bypass RLS)
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    await supabaseAdmin
       .from('rss_feeds')
       .update({
         last_error: error.message || 'Error desconegut',
