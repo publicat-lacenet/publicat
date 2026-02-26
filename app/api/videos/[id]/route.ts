@@ -331,10 +331,10 @@ export async function DELETE(
     }
   }
 
-  // Obtenir vídeo actual
+  // Obtenir vídeo actual (incloent frames_urls per netejar Storage)
   const { data: video } = await supabase
     .from('videos')
-    .select('center_id')
+    .select('center_id, frames_urls')
     .eq('id', id)
     .single();
 
@@ -351,7 +351,32 @@ export async function DELETE(
   }
 
   try {
-    // Eliminar relacions (tags i hashtags s'eliminaran automàticament amb ON DELETE CASCADE)
+    // Eliminar fotogrames de Supabase Storage si n'hi ha
+    const framesUrls: string[] = Array.isArray(video.frames_urls) ? video.frames_urls : [];
+    if (framesUrls.length > 0) {
+      const BUCKET_PREFIX = '/storage/v1/object/public/announcement-frames/';
+      const paths = framesUrls
+        .map((url: string) => {
+          const idx = url.indexOf(BUCKET_PREFIX);
+          return idx !== -1 ? url.slice(idx + BUCKET_PREFIX.length) : null;
+        })
+        .filter((p): p is string => p !== null);
+
+      if (paths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('announcement-frames')
+          .remove(paths);
+
+        if (storageError) {
+          // No bloquejar l'eliminació del vídeo per errors de Storage
+          console.warn('[DELETE video] Error eliminant frames de Storage:', storageError.message);
+        } else {
+          console.log(`[DELETE video] ${paths.length} frames eliminats de Storage`);
+        }
+      }
+    }
+
+    // Eliminar el vídeo (tags i hashtags s'eliminaran amb ON DELETE CASCADE)
     const { error } = await supabase
       .from('videos')
       .delete()
