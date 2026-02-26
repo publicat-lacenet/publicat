@@ -101,6 +101,7 @@ export async function PATCH(
     tag_ids,
     hashtag_names,
     is_shared_with_other_centers,
+    frames_urls,
   } = body;
 
   // Validacions
@@ -117,6 +118,7 @@ export async function PATCH(
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (type !== undefined) updates.type = type;
+    if (frames_urls !== undefined) updates.frames_urls = Array.isArray(frames_urls) ? frames_urls : [];
 
     // Permetre canvi d'estat NOMÉS per editor_profe
     // L'admin_global NO gestiona aprovacions de vídeos pendents

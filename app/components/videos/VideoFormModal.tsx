@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import VideoUploader, { VimeoMetadata as UploadMetadata } from './VideoUploader';
 import TagSelector from './TagSelector';
 import HashtagInput from './HashtagInput';
@@ -51,6 +51,9 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const [hashtags, setHashtags] = useState('');
   const [isShared, setIsShared] = useState(false);
   const [framesUrls, setFramesUrls] = useState<string[]>([]);
+  // Si el formulari s'envia abans que acabi l'extracció, guardem el videoId
+  // per fer un PATCH quan onFramesExtracted arribi tard
+  const pendingVideoIdRef = useRef<string | null>(null);
 
   const canShare = role === 'editor_profe' || role === 'admin_global';
 
@@ -102,6 +105,26 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   
   const handleStatusChange = useCallback((status: 'idle' | 'uploading' | 'processing' | 'complete') => {
     setUploadStatus(status);
+  }, []);
+
+  // Callback quan l'extracció de fotogrames finalitza (pot arribar abans o després del submit)
+  const handleFramesExtracted = useCallback(async (urls: string[]) => {
+    setFramesUrls(urls);
+    // Si el vídeo ja s'ha creat a la BD (submit va ser primer), actualitzar frames_urls
+    if (pendingVideoIdRef.current && urls.length > 0) {
+      const videoId = pendingVideoIdRef.current;
+      pendingVideoIdRef.current = null;
+      try {
+        await fetch(`/api/videos/${videoId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ frames_urls: urls }),
+        });
+        console.log(`✅ [VideoFormModal] frames_urls actualitzat al vídeo ${videoId} (${urls.length} frames)`);
+      } catch {
+        console.warn('[VideoFormModal] No s\'ha pogut actualitzar frames_urls al vídeo creat');
+      }
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,6 +198,10 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
 
       if (res.ok) {
         alert(isEditMode ? '✅ Vídeo actualitzat correctament!' : '✅ Vídeo pujat correctament!');
+        // Si és creació i l'extracció pot estar en curs, guardar videoId per al PATCH tardà
+        if (!isEditMode && data.video?.id) {
+          pendingVideoIdRef.current = data.video.id;
+        }
         resetForm();
         onSuccess();
         onClose();
@@ -200,6 +227,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setHashtags('');
     setIsShared(false);
     setFramesUrls([]);
+    // No netejem pendingVideoIdRef aquí — pot necessitar-se per al PATCH tardà
   };
 
   const handleClose = () => {
@@ -237,7 +265,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
                 onUploadComplete={handleUploadComplete}
                 onError={handleUploadError}
                 onStatusChange={handleStatusChange}
-                onFramesExtracted={(urls) => setFramesUrls(urls)}
+                onFramesExtracted={handleFramesExtracted}
               />
               {(uploadStatus === 'uploading' || uploadStatus === 'processing') && (
                 <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
