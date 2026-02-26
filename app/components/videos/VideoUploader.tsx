@@ -179,7 +179,7 @@ export default function VideoUploader({ onUploadComplete, onError, onStatusChang
   const extractFramesInBackground = async (file: File, videoId: string) => {
     try {
       console.log(`🖼️ [VideoUploader] Iniciant extracció de fotogrames per vídeo ${videoId}`);
-      const blobs = await extractFrames(file, 3);
+      const blobs = (await extractFrames(file, 3)).slice(0, 30);
       if (blobs.length === 0) {
         console.log('[VideoUploader] Cap fotograma extret');
         onFramesExtracted?.([]);
