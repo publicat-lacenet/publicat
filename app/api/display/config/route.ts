@@ -201,13 +201,15 @@ export async function GET(request: NextRequest) {
       .eq('center_id', centerId)
       .single();
 
-    const display_settings = displaySettings || {
+    const display_settings = {
       show_header: true,
       show_clock: true,
       show_ticker: false,
       ticker_speed: 50,
       standby_message: 'Pròximament...',
       announcement_volume: 0,
+      announcement_mode: 'video',
+      ...(displaySettings || {}),
     };
 
     return NextResponse.json({

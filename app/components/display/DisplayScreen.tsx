@@ -38,6 +38,7 @@ interface DisplayConfig {
     ticker_speed: number;
     standby_message: string;
     announcement_volume: number;
+    announcement_mode: string;
   };
 }
 
@@ -288,6 +289,7 @@ export default function DisplayScreen({
               volume={display_settings.announcement_volume}
               showFallback={true}
               centerLogo={center.logo_url}
+              mode={(display_settings.announcement_mode as 'video' | 'video_360p' | 'slideshow') || 'video'}
             />
           ) : undefined
         }

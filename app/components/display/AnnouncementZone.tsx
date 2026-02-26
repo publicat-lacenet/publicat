@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import VimeoPlayerUniversal from './VimeoPlayerUniversal';
+import AnnouncementSlideshow from './AnnouncementSlideshow';
 import Image from 'next/image';
 
 export interface AnnouncementVideo {
@@ -9,6 +10,8 @@ export interface AnnouncementVideo {
   title: string;
   vimeo_id: string;
   vimeo_hash?: string | null;
+  frames_urls?: string[];
+  thumbnail_url?: string | null;
 }
 
 const PRIMARY_COLOR = '#FEDD2C';
@@ -18,6 +21,7 @@ interface AnnouncementZoneProps {
   volume?: number;
   showFallback?: boolean;
   centerLogo?: string | null;
+  mode?: 'video' | 'video_360p' | 'slideshow';
 }
 
 export default function AnnouncementZone({
@@ -25,6 +29,7 @@ export default function AnnouncementZone({
   volume = 0,
   showFallback = true,
   centerLogo,
+  mode = 'video',
 }: AnnouncementZoneProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -92,6 +97,18 @@ export default function AnnouncementZone({
     );
   }
 
+  // Mode slideshow: mostrar fotogrames estàtics
+  if (mode === 'slideshow') {
+    return (
+      <AnnouncementSlideshow
+        videos={videos}
+        intervalSeconds={4}
+        centerLogo={centerLogo}
+        showFallback={showFallback}
+      />
+    );
+  }
+
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
       <div
@@ -110,6 +127,7 @@ export default function AnnouncementZone({
             loop={videos.length === 1}
             controls={false}
             background={false}
+            quality={mode === 'video_360p' ? '360p' : undefined}
             onEnded={handleVideoEnd}
             onError={handleVideoError}
             onAudioBlocked={handleAudioBlocked}

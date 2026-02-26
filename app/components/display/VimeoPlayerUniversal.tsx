@@ -11,6 +11,7 @@ export interface VimeoPlayerUniversalProps {
   controls?: boolean;
   background?: boolean;
   volume?: number;
+  quality?: string;
   onReady?: () => void;
   onEnded?: () => void;
   onError?: (error: Error) => void;
@@ -33,6 +34,7 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
   controls = false,
   background = false,
   volume,
+  quality,
   onReady,
   onEnded,
   onError,
@@ -117,8 +119,12 @@ const VimeoPlayerUniversal = forwardRef<VimeoPlayerUniversalHandle, VimeoPlayerU
       params.set('h', vimeoHash);
     }
 
+    if (quality) {
+      params.set('quality', quality);
+    }
+
     return `${VIMEO_ORIGIN}/video/${vimeoId}?${params.toString()}`;
-  }, [vimeoId, vimeoHash, autoplay, loop, controls, background]);
+  }, [vimeoId, vimeoHash, autoplay, loop, controls, background, quality]);
 
   // Subscribe to Vimeo events via postMessage after iframe loads
   const subscribeToEvents = useCallback(() => {

@@ -66,6 +66,7 @@ export async function GET(
           vimeo_url,
           duration_seconds,
           thumbnail_url,
+          frames_urls,
           status,
           type
         )
@@ -100,6 +101,7 @@ export async function GET(
           vimeo_url: string;
           duration_seconds: number | null;
           thumbnail_url: string | null;
+          frames_urls: string[];
           type: string;
         };
         // Extract ID and hash from vimeo_id URL if needed
@@ -115,6 +117,7 @@ export async function GET(
           vimeo_hash: vimeoHash,
           duration_seconds: video.duration_seconds,
           thumbnail_url: video.thumbnail_url,
+          frames_urls: video.frames_urls || [],
           type: video.type,
         };
       });

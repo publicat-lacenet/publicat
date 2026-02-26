@@ -50,6 +50,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [hashtags, setHashtags] = useState('');
   const [isShared, setIsShared] = useState(false);
+  const [framesUrls, setFramesUrls] = useState<string[]>([]);
 
   const canShare = role === 'editor_profe' || role === 'admin_global';
 
@@ -156,6 +157,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         payload.vimeo_hash = vimeoMetadata?.vimeo_hash;
         payload.thumbnail_url = vimeoMetadata?.thumbnail_url;
         payload.duration_seconds = vimeoMetadata?.duration;
+        payload.frames_urls = framesUrls;
         console.log('📊 Vimeo metadata:', vimeoMetadata);
         console.log('⏱️ Duration being sent:', vimeoMetadata?.duration);
       }
@@ -197,6 +199,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setTagIds([]);
     setHashtags('');
     setIsShared(false);
+    setFramesUrls([]);
   };
 
   const handleClose = () => {
@@ -234,6 +237,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
                 onUploadComplete={handleUploadComplete}
                 onError={handleUploadError}
                 onStatusChange={handleStatusChange}
+                onFramesExtracted={(urls) => setFramesUrls(urls)}
               />
               {(uploadStatus === 'uploading' || uploadStatus === 'processing') && (
                 <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">

@@ -257,6 +257,7 @@ export async function POST(request: NextRequest) {
     is_shared_with_other_centers,
     thumbnail_url,
     duration_seconds,
+    frames_urls,
     center_id: bodyCenterId, // Permet especificar centre des del body (per admin_global)
   } = body;
 
@@ -360,6 +361,7 @@ export async function POST(request: NextRequest) {
         vimeo_hash: vimeo_hash || null,
         thumbnail_url: thumbnail_url || null,
         duration_seconds: duration_seconds || null,
+        frames_urls: Array.isArray(frames_urls) ? frames_urls : [],
         uploaded_by_user_id: user.id,
         is_shared_with_other_centers: canShare,
         is_active: true,

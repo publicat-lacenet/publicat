@@ -2,11 +2,14 @@
 
 import { useState, useRef } from 'react';
 import * as tus from 'tus-js-client';
+import { extractFrames } from '@/lib/display/frameExtractor';
+import { createClient } from '@/utils/supabase/client';
 
 interface VideoUploaderProps {
   onUploadComplete: (vimeoUrl: string, metadata: VimeoMetadata) => void;
   onError: (error: string) => void;
   onStatusChange?: (status: 'idle' | 'uploading' | 'processing' | 'complete') => void;
+  onFramesExtracted?: (framesUrls: string[]) => void;
 }
 
 export interface VimeoMetadata {
@@ -16,13 +19,14 @@ export interface VimeoMetadata {
   duration: number;
 }
 
-export default function VideoUploader({ onUploadComplete, onError, onStatusChange }: VideoUploaderProps) {
+export default function VideoUploader({ onUploadComplete, onError, onStatusChange, onFramesExtracted }: VideoUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'processing' | 'complete'>('idle');
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadRef = useRef<tus.Upload | null>(null);
+  const fileRef = useRef<File | null>(null);
   
   // Notificar canvis d'estat
   const updateStatus = (newStatus: typeof status) => {
@@ -48,6 +52,7 @@ export default function VideoUploader({ onUploadComplete, onError, onStatusChang
     }
     
     setFileName(file.name);
+    fileRef.current = file;
     setUploading(true);
     updateStatus('uploading');
     setProgress(0);
@@ -140,13 +145,20 @@ export default function VideoUploader({ onUploadComplete, onError, onStatusChang
           };
           
           console.log('✅ Vídeo disponible amb thumbnail real! Cridant onUploadComplete amb:', { vimeoUrl, metadata });
-          
+
           // IMPORTANT: Cridem onUploadComplete ABANS de canviar l'estat local
           // perquè el pare pugui rebre les dades correctament
           onUploadComplete(vimeoUrl, metadata);
-          
+
           updateStatus('complete');
           setUploading(false);
+
+          // Extracció de fotogrames en background (no bloqueja el flux principal)
+          if (onFramesExtracted && fileRef.current) {
+            const capturedFile = fileRef.current;
+            const capturedVideoId = videoId;
+            extractFramesInBackground(capturedFile, capturedVideoId);
+          }
           
         } else {
           // Encara processant, retry en 5 segons
@@ -164,6 +176,48 @@ export default function VideoUploader({ onUploadComplete, onError, onStatusChang
     poll();
   };
   
+  const extractFramesInBackground = async (file: File, videoId: string) => {
+    try {
+      console.log(`🖼️ [VideoUploader] Iniciant extracció de fotogrames per vídeo ${videoId}`);
+      const blobs = await extractFrames(file, 3);
+      if (blobs.length === 0) {
+        console.log('[VideoUploader] Cap fotograma extret');
+        onFramesExtracted?.([]);
+        return;
+      }
+
+      const supabase = createClient();
+      const urls: string[] = [];
+
+      for (let i = 0; i < blobs.length; i++) {
+        const path = `${videoId}/frame_${i}.jpg`;
+        const { error } = await supabase.storage
+          .from('announcement-frames')
+          .upload(path, blobs[i], { contentType: 'image/jpeg', upsert: true });
+
+        if (error) {
+          console.warn(`[VideoUploader] Error pujant frame ${i}:`, error.message);
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('announcement-frames')
+          .getPublicUrl(path);
+
+        if (urlData?.publicUrl) {
+          urls.push(urlData.publicUrl);
+        }
+      }
+
+      console.log(`✅ [VideoUploader] ${urls.length} fotogrames pujats a Storage`);
+      onFramesExtracted?.(urls);
+    } catch (err) {
+      // Errors silenciosos — l'extracció és secundària
+      console.warn('[VideoUploader] Error en extracció de fotogrames (silenciós):', err);
+      onFramesExtracted?.([]);
+    }
+  };
+
   const handleCancel = () => {
     if (uploadRef.current) {
       uploadRef.current.abort();

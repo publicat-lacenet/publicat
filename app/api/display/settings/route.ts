@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
       ticker_speed: 50,
       standby_message: 'Pròximament...',
       announcement_volume: 0,
+      announcement_mode: 'video',
     };
 
     return NextResponse.json({ settings: displaySettings });
@@ -127,6 +128,7 @@ export async function PATCH(request: NextRequest) {
     'ticker_speed',
     'standby_message',
     'announcement_volume',
+    'announcement_mode',
   ];
 
   const filteredUpdates: Record<string, unknown> = {};
@@ -153,6 +155,16 @@ export async function PATCH(request: NextRequest) {
     if (typeof volume !== 'number' || volume < 0 || volume > 100) {
       return NextResponse.json(
         { error: 'El volum dels anuncis ha de ser entre 0 i 100' },
+        { status: 400 }
+      );
+    }
+  }
+
+  if ('announcement_mode' in filteredUpdates) {
+    const mode = filteredUpdates.announcement_mode as string;
+    if (!['video', 'video_360p', 'slideshow'].includes(mode)) {
+      return NextResponse.json(
+        { error: 'El mode d\'anuncis ha de ser video, video_360p o slideshow' },
         { status: 400 }
       );
     }

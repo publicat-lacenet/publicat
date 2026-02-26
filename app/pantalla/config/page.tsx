@@ -15,6 +15,7 @@ interface DisplaySettings {
     ticker_speed: number;
     standby_message: string;
     announcement_volume: number;
+    announcement_mode: 'video' | 'video_360p' | 'slideshow';
 }
 
 interface TickerMessage {
@@ -306,6 +307,73 @@ export default function PantallaConfigPage() {
                                     Mostrar rellotge
                                 </span>
                             </label>
+                        </div>
+                    </div>
+
+                    {/* Announcement mode section */}
+                    <div className="p-6 border-b border-gray-200">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                            Mode de reproducció d&apos;anuncis
+                        </h2>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Tria com es mostren els vídeos d&apos;anunci al costat de la pantalla.
+                        </p>
+
+                        <div className="space-y-3">
+                            {([
+                                {
+                                    value: 'video' as const,
+                                    label: 'Vídeo complet',
+                                    description: 'Millor qualitat. Requereix TV potent.',
+                                },
+                                {
+                                    value: 'video_360p' as const,
+                                    label: 'Vídeo 360p',
+                                    description: 'Menor consum de CPU. Adequat per a la majoria de TVs.',
+                                },
+                                {
+                                    value: 'slideshow' as const,
+                                    label: 'Diapositives',
+                                    description: 'Zero decodificació de vídeo. Per a TVs molt limitades.',
+                                },
+                            ] as { value: 'video' | 'video_360p' | 'slideshow'; label: string; description: string }[]).map((option) => {
+                                const isSelected = settings.announcement_mode === option.value;
+                                return (
+                                    <div
+                                        key={option.value}
+                                        onClick={() => isEditor && updateSetting('announcement_mode', option.value)}
+                                        className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+                                            isSelected
+                                                ? 'border-yellow-400 bg-yellow-50'
+                                                : isEditor
+                                                ? 'border-gray-200 hover:border-gray-300 bg-white'
+                                                : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
+                                                    isSelected
+                                                        ? 'border-yellow-500 bg-yellow-500'
+                                                        : 'border-gray-400'
+                                                }`}
+                                            >
+                                                {isSelected && (
+                                                    <div className="w-2 h-2 rounded-full bg-white m-auto mt-0.5" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-900 text-sm">
+                                                    {option.label}
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-0.5">
+                                                    {option.description}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
