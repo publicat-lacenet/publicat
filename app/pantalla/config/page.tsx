@@ -334,7 +334,7 @@ export default function PantallaConfigPage() {
                                 {
                                     value: 'slideshow' as const,
                                     label: 'Diapositives',
-                                    description: 'Zero decodificació de vídeo. Per a TVs molt limitades.',
+                                    description: 'Zero decodificació de vídeo. Per a TVs molt limitades. Els vídeos d\'anunci es mostren com a imatges estàtiques (màx. 90 s de contingut).',
                                 },
                             ] as { value: 'video' | 'video_360p' | 'slideshow'; label: string; description: string }[]).map((option) => {
                                 const isSelected = settings.announcement_mode === option.value;
