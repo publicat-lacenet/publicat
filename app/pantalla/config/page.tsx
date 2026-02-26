@@ -15,7 +15,7 @@ interface DisplaySettings {
     ticker_speed: number;
     standby_message: string;
     announcement_volume: number;
-    announcement_mode: 'video' | 'video_360p' | 'slideshow';
+    announcement_mode: 'video' | 'video_360p' | 'slideshow' | 'none';
 }
 
 interface TickerMessage {
@@ -336,7 +336,12 @@ export default function PantallaConfigPage() {
                                     label: 'Diapositives',
                                     description: 'Zero decodificació de vídeo. Per a TVs molt limitades. Els vídeos d\'anunci es mostren com a imatges estàtiques (màx. 90 s de contingut).',
                                 },
-                            ] as { value: 'video' | 'video_360p' | 'slideshow'; label: string; description: string }[]).map((option) => {
+                                {
+                                    value: 'none' as const,
+                                    label: 'No mostrar anuncis',
+                                    description: 'La columna lateral mostrarà només el RSS a pantalla completa.',
+                                },
+                            ] as { value: 'video' | 'video_360p' | 'slideshow' | 'none'; label: string; description: string }[]).map((option) => {
                                 const isSelected = settings.announcement_mode === option.value;
                                 return (
                                     <div

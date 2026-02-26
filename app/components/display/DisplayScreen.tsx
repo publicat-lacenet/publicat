@@ -283,7 +283,7 @@ export default function DisplayScreen({
           />
         }
         announcementZone={
-          announcementVideos.length > 0 ? (
+          display_settings.announcement_mode !== 'none' && announcementVideos.length > 0 ? (
             <AnnouncementZone
               videos={announcementVideos}
               volume={display_settings.announcement_volume}

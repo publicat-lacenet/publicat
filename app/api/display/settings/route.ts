@@ -162,9 +162,9 @@ export async function PATCH(request: NextRequest) {
 
   if ('announcement_mode' in filteredUpdates) {
     const mode = filteredUpdates.announcement_mode as string;
-    if (!['video', 'video_360p', 'slideshow'].includes(mode)) {
+    if (!['video', 'video_360p', 'slideshow', 'none'].includes(mode)) {
       return NextResponse.json(
-        { error: 'El mode d\'anuncis ha de ser video, video_360p o slideshow' },
+        { error: 'El mode d\'anuncis ha de ser video, video_360p, slideshow o none' },
         { status: 400 }
       );
     }
