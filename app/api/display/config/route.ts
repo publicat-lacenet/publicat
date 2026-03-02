@@ -185,13 +185,14 @@ export async function GET(request: NextRequest) {
     // 4. Obtenir configuració RSS
     const { data: rssSettings } = await supabase
       .from('rss_center_settings')
-      .select('seconds_per_item, seconds_per_feed')
+      .select('seconds_per_item, seconds_per_feed, image_height_percent')
       .eq('center_id', centerId)
       .single();
 
     const rss_settings = rssSettings || {
       seconds_per_item: 15,
       seconds_per_feed: 120,
+      image_height_percent: 50,
     };
 
     // 5. Obtenir configuració de display

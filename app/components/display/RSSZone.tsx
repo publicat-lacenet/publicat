@@ -22,6 +22,7 @@ interface RSSZoneProps {
   centerId: string;
   secondsPerItem?: number;
   secondsPerFeed?: number;
+  imageHeightPercent?: number;
   onError?: (error: Error) => void;
 }
 
@@ -29,6 +30,7 @@ export default function RSSZone({
   centerId,
   secondsPerItem = 15,
   secondsPerFeed = 120,
+  imageHeightPercent = 50,
   onError,
 }: RSSZoneProps) {
   const [feeds, setFeeds] = useState<RSSFeed[]>([]);
@@ -180,9 +182,12 @@ export default function RSSZone({
           isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
         }`}
       >
-        {/* Image if available - aspect ratio 16:9 */}
+        {/* Image if available - configurable height */}
         {currentItem.image_url && (
-          <div className="flex-shrink-0 mb-4 relative aspect-video rounded-lg overflow-hidden">
+          <div
+            className="flex-shrink-0 mb-4 relative rounded-lg overflow-hidden"
+            style={{ height: `${imageHeightPercent}%` }}
+          >
             <Image
               src={currentItem.image_url}
               alt={currentItem.title}

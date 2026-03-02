@@ -7,6 +7,7 @@ interface RSSSettings {
   seconds_per_item: number;
   seconds_per_feed: number;
   refresh_minutes: number;
+  image_height_percent: number;
 }
 
 interface RSSConfigFormProps {
@@ -18,6 +19,7 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
     seconds_per_item: 15,
     seconds_per_feed: 120,
     refresh_minutes: 60,
+    image_height_percent: 50,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,7 +53,8 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
       // Note: refresh_minutes excluded - disabled due to Vercel Hobby limitation
       const changed =
         settings.seconds_per_item !== originalSettings.seconds_per_item ||
-        settings.seconds_per_feed !== originalSettings.seconds_per_feed;
+        settings.seconds_per_feed !== originalSettings.seconds_per_feed ||
+        settings.image_height_percent !== originalSettings.image_height_percent;
       setHasChanges(changed);
     }
   }, [settings, originalSettings]);
@@ -69,6 +72,7 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
         body: JSON.stringify({
           seconds_per_item: settings.seconds_per_item,
           seconds_per_feed: settings.seconds_per_feed,
+          image_height_percent: settings.image_height_percent,
         }),
       });
 
@@ -164,6 +168,37 @@ export default function RSSConfigForm({ refreshKey = 0 }: RSSConfigFormProps) {
           />
           <p className="text-xs text-[var(--color-gray)] mt-1">
             Quant temps es mostra cada feed abans de passar al següent (60-300 segons)
+          </p>
+        </div>
+
+        {/* Image height percent */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-medium text-gray-700">
+              Alçada de la imatge
+            </label>
+            <span className="text-sm font-semibold text-[var(--color-secondary)]">
+              {settings.image_height_percent}%
+            </span>
+          </div>
+          <div className="flex gap-2">
+            {[30, 40, 50, 60, 70].map(pct => (
+              <button
+                key={pct}
+                type="button"
+                onClick={() => setSettings(prev => ({ ...prev, image_height_percent: pct }))}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  settings.image_height_percent === pct
+                    ? 'bg-[var(--color-secondary)] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-[var(--color-gray)] mt-1">
+            Percentatge de la targeta de notícia que ocupa la imatge (valor més alt = imatge major)
           </p>
         </div>
 

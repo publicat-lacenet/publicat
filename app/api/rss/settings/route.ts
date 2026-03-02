@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     seconds_per_item: 15,
     seconds_per_feed: 120,
     refresh_minutes: 60,
+    image_height_percent: 50,
   };
 
   return NextResponse.json({
@@ -87,7 +88,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { seconds_per_item, seconds_per_feed, refresh_minutes, center_id: bodyCenterId } = body;
+  const { seconds_per_item, seconds_per_feed, refresh_minutes, image_height_percent, center_id: bodyCenterId } = body;
 
   // Determinar el centre
   const centerId = (role === 'admin_global' && bodyCenterId) || userCenterId;
@@ -133,6 +134,17 @@ export async function PATCH(request: NextRequest) {
       );
     }
     updateData.refresh_minutes = value;
+  }
+
+  if (image_height_percent !== undefined) {
+    const value = parseInt(image_height_percent);
+    if (![30, 40, 50, 60, 70].includes(value)) {
+      return NextResponse.json(
+        { error: "L'alçada de la imatge ha de ser 30, 40, 50, 60 o 70" },
+        { status: 400 }
+      );
+    }
+    updateData.image_height_percent = value;
   }
 
   if (Object.keys(updateData).length === 0) {

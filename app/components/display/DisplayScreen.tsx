@@ -30,6 +30,7 @@ interface DisplayConfig {
   rss_settings: {
     seconds_per_item: number;
     seconds_per_feed: number;
+    image_height_percent: number;
   };
   display_settings: {
     show_header: boolean;
@@ -298,6 +299,7 @@ export default function DisplayScreen({
             centerId={center.id}
             secondsPerItem={rss_settings.seconds_per_item}
             secondsPerFeed={rss_settings.seconds_per_feed}
+            imageHeightPercent={rss_settings.image_height_percent}
           />
         }
         tickerZone={
