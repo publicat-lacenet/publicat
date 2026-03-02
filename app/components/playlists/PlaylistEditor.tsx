@@ -56,6 +56,7 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
   const [showAddVideos, setShowAddVideos] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
+  const [togglingStudentEditable, setTogglingStudentEditable] = useState(false);
 
   // Configure dnd-kit sensors
   const sensors = useSensors(
@@ -176,6 +177,28 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
     }
   };
 
+  const handleToggleStudentEditable = async () => {
+    if (!playlist || togglingStudentEditable) return;
+    setTogglingStudentEditable(true);
+    try {
+      const res = await fetch(`/api/playlists/${playlistId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_student_editable: !playlist.is_student_editable }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error actualitzant la llista');
+      }
+      setPlaylist(prev => prev ? { ...prev, is_student_editable: !prev.is_student_editable } : prev);
+    } catch (err: any) {
+      console.error('Error toggling student editable:', err);
+      alert('Error: ' + err.message);
+    } finally {
+      setTogglingStudentEditable(false);
+    }
+  };
+
   const handleVideosAdded = () => {
     fetchPlaylistDetails();
     setShowAddVideos(false);
@@ -270,11 +293,23 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
               {kindDescriptions[playlist.kind] || ''}
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
-              {playlist.is_student_editable && (
+              {(role === 'admin_global' || (role === 'editor_profe' && playlist.center_id === centerId)) ? (
+                <button
+                  type="button"
+                  onClick={handleToggleStudentEditable}
+                  disabled={togglingStudentEditable}
+                  className="flex items-center gap-2 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
+                >
+                  <div className={`relative w-8 h-4 rounded-full transition-colors ${playlist.is_student_editable ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${playlist.is_student_editable ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </div>
+                  Editable per alumnes
+                </button>
+              ) : playlist.is_student_editable ? (
                 <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
                   Editable per alumnes
                 </span>
-              )}
+              ) : null}
               {!userCanEdit && (
                 <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">
                   Només lectura
