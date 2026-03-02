@@ -8,8 +8,11 @@ interface VideoGridProps {
   onDelete?: (video: Video) => void;
   onPreview?: (video: Video) => void;
   onApprove?: (video: Video) => void;
+  onRequestRevision?: (video: Video) => void;
   showActions?: boolean;
   userCenterId?: string | null;
+  userRole?: string;
+  userId?: string;
 }
 
 export default function VideoGrid({
@@ -19,8 +22,11 @@ export default function VideoGrid({
   onDelete,
   onPreview,
   onApprove,
+  onRequestRevision,
   showActions = true,
   userCenterId,
+  userRole,
+  userId,
 }: VideoGridProps) {
   if (loading) {
     return (
@@ -44,7 +50,7 @@ export default function VideoGrid({
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <VideoIcon className="w-16 h-16 text-[var(--color-gray)] mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-[var(--color-dark)] mb-2 font-[family-name:var(--font-montserrat)]">
-          No s'han trobat vídeos
+          No s&apos;han trobat vídeos
         </h3>
         <p className="text-[var(--color-gray)] font-[family-name:var(--font-inter)]">
           Prova de canviar els filtres o puja el primer vídeo
@@ -63,8 +69,11 @@ export default function VideoGrid({
           onDelete={onDelete}
           onPreview={onPreview}
           onApprove={onApprove}
+          onRequestRevision={onRequestRevision}
           showActions={showActions}
           userCenterId={userCenterId}
+          userRole={userRole}
+          userId={userId}
         />
       ))}
     </div>

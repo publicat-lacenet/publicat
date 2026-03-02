@@ -1,6 +1,6 @@
 'use client';
 
-import { X, CheckCircle, XCircle, User, Clock, Play, Megaphone, Video, MapPin } from 'lucide-react';
+import { X, CheckCircle, XCircle, MessageSquareWarning, User, Clock, Play, Megaphone, Video, MapPin } from 'lucide-react';
 import { extractVimeoId } from '@/lib/vimeo/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ca } from 'date-fns/locale';
@@ -45,6 +45,7 @@ interface VideoPreviewModalProps {
   onClose: () => void;
   onApprove?: (videoId: string) => void;
   onReject?: (videoId: string) => void;
+  onRequestRevision?: (videoId: string) => void;
   showModerationActions?: boolean;
 }
 
@@ -54,6 +55,7 @@ export default function VideoPreviewModal({
   onClose,
   onApprove,
   onReject,
+  onRequestRevision,
   showModerationActions = false,
 }: VideoPreviewModalProps) {
   if (!isOpen || !video) return null;
@@ -71,11 +73,18 @@ export default function VideoPreviewModal({
 
   const handleReject = () => {
     if (onReject) {
-      const confirmed = confirm('Segur que vols rebutjar aquest vídeo? S\'esborrarà permanentment.');
+      const confirmed = confirm('Segur que vols rebutjar i eliminar aquest vídeo definitivament? Aquesta acció no es pot desfer.');
       if (confirmed) {
         onReject(video.id);
         onClose();
       }
+    }
+  };
+
+  const handleRequestRevision = () => {
+    if (onRequestRevision) {
+      onRequestRevision(video.id);
+      onClose();
     }
   };
 
@@ -210,20 +219,29 @@ export default function VideoPreviewModal({
 
             {/* Moderation Actions (només si showModerationActions és true) */}
             {showModerationActions && onApprove && onReject && (
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex gap-3 pt-4 border-t flex-wrap">
                 <button
                   onClick={handleApprove}
                   className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-5 h-5" />
-                  Aprovar vídeo
+                  Aprovar
                 </button>
+                {onRequestRevision && (
+                  <button
+                    onClick={handleRequestRevision}
+                    className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <MessageSquareWarning className="w-5 h-5" />
+                    Demanar revisió
+                  </button>
+                )}
                 <button
                   onClick={handleReject}
-                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <XCircle className="w-5 h-5" />
-                  Rebutjar vídeo
+                  Eliminar
                 </button>
               </div>
             )}

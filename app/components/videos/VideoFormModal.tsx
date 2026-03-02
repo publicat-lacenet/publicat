@@ -6,6 +6,7 @@ import TagSelector from './TagSelector';
 import HashtagInput from './HashtagInput';
 import { useAuth } from '@/utils/supabase/useAuth';
 import { parseHashtagInput, formatHashtagsForInput } from '@/lib/hashtags';
+import { MessageSquareWarning } from 'lucide-react';
 
 interface VimeoMetadata {
   vimeo_id?: string;
@@ -21,7 +22,11 @@ interface VideoData {
   description: string | null;
   type: 'content' | 'announcement';
   vimeo_url: string;
+  vimeo_id?: string | null;
+  vimeo_hash?: string | null;
   is_shared_with_other_centers: boolean;
+  status?: string;
+  rejection_comment?: string | null;
   video_tags?: Array<{ tags: { id: string; name: string } }>;
   video_hashtags?: Array<{ hashtags: { id: string; name: string } }>;
 }
@@ -37,13 +42,17 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const { role } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const isEditMode = !!editVideo;
+  // Mode revisió: alumne editant el seu propi vídeo en needs_revision
+  const isRevisionMode = isEditMode && editVideo?.status === 'needs_revision' && role === 'editor_alumne';
+
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'complete'>('idle');
-  
+  const [hasNewVideo, setHasNewVideo] = useState(false); // Si l'alumne ha pujat un vídeo nou
+
   // Form state
   const [vimeoUrl, setVimeoUrl] = useState('');
   const [isVimeoValid, setIsVimeoValid] = useState(false);
   const [vimeoMetadata, setVimeoMetadata] = useState<VimeoMetadata | null>(null);
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<'content' | 'announcement'>('content');
@@ -51,8 +60,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const [hashtags, setHashtags] = useState('');
   const [isShared, setIsShared] = useState(false);
   const [framesUrls, setFramesUrls] = useState<string[]>([]);
-  // Si el formulari s'envia abans que acabi l'extracció, guardem el videoId
-  // per fer un PATCH quan onFramesExtracted arribi tard
   const pendingVideoIdRef = useRef<string | null>(null);
 
   const canShare = role === 'editor_profe' || role === 'admin_global';
@@ -61,16 +68,16 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   useEffect(() => {
     if (isEditMode && editVideo) {
       setVimeoUrl(editVideo.vimeo_url);
-      setIsVimeoValid(true);
+      setIsVimeoValid(true); // El vídeo existent ja és vàlid
       setTitle(editVideo.title);
       setDescription(editVideo.description || '');
       setType(editVideo.type);
       setIsShared(editVideo.is_shared_with_other_centers);
-      
+      setHasNewVideo(false);
+
       const videoTagIds = editVideo.video_tags?.map(vt => vt.tags.id) || [];
       setTagIds(videoTagIds);
-      
-      // Carregar hashtags per a l'input
+
       const hashtagNames = editVideo.video_hashtags?.map(vh => vh.hashtags.name) || [];
       setHashtags(formatHashtagsForInput(hashtagNames));
     }
@@ -79,16 +86,16 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const handleVimeoValidation = useCallback((isValid: boolean, metadata?: VimeoMetadata) => {
     setIsVimeoValid(isValid);
     setVimeoMetadata(metadata ?? null);
-    
+
     if (isValid && metadata?.title) {
       setTitle(prev => prev || metadata.title || '');
     }
   }, []);
 
-  const handleUploadComplete = useCallback((vimeoUrl: string, metadata: UploadMetadata) => {
-    console.log('📹 handleUploadComplete called with:', { vimeoUrl, metadata });
-    setVimeoUrl(vimeoUrl);
+  const handleUploadComplete = useCallback((uploadedUrl: string, metadata: UploadMetadata) => {
+    setVimeoUrl(uploadedUrl);
     setIsVimeoValid(true);
+    setHasNewVideo(true);
     setVimeoMetadata({
       vimeo_id: metadata.video_id,
       vimeo_hash: metadata.vimeo_hash,
@@ -96,21 +103,18 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       duration: metadata.duration,
       title: title || 'Vídeo sense títol',
     });
-    console.log('✅ Estat actualitzat - vimeoUrl:', vimeoUrl, 'isValid:', true);
   }, [title]);
 
   const handleUploadError = useCallback((error: string) => {
-    alert(`❌ Error: ${error}`);
+    alert(`Error: ${error}`);
   }, []);
-  
+
   const handleStatusChange = useCallback((status: 'idle' | 'uploading' | 'processing' | 'complete') => {
     setUploadStatus(status);
   }, []);
 
-  // Callback quan l'extracció de fotogrames finalitza (pot arribar abans o després del submit)
   const handleFramesExtracted = useCallback(async (urls: string[]) => {
     setFramesUrls(urls);
-    // Si el vídeo ja s'ha creat a la BD (submit va ser primer), actualitzar frames_urls
     if (pendingVideoIdRef.current && urls.length > 0) {
       const videoId = pendingVideoIdRef.current;
       pendingVideoIdRef.current = null;
@@ -120,7 +124,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frames_urls: urls }),
         });
-        console.log(`✅ [VideoFormModal] frames_urls actualitzat al vídeo ${videoId} (${urls.length} frames)`);
       } catch {
         console.warn('[VideoFormModal] No s\'ha pogut actualitzar frames_urls al vídeo creat');
       }
@@ -129,20 +132,12 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('🚀 handleSubmit - Estat actual:', { 
-      title, 
-      tagIds: tagIds.length, 
-      vimeoUrl, 
-      isVimeoValid,
-      isEditMode 
-    });
-    
+
     if (!title) {
       alert('Si us plau, introdueix un títol');
       return;
     }
-    
+
     if (tagIds.length === 0) {
       alert('Si us plau, selecciona almenys una etiqueta');
       return;
@@ -152,7 +147,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       alert('Si us plau, introdueix una URL de Vimeo o puja un fitxer');
       return;
     }
-    
+
     if (!isEditMode && !isVimeoValid) {
       alert('Si us plau, espera que el vídeo es processi completament');
       return;
@@ -161,11 +156,51 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setSubmitting(true);
 
     try {
-      // Processar hashtags amb parsing robust
       const processedHashtags = parseHashtagInput(hashtags)
         .map(h => '#' + h)
         .join(', ');
 
+      // ---- MODE REVISIÓ: enviar correcció ----
+      if (isRevisionMode) {
+        const payload: Record<string, any> = {
+          action: 'submit_revision',
+          title,
+          description: description || null,
+          type,
+          tag_ids: tagIds,
+          hashtag_names: processedHashtags,
+        };
+
+        // Incloure dades del nou vídeo si l'alumne ha pujat un de nou
+        if (hasNewVideo && vimeoMetadata?.vimeo_id && vimeoMetadata.vimeo_id !== editVideo?.vimeo_id) {
+          payload.vimeo_url = vimeoUrl;
+          payload.vimeo_id = vimeoMetadata.vimeo_id;
+          payload.vimeo_hash = vimeoMetadata.vimeo_hash ?? null;
+          payload.thumbnail_url = vimeoMetadata.thumbnail_url ?? null;
+          payload.duration_seconds = vimeoMetadata.duration ?? null;
+          payload.frames_urls = framesUrls;
+        }
+
+        const res = await fetch(`/api/videos/${editVideo!.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('Correcció enviada correctament. El professor la revisarà aviat.');
+          resetForm();
+          onSuccess();
+          onClose();
+        } else {
+          alert(`Error: ${data.error || 'No s\'ha pogut enviar la correcció'}`);
+        }
+        return;
+      }
+
+      // ---- MODE EDICIÓ NORMAL ----
       const payload: Record<string, any> = {
         title,
         description: description || null,
@@ -181,8 +216,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         payload.thumbnail_url = vimeoMetadata?.thumbnail_url;
         payload.duration_seconds = vimeoMetadata?.duration;
         payload.frames_urls = framesUrls;
-        console.log('📊 Vimeo metadata:', vimeoMetadata);
-        console.log('⏱️ Duration being sent:', vimeoMetadata?.duration);
       }
 
       const url = isEditMode ? `/api/videos/${editVideo!.id}` : '/api/videos';
@@ -197,8 +230,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       const data = await res.json();
 
       if (res.ok) {
-        alert(isEditMode ? '✅ Vídeo actualitzat correctament!' : '✅ Vídeo pujat correctament!');
-        // Si és creació i l'extracció pot estar en curs, guardar videoId per al PATCH tardà
+        alert(isEditMode ? 'Vídeo actualitzat correctament!' : 'Vídeo pujat correctament!');
         if (!isEditMode && data.video?.id) {
           pendingVideoIdRef.current = data.video.id;
         }
@@ -207,10 +239,10 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         onClose();
       } else {
         const errorMsg = data.error || (isEditMode ? 'No s\'ha pogut actualitzar el vídeo' : 'No s\'ha pogut crear el vídeo');
-        alert(`❌ Error: ${errorMsg}`);
+        alert(`Error: ${errorMsg}`);
       }
     } catch {
-      alert('❌ Error de connexió');
+      alert('Error de connexió');
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +259,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setHashtags('');
     setIsShared(false);
     setFramesUrls([]);
-    // No netejem pendingVideoIdRef aquí — pot necessitar-se per al PATCH tardà
+    setHasNewVideo(false);
+    setUploadStatus('idle');
   };
 
   const handleClose = () => {
@@ -239,12 +272,19 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
 
   if (!isOpen) return null;
 
+  const modalTitle = isRevisionMode ? 'Corregir vídeo' : isEditMode ? 'Editar Vídeo' : 'Pujar Vídeo';
+  const submitLabel = isRevisionMode
+    ? (submitting ? 'Enviant...' : 'Enviar per revisió')
+    : isEditMode
+      ? (submitting ? 'Actualitzant...' : 'Actualitzar Vídeo')
+      : (submitting ? 'Pujant...' : 'Pujar Vídeo');
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {isEditMode ? 'Editar Vídeo' : 'Pujar Vídeo'}
+            {modalTitle}
           </h2>
           <button
             onClick={handleClose}
@@ -256,6 +296,21 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+
+          {/* Comentari del professor (mode revisió) */}
+          {isRevisionMode && editVideo?.rejection_comment && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-2">
+                <MessageSquareWarning className="w-4 h-4" />
+                Comentari del professor:
+              </p>
+              <p className="text-sm text-red-800 leading-relaxed whitespace-pre-wrap">
+                {editVideo.rejection_comment}
+              </p>
+            </div>
+          )}
+
+          {/* Secció del vídeo */}
           {!isEditMode ? (
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -270,8 +325,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
               {(uploadStatus === 'uploading' || uploadStatus === 'processing') && (
                 <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                   <p className="text-sm text-amber-800">
-                    {uploadStatus === 'uploading' && '⏫ Pujant vídeo a Vimeo...'}
-                    {uploadStatus === 'processing' && '⏳ Processant vídeo... El botó "Pujar Vídeo" s\'activarà quan finalitzi el processament.'}
+                    {uploadStatus === 'uploading' && 'Pujant vídeo a Vimeo...'}
+                    {uploadStatus === 'processing' && 'Processant vídeo... El botó s\'activarà quan finalitzi el processament.'}
                   </p>
                 </div>
               )}
@@ -284,7 +339,49 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
                 </div>
               )}
             </div>
+          ) : isRevisionMode ? (
+            /* Mode revisió: mostrar uploader opcional per substituir el vídeo */
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Substituir el vídeo <span className="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Si el problema és el contingut visual, pots pujar un vídeo nou. Si no, simplement corregeix les metadades a continuació.
+                </p>
+                <VideoUploader
+                  onUploadComplete={handleUploadComplete}
+                  onError={handleUploadError}
+                  onStatusChange={handleStatusChange}
+                  onFramesExtracted={handleFramesExtracted}
+                />
+              </div>
+              {(uploadStatus === 'uploading' || uploadStatus === 'processing') && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    {uploadStatus === 'uploading' && 'Pujant vídeo nou a Vimeo...'}
+                    {uploadStatus === 'processing' && 'Processant vídeo nou...'}
+                  </p>
+                </div>
+              )}
+              {hasNewVideo && vimeoUrl && isVimeoValid && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-sm font-medium">Vídeo nou llest per substituir l&apos;anterior</span>
+                </div>
+              )}
+              {!hasNewVideo && (
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500">
+                    Vídeo actual: <span className="font-medium text-gray-700">{editVideo?.vimeo_url}</span>
+                  </p>
+                </div>
+              )}
+            </div>
           ) : (
+            /* Mode edició normal: URL del vídeo de lectura */
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 URL de Vimeo
@@ -343,7 +440,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
 
           <HashtagInput value={hashtags} onChange={setHashtags} />
 
-          {canShare && (
+          {canShare && !isRevisionMode && (
             <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
               <input
                 type="checkbox"
@@ -369,17 +466,20 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
             </button>
             <button
               type="submit"
-              disabled={submitting || !title || tagIds.length === 0 || (!isEditMode && (uploadStatus === 'uploading' || uploadStatus === 'processing'))}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={
-                !title ? 'Falta el títol' :
-                tagIds.length === 0 ? 'Selecciona almenys una etiqueta' :
-                uploadStatus === 'uploading' ? 'Esperant que finalitzi la pujada' :
-                uploadStatus === 'processing' ? 'Esperant que finalitzi el processament' :
-                isEditMode ? 'Actualitzar vídeo' : 'Pujar vídeo'
+              disabled={
+                submitting ||
+                !title ||
+                tagIds.length === 0 ||
+                (!isEditMode && (uploadStatus === 'uploading' || uploadStatus === 'processing')) ||
+                (isRevisionMode && (uploadStatus === 'uploading' || uploadStatus === 'processing'))
               }
+              className={`px-6 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                isRevisionMode
+                  ? 'bg-orange-500 hover:bg-orange-600'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
-              {submitting ? (isEditMode ? 'Actualitzant...' : 'Pujant...') : (isEditMode ? 'Actualitzar Vídeo' : 'Pujar Vídeo')}
+              {submitLabel}
             </button>
           </div>
         </form>

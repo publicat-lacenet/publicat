@@ -28,12 +28,12 @@ const sidebarItems: SidebarItem[] = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const { role, loading, centerId } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
+  const { user, role, loading, centerId } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);   // per editor_profe
+  const [revisionCount, setRevisionCount] = useState(0); // per editor_alumne
   const supabase = createClient();
 
-  // Fetch pending videos count NOMÉS per editor_profe
-  // L'admin_global NO gestiona vídeos pendents de centres
+  // Fetch pending videos count per editor_profe
   useEffect(() => {
     if (!role || role !== 'editor_profe') {
       setPendingCount(0);
@@ -47,13 +47,11 @@ export default function AppSidebar() {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending_approval');
 
-        // Filtrar per centre (tant per editor_profe com per admin_global)
         if (centerId) {
           query = query.eq('center_id', centerId);
         }
 
         const { count, error } = await query;
-
         if (!error) {
           setPendingCount(count || 0);
         }
@@ -64,28 +62,16 @@ export default function AppSidebar() {
 
     fetchPendingCount();
 
-    // Realtime subscription per actualitzar el comptador
     const channel = supabase
       .channel('pending_videos_count')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'videos',
-          filter: centerId ? `center_id=eq.${centerId}` : undefined
-        },
-        () => {
-          fetchPendingCount();
-        }
+        { event: '*', schema: 'public', table: 'videos', filter: centerId ? `center_id=eq.${centerId}` : undefined },
+        () => { fetchPendingCount(); }
       )
       .subscribe();
 
-    // Escuchar eventos manuales de aprobación/rechazo de vídeos
-    const handleVideoStatusChange = () => {
-      fetchPendingCount();
-    };
-
+    const handleVideoStatusChange = () => { fetchPendingCount(); };
     window.addEventListener('videoStatusChanged', handleVideoStatusChange);
 
     return () => {
@@ -93,6 +79,45 @@ export default function AppSidebar() {
       window.removeEventListener('videoStatusChanged', handleVideoStatusChange);
     };
   }, [role, centerId, supabase]);
+
+  // Fetch needs_revision count per editor_alumne (polling cada 60s)
+  useEffect(() => {
+    if (!role || role !== 'editor_alumne' || !user?.id || !centerId) {
+      setRevisionCount(0);
+      return;
+    }
+
+    const fetchRevisionCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('videos')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'needs_revision')
+          .eq('uploaded_by_user_id', user.id)
+          .eq('center_id', centerId);
+
+        if (!error) {
+          setRevisionCount(count || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching revision count:', err);
+      }
+    };
+
+    fetchRevisionCount();
+
+    // Polling cada 60 segons
+    const interval = setInterval(fetchRevisionCount, 60000);
+
+    // Actualitzar també quan hi ha canvis d'estat de vídeo
+    const handleVideoStatusChange = () => { fetchRevisionCount(); };
+    window.addEventListener('videoStatusChanged', handleVideoStatusChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('videoStatusChanged', handleVideoStatusChange);
+    };
+  }, [role, user?.id, centerId, supabase]);
 
   if (loading) {
     return (
@@ -132,10 +157,16 @@ export default function AppSidebar() {
                 `}
               >
                 <Icon className={`w-5 h-5 transition-colors duration-200 ${active ? 'text-[var(--color-accent)]' : 'text-[var(--color-dark)] group-hover:text-[var(--color-accent)]'}`} />
-                {/* Badge de comptador per vídeos pendents (NOMÉS per editor_profe) */}
+                {/* Badge per editor_profe: vídeos pendents d'aprovació */}
                 {item.showBadge && pendingCount > 0 && role === 'editor_profe' && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
                     {pendingCount > 9 ? '9+' : pendingCount}
+                  </Badge>
+                )}
+                {/* Badge per editor_alumne: vídeos propis que necessiten revisió */}
+                {item.showBadge && revisionCount > 0 && role === 'editor_alumne' && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
+                    {revisionCount > 9 ? '9+' : revisionCount}
                   </Badge>
                 )}
                 {/* Tooltip */}

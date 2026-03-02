@@ -154,10 +154,10 @@ export async function GET(request: NextRequest) {
       // Veuen tots els estats
       query = query.in('status', ['published', 'pending_approval']);
     } else if (role === 'editor_alumne') {
-      // Veuen: (status='published') O (status='pending_approval' I uploaded_by=user_id)
+      // Veuen: (status='published') O (status='pending_approval' O 'needs_revision' I uploaded_by=user_id)
       // Important: Aquesta consulta no es pot fer amb .or() directament perquè no suporta condicions complexes
       // Solució: Filtrar al backend després de la consulta
-      query = query.in('status', ['published', 'pending_approval']);
+      query = query.in('status', ['published', 'pending_approval', 'needs_revision']);
     } else {
       // Altres rols només veuen publicats
       query = query.eq('status', 'published');
@@ -188,9 +188,10 @@ export async function GET(request: NextRequest) {
   if (role === 'editor_alumne') {
     const beforeFilter = filteredVideos.length;
     filteredVideos = filteredVideos.filter(video => {
-      // Veure vídeos publicats O vídeos pendents propis
-      return video.status === 'published' || 
-             (video.status === 'pending_approval' && video.uploaded_by_user_id === user.id);
+      // Veure vídeos publicats O vídeos pendents/en revisió propis
+      return video.status === 'published' ||
+             ((video.status === 'pending_approval' || video.status === 'needs_revision')
+               && video.uploaded_by_user_id === user.id);
     });
     console.log(`🎓 [editor_alumne] Filtered: ${beforeFilter} -> ${filteredVideos.length} videos`);
     console.log(`🎓 [editor_alumne] User ID: ${user.id}`);

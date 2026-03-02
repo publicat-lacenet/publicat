@@ -1,3 +1,32 @@
+/**
+ * Elimina un vídeo de Vimeo per ID.
+ * Falla silenciosament si el vídeo no existeix (404).
+ */
+export async function deleteVimeoVideo(vimeoId: string): Promise<void> {
+  if (!vimeoId) return;
+
+  const response = await fetch(
+    `https://api.vimeo.com/videos/${vimeoId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${process.env.VIMEO_ACCESS_TOKEN}`,
+        'Accept': 'application/vnd.vimeo.*+json;version=3.4',
+      },
+    }
+  );
+
+  if (response.status === 404) {
+    // Vídeo ja eliminat o inexistent, no cal fer res
+    return;
+  }
+
+  if (!response.ok && response.status !== 204) {
+    console.error(`[deleteVimeoVideo] Error eliminant vídeo ${vimeoId}: ${response.status}`);
+    // No llançar excepció — falla silenciosament per no bloquejar el flux
+  }
+}
+
 export interface VimeoVideoData {
   title: string;
   description: string | null;
