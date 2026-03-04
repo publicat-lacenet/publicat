@@ -138,7 +138,12 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
 
   // Permissions
   const canCreatePlaylist = role === 'editor_profe' || role === 'admin_global';
-  const canEditPlaylists = role !== 'editor_alumne';
+  const canEditPlaylist = (playlist: Playlist) => {
+    if (role === 'admin_global') return true;
+    if (role === 'editor_profe') return true;
+    if (role === 'editor_alumne' && playlist.is_student_editable) return true;
+    return false;
+  };
   const canDeletePlaylists = role === 'editor_profe' || role === 'admin_global';
 
   if (authLoading || loading) {
@@ -229,7 +234,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
                 key={playlist.id}
                 playlist={playlist}
                 onEdit={handleEdit}
-                canEdit={canEditPlaylists}
+                canEdit={canEditPlaylist(playlist)}
                 canDelete={false}
               />
             ))}
@@ -249,7 +254,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
                 key={playlist.id}
                 playlist={playlist}
                 onEdit={handleEdit}
-                canEdit={canEditPlaylists}
+                canEdit={canEditPlaylist(playlist)}
                 canDelete={false}
               />
             ))}
@@ -297,7 +302,7 @@ export default function PlaylistList({ onCreatePlaylist }: PlaylistListProps) {
                     playlist={playlist}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
-                    canEdit={canEditPlaylists}
+                    canEdit={canEditPlaylist(playlist)}
                     canDelete={canDeletePlaylists}
                   />
                   {/* Delete confirmation overlay */}
