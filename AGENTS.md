@@ -24,6 +24,32 @@ npm run lint
 
 No hi ha una suite de tests automatitzada definida. Com a verificacio minima, executa `npm run lint`; per canvis de Next/Supabase o d'abast mitja/alt, executa tambe `npm run build` quan sigui raonable.
 
+## GitHub i comptes
+
+Aquest repositori GitHub es `publicat-lacenet/publicat` i s'ha de treballar amb el compte GitHub `publicat-lacenet`.
+
+Abans de fer qualsevol operacio amb GitHub, especialment `git push`, `gh repo ...`, PRs o comprovacions de permisos, comprova que el compte actiu sigui el correcte:
+
+```powershell
+gh auth switch -h github.com -u publicat-lacenet
+gh auth status
+```
+
+Si `gh auth switch` o `gh auth status` indiquen que el token es invalid, que el compte no esta autenticat, o que cal iniciar sessio de nou, demana a l'usuari que reautentiqui el compte amb:
+
+```powershell
+gh auth login -h github.com -p https -w
+```
+
+Durant el login, l'usuari ha d'iniciar sessio al navegador amb el compte `publicat-lacenet`. No facis servir `gh auth login -u publicat-lacenet`, perque `gh auth login` no accepta el flag `-u`; el compte es selecciona autenticant-se al navegador amb l'usuari correcte. Despres de completar el login, torna a executar:
+
+```powershell
+gh auth switch -h github.com -u publicat-lacenet
+gh auth status
+```
+
+No facis `git push` si `gh auth status` no mostra `publicat-lacenet` com a compte actiu i autenticat. En aquesta maquina hi pot haver altres comptes GitHub autenticats per altres projectes; canvia de compte explicitament quan canviis de repositori.
+
 ## Variables d'entorn
 
 El projecte necessita, segons l'entorn:
