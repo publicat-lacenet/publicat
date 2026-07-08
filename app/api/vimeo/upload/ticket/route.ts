@@ -8,6 +8,30 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'No autenticat' }, { status: 401 });
   }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (
+    profile?.role !== 'admin_global' &&
+    profile?.role !== 'editor_profe' &&
+    profile?.role !== 'editor_alumne'
+  ) {
+    return NextResponse.json(
+      { error: 'No tens permisos per pujar vídeos' },
+      { status: 403 }
+    );
+  }
+
+  if (!process.env.VIMEO_ACCESS_TOKEN) {
+    return NextResponse.json(
+      { error: 'La integració amb Vimeo no està configurada' },
+      { status: 500 }
+    );
+  }
   
   try {
     const { file_size, file_name } = await request.json();
@@ -50,8 +74,7 @@ export async function POST(request: NextRequest) {
     });
     
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Error Vimeo API:', error);
+      console.error('Error Vimeo API creating upload ticket:', response.status);
       return NextResponse.json(
         { error: 'Error creant upload ticket a Vimeo' },
         { status: response.status }

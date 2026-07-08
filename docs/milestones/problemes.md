@@ -158,7 +158,7 @@ export default async function VisorPage() {
 
 ---
 
-## Notes per a l'agent Claude Code CLI
+## Notes per a l'agent
 
 1. **Primer problema (Vimeo):**
    - La funció `extractVimeoId` ja existeix a `lib/vimeo/utils.ts`

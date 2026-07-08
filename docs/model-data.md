@@ -1138,4 +1138,4 @@ El subselect força l'avaluació una sola vegada per consulta en lloc de per cad
 
 - [Supabase RLS Documentation](https://supabase.com/docs/guides/auth/row-level-security)
 - [PostgreSQL Trigger Documentation](https://www.postgresql.org/docs/current/sql-createtrigger.html)
-- [CLAUDE.md - Guia del projecte](../CLAUDE.md)
+- [AGENTS.md - Guia del projecte](../AGENTS.md)

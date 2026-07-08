@@ -1,360 +1,202 @@
 # PUBLI*CAT
 
-Plataforma de vídeo per a centres educatius que permet centralitzar, organitzar i compartir contingut audiovisual educatiu.
+**PUBLI*CAT** és una plataforma web multi-centre per gestionar, organitzar i mostrar contingut audiovisual educatiu. El projecte permet als centres treballar amb vídeos de Vimeo, llistes de reproducció, feeds RSS i pantalles informatives de vestíbul amb control de rols i permisos.
 
-## 🎯 Descripció
+Aquest README descriu l'estat actual del repositori. El README anterior s'ha conservat a `docs/README-historic.md`.
 
-PUBLI*CAT és una aplicació web desenvolupada amb Next.js que permet als centres educatius:
+## Estat Actual
 
-- 📹 Centralitzar i gestionar tots els vídeos educatius de Vimeo
-- ⬆️ **Pujar vídeos directament a Vimeo** des del formulari (M3b)
-- 🏷️ Organitzar contingut amb tags globals i hashtags per centre
-- 🔄 Compartir vídeos entre centres educatius
-- 📺 Crear playlists per a pantalles informatives (en desenvolupament)
-- 🔐 Gestionar l'accés amb autenticació segura i sistema de rols
-- 👥 Convidar i gestionar usuaris amb diferents permisos
-- 🎛️ Panel d'administració complet per a gestió de centres, zones i usuaris
+El projecte ja disposa dels blocs principals implementats:
 
-## 🚀 Tecnologies
+- Administració global de centres, zones i usuaris.
+- Autenticació amb Supabase Auth, invitacions i recuperació de contrasenya.
+- Gestió de vídeos amb URL de Vimeo i pujada directa a Vimeo via Tus.
+- Moderació de vídeos pujats per alumnes.
+- Tags globals, hashtags de centre, filtres i compartició intercentres.
+- Llistes de reproducció amb drag and drop i calendari d'assignacions.
+- Mode pantalla/display amb vídeo principal, anuncis i RSS.
+- Gestió de feeds RSS, configuració i ordre de rotació.
+- Landing pública amb playlist global.
+- Gestió d'usuaris del centre per part d'editors professor.
+- Revisió de seguretat aplicada sobre RLS, secrets, Vimeo i headers.
 
-- **Framework**: [Next.js 16](https://nextjs.org) (App Router + Turbopack)
-- **Base de dades**: [Supabase](https://supabase.com) (PostgreSQL)
-- **Autenticació**: [Supabase Auth](https://supabase.com/auth)
-- **Estils**: [Tailwind CSS](https://tailwindcss.com)
-- **Llenguatge**: TypeScript
-- **Vídeo**: [Vimeo API](https://developer.vimeo.com) + tus-js-client
-- **Deployment**: [Vercel](https://vercel.com)
+El roadmap actual apunta principalment a millores com convidats temporals, auditoria, logs, notificacions in-app i evolucions de producte.
 
-## 📋 Prerequisits
+## Stack
 
-- Node.js 20+ i npm
-- Compte de Supabase (per a base de dades i autenticació)
-- Compte de Vimeo amb API token (scopes: private, upload, video_files, public)
-- Compte de Vercel (per a deployment)
+- **Framework:** Next.js 16, App Router, Turbopack
+- **Llenguatge:** TypeScript
+- **UI:** React 19, Tailwind CSS 4, lucide-react
+- **Base de dades:** Supabase PostgreSQL
+- **Auth:** Supabase Auth i `@supabase/ssr`
+- **Video:** Vimeo API, `@vimeo/player`, `tus-js-client`
+- **RSS:** `rss-parser`
+- **Drag and drop:** `@dnd-kit`
+- **Deploy:** Vercel
 
-## 🛠️ Instal·lació
+## Requisits
 
-1. Clona el repositori:
-```bash
-git clone https://github.com/publicat-lacenet/publicat.git
-cd publicat
-```
+- Node.js 20+
+- npm
+- Projecte Supabase configurat
+- Token de Vimeo amb scopes `private`, `upload`, `video_files`, `public`
+- Projecte Vercel per producció
 
-2. Instal·la les dependències:
+## Posada en Marxa
+
+Instal·la dependències:
+
 ```bash
 npm install
 ```
 
-3. Configura les variables d'entorn:
+Copia `.env.example` a `.env.local` i omple els valors:
 
-Crea un fitxer `.env.local` amb:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=la-teva-url-de-supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=la-teva-anon-key
-VIMEO_ACCESS_TOKEN=el-teu-token-de-vimeo
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+DATABASE_URL=...
+VIMEO_ACCESS_TOKEN=...
+CRON_SECRET=...
+MAX_VIDEO_SIZE_MB=2048
+ALLOWED_VIDEO_FORMATS=mp4,mov,avi,mkv,webm
+VIMEO_UPLOAD_CHUNK_SIZE_MB=10
 ```
 
-4. Executa el servidor de desenvolupament:
+Executa el servidor de desenvolupament:
+
 ```bash
 npm run dev
 ```
 
-Obre [http://localhost:3000](http://localhost:3000) al navegador.
+Obre `http://localhost:3000`.
 
-## 🎨 Guia d'Estil
+## Scripts
 
-La guia d'estil del projecte es troba a [`docs/ui/guia-estil.md`](docs/ui/guia-estil.md)
-
-## 🔐 Sistema d'Autenticació
-
-El projecte utilitza autenticació amb email/contrasenya mitjançant Supabase:
-
-- **Login**: `/login` - Inici de sessió amb email i contrasenya
-- **Recuperació**: `/reset-password` - Restablir contrasenya per email
-- **Invitacions**: `/auth/confirm` - Acceptar invitació i crear contrasenya
-- **Callback**: `/auth/callback` - Gestió de tokens d'autenticació
-
-### Configuració de Supabase
-
-1. **URL Configuration**:
-   - Site URL: `https://publicat-lovat.vercel.app`
-   - Redirect URLs: `/auth/callback`, `/auth/confirm`, `/reset-password`
-
-2. **Email Templates**:
-   - Invite User: Plantilla personalitzada en català
-   - Reset Password: Plantilla personalitzada en català
-   - Email OTP Expiration: 86400 segons (24 hores)
-
-## 📂 Estructura del Projecte
-
+```bash
+npm run dev      # Servidor de desenvolupament
+npm run build    # Build de producció
+npm run start    # Servidor de producció
+npm run lint     # ESLint
 ```
+
+Actualment no hi ha una suite de tests automatitzada definida. Per canvis de codi, com a mínim executa `npm run lint`; per canvis d'abast mitjà o alt, executa també `npm run build`.
+
+## Estructura del Projecte
+
+```text
 app/
-├── page.tsx                    # Landing page
-├── layout.tsx                  # Layout principal
-├── globals.css                 # Estils globals
-├── login/                      # Pàgina de login
-├── contingut/                  # Gestió de vídeos (M3a + M3b)
-├── admin/                      # Panel d'administració (M2)
-│   └── tabs/                   # Tabs de gestió
-│       ├── CentresTab.tsx      # Gestió de centres
-│       ├── UsersTab.tsx        # Gestió d'usuaris
-│       └── ZonesTab.tsx        # Gestió de zones
-├── dashboard/                  # Dashboard principal
-├── llistes/                    # Gestió de llistes (futur)
-├── rss/                        # Configuració RSS (futur)
-├── visor/                      # Mode visor (futur)
-├── pantalla/                   # Mode pantalla (futur)
-├── usuaris/                    # Gestió usuaris centre
-├── perfil/                     # Perfil d'usuari
-├── reset-password/             # Recuperació de contrasenya
-│   └── confirm/                # Confirmar nova contrasenya
-├── auth/
-│   ├── callback/               # Callback d'autenticació
-│   ├── confirm/                # Confirmació d'invitació
-│   ├── signout/                # Tancament de sessió
-│   └── auth-code-error/        # Errors d'autenticació
-├── components/
-│   ├── layout/                 # Components de layout
-│   │   ├── AdminLayout.tsx     # Layout d'administració
-│   │   ├── AppHeader.tsx       # Header amb info de rol
-│   │   └── AppSidebar.tsx      # Sidebar dinàmic per rol
-│   ├── videos/                 # Components de vídeo
-│   │   ├── VideoCard.tsx       # Card de vídeo
-│   │   ├── VideoGrid.tsx       # Grid responsive
-│   │   ├── VideoFormModal.tsx  # Formulari creació/edició
-│   │   ├── VideoPreviewModal.tsx # Preview del vídeo
-│   │   ├── VideoUploader.tsx   # 📤 Pujada directa a Vimeo (M3b)
-│   │   ├── TagSelector.tsx     # Selector de tags
-│   │   ├── HashtagInput.tsx    # Input de hashtags
-│   │   └── VimeoUrlInput.tsx   # Input amb validació URL
-│   └── ui/                     # Components UI reutilitzables
-│       └── PageHeader.tsx      # Header de pàgina
-└── api/
-    ├── videos/                 # CRUD de vídeos
-    │   ├── route.ts            # GET, POST
-    │   └── [id]/route.ts       # PATCH, DELETE
-    ├── vimeo/                  # Integració Vimeo
-    │   ├── validate/route.ts   # Validació d'URLs
-    │   ├── upload/             # 📤 Pujada directa (M3b)
-    │   │   └── ticket/route.ts # Obtenir ticket Tus
-    │   └── status/             # Estat del vídeo
-    │       └── [videoId]/route.ts
-    ├── auth/
-    │   └── me/route.ts         # Hidratació de sessió
-    ├── invite-user/            # Invitació d'usuaris
-    └── admin/                  # Gestió administrativa
-        ├── centers/            # CRUD centres
-        ├── users/              # CRUD usuaris
-        └── zones/              # CRUD zones
+  api/                 Endpoints JSON de l'aplicació
+  admin/               Administració global
+  auth/                Callbacks i fluxos d'autenticació
+  components/          Components UI, layout, vídeos, playlists, RSS i display
+  contingut/           Gestió de vídeos
+  dashboard/           Entrada autenticada
+  llistes/             Gestió de llistes de reproducció
+  login/               Inici de sessió
+  pantalla/            Mode display/pantalla
+  perfil/              Perfil d'usuari
+  reset-password/      Recuperació de contrasenya
+  rss/                 Gestió de feeds RSS
+  usuaris/             Gestió d'usuaris del centre
+  visor/               Previsualització de pantalla
 
-docs/                           # Documentació completa
-├── overview.md                 # Visió general
-├── database.schema.md          # Esquema de BD
-├── roles.md                    # Sistema de rols
-├── authentication.md           # Autenticació
-├── vimeo-integration.md        # Integració Vimeo
-├── moderation-system.md        # Sistema de moderació
-├── rss-system.md               # Sistema RSS
-├── storage.md                  # Emmagatzematge
-├── admin-global-center-policy.md # Política admin global
-├── CHANGELOG.md                # Historial de canvis
-├── ui/                         # Documentació UI
-│   ├── guia-estil.md           # Guia d'estil
-│   ├── estructura-layout.md    # Estructura layout
-│   └── ...                     # Altres docs UI
-└── milestones/                 # Documents de milestones
-    ├── M1-*.md                 # M1: Base de dades
-    ├── M2-admin-ui.md          # M2: Admin UI
-    ├── M3a-contingut-base.md   # M3a: Contingut base
-    ├── M3b-vimeo-upload.md     # M3b: Pujada directa Vimeo
-    └── M3c-moderacio-alumnes.md # M3c: Moderació alumnes
-
-hooks/                          # Custom hooks
-├── useDebouncedCallback.ts     # Debounce per inputs
-├── useVideos.ts                # Gestió de vídeos
-└── useVimeoValidation.ts       # Validació Vimeo
-
-lib/
-└── vimeo/                      # Utilitats Vimeo
-    ├── api.ts                  # Funcions API
-    ├── utils.ts                # Utilitats
-    └── index.ts                # Exports
-
-supabase/
-├── config.toml                 # Configuració local
-└── migrations/                 # Migracions de BD (M1)
-    └── *.sql                   # Fitxers de migració
-
-utils/
-└── supabase/                   # Clients de Supabase
-    ├── client.ts               # Client-side
-    ├── server.ts               # Server-side
-    └── useAuth.ts              # Hook d'autenticació
+hooks/                 Hooks de React reutilitzables
+lib/                   Lògica compartida, Vimeo, hashtags i display
+public/                Logos i assets públics
+supabase/migrations/   Migracions SQL versionades
+utils/supabase/        Clients Supabase server/client i auth helpers
+docs/                  Documentació funcional, tècnica i UI
 ```
 
-## 👥 Rols d'Usuari
+## Rols
 
-El sistema implementa 4 rols amb permisos diferenciats:
+- `admin_global`: control global del sistema, centres, zones, usuaris, llistes globals i landing.
+- `editor_profe`: gestiona vídeos, llistes, RSS i usuaris del seu centre.
+- `editor_alumne`: pot pujar vídeos pendents d'aprovació i editar llistes marcades com editables per alumnes.
+- `display`: accedeix al mode passiu de pantalla.
 
-### 🔑 Admin Global
-- Gestió completa de centres, zones i usuaris
-- Accés a totes les funcionalitats administratives
-- Pot crear i editar contingut de qualsevol centre
-- **Associat automàticament al Centre Lacenet**
-- Compartició intercentres automàtica
+Els permisos s'han de mantenir alineats entre UI, API routes i RLS. No n'hi ha prou amb amagar controls a la interfície.
 
-### 📝 Editor Profe
-- Gestió de vídeos del seu centre
-- Creació, edició i eliminació de contingut
-- Pot compartir vídeos amb altres centres
-- Gestió de tags i hashtags
+## Fluxos Principals
 
-### 👨‍🎓 Editor Alumne
-- Visualització de vídeos del centre
-- Gestió de llistes personalitzades (futur)
-- Accés a contingut compartit
+### Vídeos
 
-### 🖥️ Display
-- Mode pantalla (només visualització)
-- Reproducció automàtica de playlists
-- Sense controls d'edició
+- Alta per URL de Vimeo amb validació i metadades.
+- Pujada directa a Vimeo amb Tus i seguiment de processament.
+- Guardat de `vimeo_id` i `vimeo_hash` per vídeos unlisted.
+- Tags globals obligatoris i hashtags opcionals per centre.
+- Compartició intercentres controlada per editors professor i admin global.
 
-## 🔗 Integració amb Vimeo
+### Moderació
 
-El projecte utilitza l'API de Vimeo per a la gestió de contingut audiovisual:
+- Els vídeos pujats per `editor_alumne` entren com `pending_approval`.
+- `editor_profe` i `admin_global` poden aprovar, editar o rebutjar.
+- Les notificacions existeixen a nivell de base de dades; la UI de notificacions queda com a millora.
 
-### Funcionalitats
-- ✅ **Pujada directa de vídeos** (Protocol Tus per uploads resumibles)
-- ✅ Validació de URLs de vídeos en temps real
-- ✅ Obtenció automàtica de thumbnails (espera thumbnail real)
-- ✅ Extracció de metadades (títol, durada, descripció)
-- ✅ Suport per vídeos unlisted (extracció de `vimeo_hash`)
-- ✅ Preview del vídeo abans de guardar
-- ✅ Sistema de fallback amb oEmbed per a vídeos no llistats
+### Llistes i Pantalla
 
-### Configuració necessària
-```env
-VIMEO_ACCESS_TOKEN=el-teu-token-dacces
+- Les llistes agrupen vídeos ordenats.
+- Hi ha llistes de dies, anuncis, personalitzades i globals.
+- El calendari (`schedule_overrides`) permet assignar llistes a dates concretes.
+- El mode display combina vídeo principal, anuncis, ticker i RSS.
+
+### RSS
+
+- Gestió de feeds per centre.
+- Validació de feeds.
+- Configuració de durada per item/feed i ordre de rotació.
+- Actualització via endpoint cron protegit amb `CRON_SECRET`.
+
+## Base de Dades i Migracions
+
+Les migracions es guarden a `supabase/migrations/`, però no s'apliquen amb Supabase CLI en el flux habitual del projecte.
+
+Flux actual:
+
+1. Crear una migració nova amb prefix cronològic `YYYYMMDDHHmmss`.
+2. Copiar el SQL al Supabase SQL Editor.
+3. Executar manualment la migració.
+4. Documentar canvis rellevants a `docs/`.
+
+No editis migracions antigues que representin historial ja aplicat. Per l'estat real de la base de dades, consulta `docs/DB-AUDIT-REPORT.md`.
+
+## Documentació de Referència
+
+- `AGENTS.md`: guia operativa per a agents i mantenidors.
+- `roadmap.md`: estat i evolució de milestones.
+- `docs/overview.md`: visió general del producte.
+- `docs/domain-model.md`: model de domini.
+- `docs/roles.md`: rols i permisos.
+- `docs/database.schema.md`: esquema de base de dades.
+- `docs/DB-AUDIT-REPORT.md`: auditoria de la base de dades.
+- `docs/vimeo-integration.md`: integració amb Vimeo.
+- `docs/rss-system.md`: sistema RSS.
+- `docs/ui/guia-estil.md`: guia visual.
+
+## UI i Identitat
+
+Colors principals:
+
+- Groc: `#FEDD2C`
+- Magenta: `#F91248`
+- Turquesa: `#16AFAA`
+- Fons clar: `#F9FAFB`
+- Text: `#111827`
+
+La UI fa servir Montserrat per títols, Inter per text i icones de `lucide-react`.
+
+## Deploy
+
+Producció:
+
+```text
+https://publicat-lovat.vercel.app
 ```
 
-**Scopes requerits del token:**
-- `private` - Accés a vídeos privats
-- `upload` - Pujar vídeos
-- `video_files` - Accés a fitxers de vídeo
-- `public` - Accés a vídeos públics
+La branca `main` es desplega automàticament a Vercel. Les variables d'entorn de producció s'han de configurar al dashboard de Vercel.
 
-## 🎨 Colors Corporatius
+## Llicència
 
-- **Groc principal**: `#FEDD2C`
-- **Rosa accent**: `#F91248`
-- **Verd/Cian**: `#16AFAA`
-- **Fons**: `#F9FAFB`
-- **Text**: `#111827`
-
-## 📱 Funcionalitats Implementades
-
-### ✅ Milestone 1: Base de Dades (M1)
-- Esquema core complet (centres, usuaris, zones)
-- Esquema de contingut (vídeos, tags, hashtags)
-- Sistema de playlists
-- RLS (Row Level Security) per a tots els rols
-- Triggers i funcions automatitzades
-- Seeds de dades inicials
-
-### ✅ Milestone 2: Admin UI (M2)
-- Panel d'administració complet
-- Gestió de centres educatius
-- Gestió d'usuaris amb invitacions
-- Gestió de zones territorials
-- Sistema de tabs amb navegació
-- Validacions i feedback visual
-
-### ✅ Milestone 3a: Contingut Base (M3a)
-- ✅ Pàgina de gestió de vídeos
-- ✅ Validació en temps real d'URLs de Vimeo
-- ✅ Obtenció automàtica de metadades
-- ✅ Preview del vídeo abans de guardar
-- ✅ Edició de vídeos (Modal reutilitzable)
-- ✅ Eliminació de vídeos amb confirmació
-- ✅ Sistema de tags globals (multi-selecció)
-- ✅ Sistema de hashtags per centre
-- ✅ Compartició intercentres
-- ✅ Filtres avançats (cerca, tipus, compartits)
-- ✅ Paginació amb 24 vídeos per pàgina
-- ✅ Grid responsive amb cards de vídeo
-- ✅ Thumbnails amb fallback automàtic
-
-### ✅ Milestone 3b: Pujada Directa a Vimeo (M3b)
-- ✅ **Pujada directa de vídeos a Vimeo** des del formulari
-- ✅ Protocol Tus per pujades resumibles
-- ✅ Barra de progrés de pujada
-- ✅ Polling d'estat de processament
-- ✅ Detecció de thumbnail real (no placeholder)
-- ✅ Extracció automàtica de `vimeo_id` (ID numèric) i `vimeo_hash` (hash unlisted)
-- ✅ Índex optimitzat per consultes ràpides per `vimeo_id`
-- ✅ Botó de submit desactivat durant processament
-- ✅ Missatges d'estat clars per l'usuari
-- ✅ Suport per formats: mp4, mov, avi, mkv, webm (fins 2GB)
-
-### 🚧 Milestone 3c: Moderació Alumnes (M3c) - PENDENT
-- Sistema de moderació per a vídeos d'alumnes
-- Workflow d'aprovació per professors
-
-### ✅ Política Admin Global
-- ✅ Centre Lacenet per defecte per a administradors
-- ✅ Migració automàtica d'usuaris existents
-- ✅ Trigger per a nous administradors
-- ✅ Documentació completa de la política
-
-### 🎯 Funcionalitats Generals
-- ✅ Landing page responsive
-- ✅ Sistema de login amb email/contrasenya
-- ✅ Recuperació de contrasenya per email
-- ✅ Sistema d'invitacions per a nous usuaris
-- ✅ Callbacks d'autenticació
-- ✅ Gestió de sessions amb Supabase (sessionStorage)
-- ✅ Sidebar dinàmic segons rol
-- ✅ Header amb indicador de rol
-- ✅ Middleware de protecció de rutes
-
-## 🚧 Pròxims Desenvolupaments
-
-- 📋 **M3c**: Moderació de contingut alumnes
-- 📋 **M4**: Gestió de llistes de reproducció
-- 📡 **M5**: Integració amb feeds RSS
-- 🖥️ **M6**: Mode visor per a pantalles
-- 🎨 **M7**: Personalització visual per centre
-- 🔍 **Millores**: Sistema de cerca avançada i filtres dinàmics
-
-## 🌐 Deployment
-
-El projecte està desplegat a Vercel:
-- **Producció**: https://publicat-lovat.vercel.app
-
-Per desplegar canvis:
-```bash
-git push origin main
-```
-
-Vercel detecta automàticament els canvis i redesplega.
-
-## 📝 Scripts Disponibles
-
-```bash
-npm run dev          # Servidor de desenvolupament
-npm run build        # Build de producció
-npm run start        # Servidor de producció
-npm run lint         # Linter
-```
-
-## 🤝 Contribució
-
-Aquest és un projecte pilot per a centres educatius de la xarxa Lacenet.
-
-## 📄 Llicència
-
-Propietat de Lacenet - Desenvolupament intern per a centres educatius
-
----
-
-**PUBLI\*CAT** - Plataforma de vídeo per a centres educatius
+Projecte intern de Lacenet per a centres educatius.

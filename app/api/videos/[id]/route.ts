@@ -3,6 +3,45 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseHashtagInput } from '@/lib/hashtags';
 import { deleteVimeoVideo } from '@/lib/vimeo/api';
 
+type UserRole = 'admin_global' | 'editor_profe' | 'editor_alumne' | 'display';
+
+type UserProfile = {
+  role: UserRole;
+  center_id: string | null;
+};
+
+type VideoUpdatePayload = {
+  title?: string;
+  description?: string | null;
+  type?: string;
+  status?: 'pending_approval' | 'published' | 'needs_revision';
+  rejection_comment?: string | null;
+  rejected_at?: string | null;
+  rejected_by_user_id?: string | null;
+  vimeo_url?: string;
+  vimeo_id?: string;
+  vimeo_hash?: string | null;
+  thumbnail_url?: string | null;
+  duration_seconds?: number | null;
+  frames_urls?: string[];
+  is_shared_with_other_centers?: boolean;
+  shared_by_user_id?: string;
+  shared_at?: string;
+};
+
+async function getUserProfile(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<UserProfile | null> {
+  const { data } = await supabase
+    .from('users')
+    .select('role, center_id')
+    .eq('id', userId)
+    .single();
+
+  return data as UserProfile | null;
+}
+
 // PATCH /api/videos/[id] - Actualitzar vídeo
 export async function PATCH(
   request: NextRequest,
@@ -20,59 +59,14 @@ export async function PATCH(
     return NextResponse.json({ error: 'No autoritzat' }, { status: 401 });
   }
 
-  const role = user.user_metadata?.role;
-  const centerId = user.user_metadata?.center_id;
+  const profile = await getUserProfile(supabase, user.id);
 
-  // Llegir role i center_id de la taula users (fallback)
-  if (!role || !centerId) {
-    const { data: dbUser } = await supabase
-      .from('users')
-      .select('role, center_id')
-      .eq('id', user.id)
-      .single();
-
-    if (dbUser?.role && !role) {
-      user.user_metadata = user.user_metadata || {};
-      user.user_metadata.role = dbUser.role;
-    }
-    if (dbUser?.center_id && !centerId) {
-      user.user_metadata = user.user_metadata || {};
-      user.user_metadata.center_id = dbUser.center_id;
-    }
+  if (!profile) {
+    return NextResponse.json({ error: 'Perfil d\'usuari no trobat' }, { status: 403 });
   }
 
-  const finalRole = user.user_metadata?.role;
-  const finalCenterId = user.user_metadata?.center_id;
-
-  // admin_global no té center_id, buscar centre per defecte
-  let effectiveCenterId = finalCenterId;
-  if (finalRole === 'admin_global' && !finalCenterId) {
-    // Buscar centre Lacenet
-    const { data: lacenet } = await supabase
-      .from('centers')
-      .select('id')
-      .ilike('name', '%lacenet%')
-      .eq('is_active', true)
-      .limit(1)
-      .single();
-
-    if (lacenet) {
-      effectiveCenterId = lacenet.id;
-    } else {
-      // Buscar primer centre actiu
-      const { data: firstCenter } = await supabase
-        .from('centers')
-        .select('id')
-        .eq('is_active', true)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single();
-
-      if (firstCenter) {
-        effectiveCenterId = firstCenter.id;
-      }
-    }
-  }
+  const finalRole = profile.role;
+  const finalCenterId = profile.center_id;
 
   // Obtenir vídeo actual
   const { data: video } = await supabase
@@ -86,7 +80,7 @@ export async function PATCH(
   }
 
   // Validar permisos
-  if (finalRole !== 'admin_global' && video.center_id !== effectiveCenterId) {
+  if (finalRole !== 'admin_global' && video.center_id !== finalCenterId) {
     return NextResponse.json(
       { error: 'No tens permisos per editar aquest vídeo' },
       { status: 403 }
@@ -164,7 +158,7 @@ export async function PATCH(
     }
 
     try {
-      const revisionUpdates: any = {
+      const revisionUpdates: VideoUpdatePayload = {
         status: 'pending_approval',
         rejection_comment: null,
         rejected_at: null,
@@ -243,7 +237,7 @@ export async function PATCH(
 
       return NextResponse.json({ message: 'Correcció enviada correctament' });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Unexpected error in submit_revision:', error);
       return NextResponse.json({ error: 'Error inesperat enviant la correcció' }, { status: 500 });
     }
@@ -252,6 +246,12 @@ export async function PATCH(
   // ============================================================
   // CAS 3: Edició normal (editor_profe / admin_global)
   // ============================================================
+  if (finalRole !== 'editor_profe' && finalRole !== 'admin_global') {
+    return NextResponse.json(
+      { error: 'No tens permisos per editar aquest vídeo' },
+      { status: 403 }
+    );
+  }
 
   // Validacions
   if (tag_ids && tag_ids.length === 0) {
@@ -263,7 +263,7 @@ export async function PATCH(
 
   try {
     // Actualitzar vídeo
-    const updates: any = {};
+    const updates: VideoUpdatePayload = {};
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (type !== undefined) updates.type = type;
@@ -402,7 +402,7 @@ export async function PATCH(
       video: updatedVideo,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Unexpected error:', error);
     return NextResponse.json(
       { error: 'Error inesperat al actualitzar el vídeo' },
@@ -428,58 +428,20 @@ export async function DELETE(
     return NextResponse.json({ error: 'No autoritzat' }, { status: 401 });
   }
 
-  const role = user.user_metadata?.role;
-  const centerId = user.user_metadata?.center_id;
+  const profile = await getUserProfile(supabase, user.id);
 
-  // Llegir role i center_id de la taula users (fallback)
-  if (!role || !centerId) {
-    const { data: dbUser } = await supabase
-      .from('users')
-      .select('role, center_id')
-      .eq('id', user.id)
-      .single();
-
-    if (dbUser?.role && !role) {
-      user.user_metadata = user.user_metadata || {};
-      user.user_metadata.role = dbUser.role;
-    }
-    if (dbUser?.center_id && !centerId) {
-      user.user_metadata = user.user_metadata || {};
-      user.user_metadata.center_id = dbUser.center_id;
-    }
+  if (!profile) {
+    return NextResponse.json({ error: 'Perfil d\'usuari no trobat' }, { status: 403 });
   }
 
-  const finalRole = user.user_metadata?.role;
-  const finalCenterId = user.user_metadata?.center_id;
+  const finalRole = profile.role;
+  const finalCenterId = profile.center_id;
 
-  // admin_global no té center_id, buscar centre per defecte
-  let effectiveCenterId = finalCenterId;
-  if (finalRole === 'admin_global' && !finalCenterId) {
-    // Buscar centre Lacenet
-    const { data: lacenet } = await supabase
-      .from('centers')
-      .select('id')
-      .ilike('name', '%lacenet%')
-      .eq('is_active', true)
-      .limit(1)
-      .single();
-
-    if (lacenet) {
-      effectiveCenterId = lacenet.id;
-    } else {
-      // Buscar primer centre actiu
-      const { data: firstCenter } = await supabase
-        .from('centers')
-        .select('id')
-        .eq('is_active', true)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single();
-
-      if (firstCenter) {
-        effectiveCenterId = firstCenter.id;
-      }
-    }
+  if (finalRole !== 'editor_profe' && finalRole !== 'admin_global') {
+    return NextResponse.json(
+      { error: 'No tens permisos per eliminar aquest vídeo' },
+      { status: 403 }
+    );
   }
 
   // Obtenir vídeo actual (incloent frames_urls per netejar Storage)
@@ -494,7 +456,7 @@ export async function DELETE(
   }
 
   // Validar permisos
-  if (finalRole !== 'admin_global' && video.center_id !== effectiveCenterId) {
+  if (finalRole !== 'admin_global' && video.center_id !== finalCenterId) {
     return NextResponse.json(
       { error: 'No tens permisos per eliminar aquest vídeo' },
       { status: 403 }
@@ -545,7 +507,7 @@ export async function DELETE(
       message: 'Vídeo eliminat correctament',
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Unexpected error:', error);
     return NextResponse.json(
       { error: 'Error inesperat al eliminar el vídeo' },

@@ -10,12 +10,22 @@ const parser = new Parser({
   },
 });
 
+type RssItemWithMedia = Parser.Item & {
+  enclosure?: { url?: string };
+  'media:content'?: { '$'?: { url?: string } };
+  'media:thumbnail'?: { '$'?: { url?: string } };
+};
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Error desconegut';
+}
+
 function extractImage(item: Parser.Item): string | null {
-  const anyItem = item as any;
-  if (anyItem.enclosure?.url) return anyItem.enclosure.url;
-  if (anyItem['media:content']?.['$']?.url) return anyItem['media:content']['$'].url;
-  if (anyItem['media:thumbnail']?.['$']?.url)
-    return anyItem['media:thumbnail']['$'].url;
+  const mediaItem = item as RssItemWithMedia;
+  if (mediaItem.enclosure?.url) return mediaItem.enclosure.url;
+  if (mediaItem['media:content']?.['$']?.url) return mediaItem['media:content']['$'].url;
+  if (mediaItem['media:thumbnail']?.['$']?.url)
+    return mediaItem['media:thumbnail']['$'].url;
   const content = item.content || item.contentSnippet || '';
   const imgMatch = content.match(/<img[^>]+src="([^"]+)"/);
   if (imgMatch) return imgMatch[1];
@@ -27,9 +37,17 @@ export async function GET(request: NextRequest) {
   // Verificar autorització del cron job
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
+  const isLocalDev = process.env.NODE_ENV === 'development';
 
-  // En producció, verificar el secret
-  if (process.env.NODE_ENV === 'production' && cronSecret) {
+  if (!cronSecret && !isLocalDev) {
+    return NextResponse.json(
+      { error: 'CRON_SECRET no està configurat' },
+      { status: 500 }
+    );
+  }
+
+  // En local es permet executar sense secret si no esta configurat.
+  if (cronSecret) {
     if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'No autoritzat' }, { status: 401 });
     }
@@ -133,8 +151,9 @@ export async function GET(request: NextRequest) {
           status: 'success',
           items: itemsToUpsert.length,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error processing feed ${feed.name}:`, error);
+        const errorMessage = getErrorMessage(error);
 
         const newErrorCount = (feed.error_count || 0) + 1;
         const shouldDisable = newErrorCount >= 5;
@@ -144,7 +163,7 @@ export async function GET(request: NextRequest) {
           .from('rss_feeds')
           .update({
             error_count: newErrorCount,
-            last_error: error.message || 'Error desconegut',
+            last_error: errorMessage,
             is_active: !shouldDisable,
           })
           .eq('id', feed.id);
@@ -158,7 +177,7 @@ export async function GET(request: NextRequest) {
           feed_id: feed.id,
           name: feed.name,
           status: shouldDisable ? 'disabled' : 'error',
-          error: error.message || 'Error desconegut',
+          error: errorMessage,
         });
       }
     }
@@ -167,10 +186,10 @@ export async function GET(request: NextRequest) {
       message: 'Cron job completat',
       results,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in cron job:', error);
     return NextResponse.json(
-      { error: error.message || 'Error inesperat' },
+      { error: getErrorMessage(error) || 'Error inesperat' },
       { status: 500 }
     );
   }

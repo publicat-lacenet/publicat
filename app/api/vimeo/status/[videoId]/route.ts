@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
+type VimeoPictureSize = {
+  width: number;
+  link: string;
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ videoId: string }> }
@@ -11,6 +16,30 @@ export async function GET(
 
   if (!user) {
     return NextResponse.json({ error: 'No autenticat' }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (
+    profile?.role !== 'admin_global' &&
+    profile?.role !== 'editor_profe' &&
+    profile?.role !== 'editor_alumne'
+  ) {
+    return NextResponse.json(
+      { error: 'No tens permisos per consultar l\'estat de Vimeo' },
+      { status: 403 }
+    );
+  }
+
+  if (!process.env.VIMEO_ACCESS_TOKEN) {
+    return NextResponse.json(
+      { error: 'La integració amb Vimeo no està configurada' },
+      { status: 500 }
+    );
   }
 
   const { videoId } = await params;
@@ -37,16 +66,8 @@ export async function GET(
     const linkParts = data.link?.split('/') || [];
     const vimeoHash = linkParts.length > 4 ? linkParts[4] : null;
     
-    console.log('📊 Vimeo API response for video', videoId, ':', {
-      status: data.status,
-      link: data.link,
-      vimeoHash,
-      duration: data.duration,
-      pictures: data.pictures?.sizes?.length || 0,
-    });
-    
     // Seleccionar thumbnail de 640px o el primer disponible
-    const thumbnail = data.pictures?.sizes?.find((s: any) => s.width === 640)?.link 
+    const thumbnail = data.pictures?.sizes?.find((s: VimeoPictureSize) => s.width === 640)?.link 
       || data.pictures?.sizes?.[0]?.link
       || '';
     
