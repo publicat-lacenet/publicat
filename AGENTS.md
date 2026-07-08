@@ -28,6 +28,40 @@ No hi ha una suite de tests automatitzada definida. Com a verificacio minima, ex
 
 Aquest repositori GitHub es `publicat-lacenet/publicat` i s'ha de treballar amb el compte GitHub `publicat-lacenet`.
 
+En aquesta maquina es treballa amb diversos projectes i diversos comptes GitHub. Cada vegada que entris o tornis a aquest projecte despres d'haver treballat en un altre repositori, no assumeixis que la configuracio global encara es correcta: comprova i restaura explicitament el remot, el compte GitHub actiu i la identitat Git local d'aquest checkout.
+
+Comprovacio minima en tornar a aquest projecte:
+
+```powershell
+git remote -v
+git config --local --get user.name
+git config --local --get user.email
+gh auth switch -h github.com -u publicat-lacenet
+gh auth status
+```
+
+La configuracio esperada es:
+
+```text
+origin = https://github.com/publicat-lacenet/publicat.git
+user.name = publicat-lacenet
+user.email = publicat@xtec.cat
+gh active account = publicat-lacenet
+```
+
+Si `origin` no apunta a aquest repositori, corregeix-lo abans de fer cap operacio GitHub:
+
+```powershell
+git remote set-url origin https://github.com/publicat-lacenet/publicat.git
+```
+
+Si la identitat Git local no es la d'aquest projecte, corregeix-la abans de fer commits:
+
+```powershell
+git config --local user.name publicat-lacenet
+git config --local user.email publicat@xtec.cat
+```
+
 Abans de fer qualsevol operacio amb GitHub, especialment `git push`, `gh repo ...`, PRs o comprovacions de permisos, comprova que el compte actiu sigui el correcte:
 
 ```powershell
@@ -48,7 +82,19 @@ gh auth switch -h github.com -u publicat-lacenet
 gh auth status
 ```
 
-No facis `git push` si `gh auth status` no mostra `publicat-lacenet` com a compte actiu i autenticat. En aquesta maquina hi pot haver altres comptes GitHub autenticats per altres projectes; canvia de compte explicitament quan canviis de repositori.
+Abans de fer `git push`, verifica tambe l'autor i el committer de l'ultim commit:
+
+```powershell
+git log -1 --format="author=%an <%ae>%ncommitter=%cn <%ce>"
+```
+
+No facis `git push` si `gh auth status` no mostra `publicat-lacenet` com a compte actiu i autenticat, si `origin` no apunta a `publicat-lacenet/publicat`, o si l'autor/committer del commit que vols pujar no son `publicat-lacenet <publicat@xtec.cat>`. En aquesta maquina hi pot haver altres comptes GitHub autenticats per altres projectes; canvia de compte explicitament quan canviis de repositori.
+
+Si un commit local s'ha creat amb la identitat equivocada i encara no s'ha publicat, corregeix primer la identitat local i despres amenda'l:
+
+```powershell
+git commit --amend --reset-author --no-edit
+```
 
 ## Variables d'entorn
 
