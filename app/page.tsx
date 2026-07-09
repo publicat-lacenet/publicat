@@ -143,20 +143,9 @@ export default function Home() {
                 height={60}
                 className="h-14 w-auto object-contain"
               />
-              <Image
-                src="/logo_gencat.png"
-                alt="Generalitat de Catalunya - Departament d'Educació i Formació Professional"
-                width={280}
-                height={60}
-                className="h-14 w-auto object-contain"
-              />
-              <Image
-                src="/logo_crp_bages.png"
-                alt="Servei Educatiu del Bages - CRP"
-                width={180}
-                height={60}
-                className="h-14 w-auto object-contain"
-              />
+              <p className="max-w-xl text-center text-sm font-bold leading-relaxed text-[#111827]">
+                PUBLICAT és una iniciativa de l&apos;equip Lacenet que es desenvolupa sense suport institucional ni subvencions. La gestionem docents de manera voluntària i altruista.
+              </p>
             </div>
             <div className="flex flex-col items-center justify-between gap-2 border-t border-[#E5E7EB] pt-4 md:flex-row">
               <p>© {new Date().getFullYear()} PUBLICAT</p>
