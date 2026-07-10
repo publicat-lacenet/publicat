@@ -14,6 +14,9 @@ interface PlaylistFormModalProps {
   };
 }
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 export default function PlaylistFormModal({
   isOpen,
   onClose,
@@ -46,7 +49,7 @@ export default function PlaylistFormModal({
         : '/api/playlists';
       const method = isEditing ? 'PATCH' : 'POST';
 
-      const body: any = {
+      const body = {
         name: name.trim(),
         is_student_editable: isStudentEditable,
       };
@@ -68,9 +71,9 @@ export default function PlaylistFormModal({
 
       onSuccess?.();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving playlist:', err);
-      setError(err.message);
+      setError(getErrorMessage(err, 'Error guardant la llista'));
     } finally {
       setLoading(false);
     }
@@ -87,7 +90,7 @@ export default function PlaylistFormModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isEditing ? 'Editar Llista' : 'Nova Llista'}
+      title={isEditing ? 'Editar llista' : 'Nova llista amb calendari'}
       footer={
         <>
           <button
@@ -104,7 +107,7 @@ export default function PlaylistFormModal({
             className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={loading || !name.trim()}
           >
-            {loading ? 'Guardant...' : isEditing ? 'Guardar Canvis' : 'Crear Llista'}
+            {loading ? 'Guardant...' : isEditing ? 'Guardar canvis' : 'Crear llista'}
           </button>
         </>
       }
@@ -163,8 +166,8 @@ export default function PlaylistFormModal({
 
         {/* Helper text */}
         <p className="text-xs text-[var(--color-gray)]">
-          Les llistes personalitzades es poden eliminar. Les llistes
-          predefinides (dies de la setmana i anuncis) no es poden eliminar.
+          Les llistes amb calendari es poden eliminar. La llista permanent,
+          les llistes per dia de la setmana i la llista d&apos;anuncis no es poden eliminar.
         </p>
       </form>
     </Modal>

@@ -35,7 +35,12 @@ export async function PATCH(
 
   // Build update object
   const updateData: Record<string, unknown> = {};
-  if (text !== undefined) updateData.text = text.trim();
+  if (text !== undefined) {
+    if (!text.trim()) {
+      return NextResponse.json({ error: 'El text és obligatori' }, { status: 400 });
+    }
+    updateData.text = text.trim();
+  }
   if (position !== undefined) updateData.position = position;
   if (is_active !== undefined) updateData.is_active = is_active;
 
@@ -43,7 +48,21 @@ export async function PATCH(
     return NextResponse.json({ error: 'No hi ha dades per actualitzar' }, { status: 400 });
   }
 
-  // Update message (RLS will ensure user can only update their center's messages)
+  const { data: existingMessage } = await supabase
+    .from('ticker_messages')
+    .select('center_id')
+    .eq('id', id)
+    .single();
+
+  if (!existingMessage) {
+    return NextResponse.json({ error: 'Missatge no trobat' }, { status: 404 });
+  }
+
+  if (userData.role !== 'admin_global' && existingMessage.center_id !== userData.center_id) {
+    return NextResponse.json({ error: 'No tens permisos per aquest centre' }, { status: 403 });
+  }
+
+  // Update message
   const { data: message, error } = await supabase
     .from('ticker_messages')
     .update(updateData)
@@ -95,7 +114,7 @@ export async function DELETE(
   // Get the message to check if it's the first one
   const { data: message } = await supabase
     .from('ticker_messages')
-    .select('center_id, position')
+    .select('center_id, playlist_id, position')
     .eq('id', id)
     .single();
 
@@ -103,21 +122,31 @@ export async function DELETE(
     return NextResponse.json({ error: 'Missatge no trobat' }, { status: 404 });
   }
 
-  // Count messages for this center
-  const { count } = await supabase
+  if (userData.role !== 'admin_global' && message.center_id !== userData.center_id) {
+    return NextResponse.json({ error: 'No tens permisos per aquest centre' }, { status: 403 });
+  }
+
+  let countQuery = supabase
     .from('ticker_messages')
     .select('*', { count: 'exact', head: true })
-    .eq('center_id', message.center_id);
+    .eq('center_id', message.center_id)
+    .eq('is_active', true);
 
-  // Don't allow deleting if it's the only message
-  if (count && count <= 1) {
+  countQuery = message.playlist_id
+    ? countQuery.eq('playlist_id', message.playlist_id)
+    : countQuery.is('playlist_id', null);
+
+  const { count } = await countQuery;
+
+  // Don't allow deleting the last general fallback message.
+  if (!message.playlist_id && count && count <= 1) {
     return NextResponse.json(
       { error: 'No es pot eliminar l\'últim missatge. Sempre ha d\'haver-hi almenys un.' },
       { status: 400 }
     );
   }
 
-  // Delete message (RLS will ensure user can only delete their center's messages)
+  // Delete message
   const { error } = await supabase
     .from('ticker_messages')
     .delete()
@@ -128,12 +157,19 @@ export async function DELETE(
     return NextResponse.json({ error: 'Error eliminant missatge' }, { status: 500 });
   }
 
-  // Reorder remaining messages
-  const { data: remainingMessages } = await supabase
+  // Reorder remaining messages in the same scope
+  let remainingQuery = supabase
     .from('ticker_messages')
     .select('id')
     .eq('center_id', message.center_id)
+    .eq('is_active', true)
     .order('position', { ascending: true });
+
+  remainingQuery = message.playlist_id
+    ? remainingQuery.eq('playlist_id', message.playlist_id)
+    : remainingQuery.is('playlist_id', null);
+
+  const { data: remainingMessages } = await remainingQuery;
 
   if (remainingMessages) {
     for (let i = 0; i < remainingMessages.length; i++) {

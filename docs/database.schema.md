@@ -1,509 +1,445 @@
-# database-schema.md — Publicat
+# Esquema de base de dades - PUBLI*CAT
 
-Aquest document descriu l’esquema físic (Postgres/Supabase) derivat del Domain Model: taules, columnes, constraints, índexs i notes d’implementació.
+Document canònic del mapa de base de dades de PUBLI*CAT. Descriu l'estructura real verificada, les relacions principals i les regles que cal preservar quan es modifica schema, RLS o fluxos de dades.
 
----
+Última verificació: 2026-07-09 contra la BD real `publicat_videos` (`tvsafusrasfzubiujavk`) via `DATABASE_URL`, sense exposar credencials.
 
-## 1) Convencions i criteris globals
+## Fonts de veritat
 
-### Schema i naming
-- Schema: `public.*`
-- Taules: **plural** i `snake_case` (p. ex. `centers`, `playlist_items`).
-- Columnes: `snake_case` (p. ex. `center_id`, `created_at`).
-- FK: `<entity>_id`.
+- Aquest document és el mapa canònic de lectura per entendre la BD.
+- El SQL exacte viu a `supabase/migrations/`.
+- Les verificacions i rectificacions datades viuen a `MEMORIA_PROJECTE.md`.
+- Els informes antics moguts a `docs/OBSOLET/` són històrics i no s'han d'usar com a foto actual sense contrastar.
 
-### Tipus base
-- Identificadors: `uuid` (default `gen_random_uuid()`).
-- Dates: `date`.
+Estat verificat el 2026-07-09:
+
+- Taules públiques: 20.
+- Enums públics: 6 després de la migració local pendent.
+- Migracions locals: 37 després de la migració local pendent.
+- Versions registrades a `supabase_migrations.schema_migrations`: 35.
+- Última migració registrada: `20260707180000_harden_core_rls_policies.sql`.
+- Totes les taules públiques tenen RLS activat.
+
+## Convencions
+
+- Schema principal: `public`.
+- Identificadors: `uuid`.
 - Timestamps: `timestamptz`.
-- Text: `text` (o `citext` si volem uniques case-insensitive).
-- Booleans: `boolean`.
-- Ordres/posicions: `int`.
-
-### Camps comuns
-Recomanats a la majoria de taules:
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()` (via trigger)
-- `is_active boolean not null default true` (quan tingui sentit)
-
-### Soft delete vs is_active=false
-- `is_active=false`: baixa lògica “operativa” (p. ex. usuaris, zones, hashtags, feeds).
-- Soft delete (opcional): `deleted_at timestamptz` si volem conservar històric (no és imprescindible a la fase inicial).
-- Delete físic: acceptable en entitats “transaccionals” si el domini ho indica (p. ex. **rebuig de vídeo = esborrat immediat**).
-
-### Triggers utilitaris (recomanat)
-- `set_updated_at()` per mantenir `updated_at` automàtic.
-- (Opcional) `set_video_zone_from_center()` per assegurar `videos.zone_id = centers.zone_id`.
-
----
-
-## 2) Enums o CHECK constraints
-
-Recomanat: **Postgres ENUM** (clar, validació forta).
-
-### Enums mínims
-- `user_role`: `admin_global | editor_profe | editor_alumne | display`
-- `onboarding_status`: `invited | active | disabled`
-- `video_type`: `content | announcement`
-- `video_status`: `pending_approval | published`
-  - Nota: el domini diu que “rebutjat = esborrat”; si en el futur vols auditar, es pot afegir `rejected`.
-- `playlist_kind`: `weekday | announcements | custom | global | landing`
-
----
-
-## 3) Taules
-
-> Format de cada taula:
-> 1) Propòsit
-> 2) Columnes
-> 3) PK/FK
-> 4) UNIQUE
-> 5) Índexs
-> 6) Constraints/triggers especials (si cal)
-
-### 3.1 `public.zones`
-**Propòsit:** catàleg global de zones geogràfiques.
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `name text not null`
-- `is_active boolean not null default true`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**UNIQUE**
-- `UNIQUE (name)` (idealment case-insensitive via `citext` o `unique(lower(name))`)
-
-**Índexs**
-- (implícit per UNIQUE)
-
----
-
-### 3.2 `public.centers`
-**Propòsit:** tenant del sistema.
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `name text not null`
-- `zone_id uuid not null`
-- `logo_url text null` (URL pública de Supabase Storage bucket `center-logos`, vegeu `docs/storage.md`)
-- `is_active boolean not null default true`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**FK**
-- `zone_id -> zones(id) on delete restrict`
-
-**Índexs**
-- `index (zone_id)`
-- (Opcional) `unique(lower(name))` si vols evitar duplicats globals de nom
-
----
-
-### 3.3 `public.users` (perfil d’app)
-**Propòsit:** perfil aplicatiu (rol, centre, estat, traçabilitat), 1:1 amb `auth.users`.
-
-**Columnes**
-- `id uuid pk`  (mateix id que `auth.users.id`)
-- `email text not null` (cache de `auth.users.email`)
-- `role user_role not null`
-- `center_id uuid null`
-- `is_active boolean not null default true`
-- `full_name text null`
-- `phone text null`
-- `onboarding_status onboarding_status not null default 'invited'`
-- `invited_at timestamptz null`
-- `last_invitation_sent_at timestamptz null`
-- `activated_at timestamptz null`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-- `created_by_user_id uuid null` (auditoria)
-
-**FK**
-- `id -> auth.users(id) on delete cascade|restrict` (veure secció 4)
-- `center_id -> centers(id) on delete restrict`
-- `created_by_user_id -> users(id) on delete set null`
-
-**UNIQUE**
-- `UNIQUE (lower(email))` (email no pot estar associat a més d’un centre)
-
-**Constraints**
-- `CHECK ((role = 'admin_global') OR (role <> 'admin_global' AND center_id IS NOT NULL))`
-  - Nota: Els admin_global poden tenir o no tenir centre. Per defecte s'associen al Centre Lacenet.
-
-**Índexs**
-- `index (center_id)`
-- `index (role)`
-- `index (is_active)`
-- `index (onboarding_status)`
-
----
-
-### 3.4 `public.guest_access_links`
-**Propòsit:** accés temporal sense autenticació per veure contingut publicat d’un centre.
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `token text not null` *(o millor: `token_hash text not null` i no guardar el token en clar)*
-- `center_id uuid not null`
-- `expires_at timestamptz not null`
-- `created_at timestamptz not null default now()`
-- `created_by_user_id uuid not null`
-- `revoked_at timestamptz null`
-- `revoked_by_user_id uuid null`
-- `full_name text null`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-- `created_by_user_id -> users(id) on delete restrict`
-- `revoked_by_user_id -> users(id) on delete set null`
-
-**UNIQUE**
-- `UNIQUE (token)` (o `token_hash`)
-
-**Índexs**
-- `index (center_id)`
-- `index (expires_at)`
-- `index (revoked_at)`
-
----
-
-### 3.5 `public.videos`
-**Propòsit:** contingut audiovisual (Vimeo) d’un centre, amb moderació i compartició.
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `center_id uuid not null`
-- `zone_id uuid not null` *(redundant/derivada; recomanat per filtres ràpids)*
-- `title text not null`
-- `description text null`
-- `type video_type not null default 'content'`
-- `status video_status not null default 'pending_approval'`
-- `vimeo_url text not null` *(URL completa del vídeo de Vimeo)*
-- `vimeo_id text null` *(ID numèric del vídeo, ex: 1153589462 - extret automàticament de vimeo_url)*
-- `vimeo_hash text null` *(hash de privacitat per vídeos unlisted, ex: e03029570e)*
-- `duration_seconds int null`
-- `thumbnail_url text null`
-- `uploaded_by_user_id uuid not null`
-- `approved_by_user_id uuid null`
-- `approved_at timestamptz null`
-- `is_shared_with_other_centers boolean not null default false`
-- `shared_by_user_id uuid null`
-- `shared_at timestamptz null`
-- `is_active boolean not null default true`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**FK**
-- `center_id -> centers(id) on delete restrict`
-- `zone_id -> zones(id) on delete restrict`
-- `uploaded_by_user_id -> users(id) on delete restrict`
-- `approved_by_user_id -> users(id) on delete set null`
-- `shared_by_user_id -> users(id) on delete set null`
-
-**Constraints (recomanats)**
-- (Opcional) `CHECK (duration_seconds IS NULL OR duration_seconds >= 0)`
-- Coherència `zone_id`: via trigger que copiï `centers.zone_id` quan es crea/actualitza `center_id`.
-
-**Índexs "load-bearing"**
-- `index (center_id)`
-- `index (zone_id)`
-- `index (status)`
-- `index (type)`
-- `index (vimeo_id)` *(nou - per consultes ràpides)*
-- `index (is_shared_with_other_centers)`
-- (Opcional) `index (created_at desc)`
-
----
-
-### 3.6 `public.tags`
-**Propòsit:** catàleg global d’etiquetes (controlat).
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `name text not null`
-- `is_active boolean not null default true`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**UNIQUE**
-- `UNIQUE (lower(name))`
-
----
-
-### 3.7 `public.hashtags`
-**Propòsit:** etiquetes internes per centre (opcionales).
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `center_id uuid not null`
-- `name text not null`
-- `is_active boolean not null default true`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-
-**UNIQUE**
-- `UNIQUE (center_id, lower(name))`
-
-**Índexs**
-- `index (center_id)`
-
----
-
-### 3.8 `public.playlists`
-**Propòsit:** llista ordenada de vídeos (weekday/announcements/custom/global/landing).
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `center_id uuid null` *(null = definició global / landing)*
-- `name text not null`
-- `kind playlist_kind not null`
-- `is_deletable boolean not null default true`
-- `is_student_editable boolean not null default false`
-- `origin_playlist_id uuid null` *(còpia local -> apunta a la global d’origen)*
-- `created_by_user_id uuid null`
-- `is_active boolean not null default true`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-- `origin_playlist_id -> playlists(id) on delete restrict`
-- `created_by_user_id -> users(id) on delete set null`
-
-**Constraints (clau del domini)**
-- `CHECK` de coherència `center_id` segons `kind`:
-  - `weekday | announcements | custom` => `center_id IS NOT NULL`
-  - `landing` => `center_id IS NULL AND origin_playlist_id IS NULL`
-  - `global`:
-    - definició global => `center_id IS NULL AND origin_playlist_id IS NULL`
-    - còpia local => `center_id IS NOT NULL AND origin_playlist_id IS NOT NULL`
-- `CHECK` per a alumnat:
-  - `is_student_editable = false` si `kind IN ('announcements','global','landing')`
-
-**UNIQUE (recomanat)**
-- `UNIQUE (center_id, kind, lower(name))` *(per evitar duplicats dins un centre; per globals, `center_id` null)*
-
-**Índexs**
-- `index (center_id, kind)`
-- `index (origin_playlist_id)`
-
----
-
-### 3.9 `public.playlist_items`
-**Propòsit:** join ordenat playlist↔video.
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `playlist_id uuid not null`
-- `video_id uuid not null`
-- `position int not null`
-- `added_at timestamptz not null default now()`
-- `added_by_user_id uuid null`
-
-**FK**
-- `playlist_id -> playlists(id) on delete cascade`
-- `video_id -> videos(id) on delete cascade`
-- `added_by_user_id -> users(id) on delete set null`
-
-**UNIQUE**
-- `UNIQUE (playlist_id, position)`
-- (Opcional) `UNIQUE (playlist_id, video_id)` si **no** vols duplicats del mateix vídeo a la mateixa llista.
-
-**Índexs**
-- `index (playlist_id, position)`
-- `index (video_id)`
-
-**Regles difícils de garantir només amb schema**
-- Si `playlists.kind = 'announcements'`, només permetre `videos.type = 'announcement'`.
-  - Recomanat: validació d’app + (opcional) trigger.
-
----
-
-### 3.10 `public.schedule_overrides`
-**Propòsit:** assignar una playlist a una data concreta per un centre (decisió “una fila per dia”).
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `center_id uuid not null`
-- `date date not null`
-- `playlist_id uuid not null`
-- `created_by_user_id uuid not null`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-- `playlist_id -> playlists(id) on delete restrict`
-- `created_by_user_id -> users(id) on delete restrict`
-
-**UNIQUE**
-- `UNIQUE (center_id, date)`
-
-**Índexs**
-- `index (center_id, date)`
-
-**Regles de domini (validació app / trigger opcional)**
-- `playlist_id` només pot apuntar a llistes `custom` o `global` (còpies locals).
-
----
-
-### 3.11 `public.rss_feeds`
-**Propòsit:** definició de feeds RSS (de centre o globals).
-
-**Columnes**
-- `id uuid pk default gen_random_uuid()`
-- `center_id uuid null` *(null = feed global)*
-- `name text not null`
-- `url text not null`
-- `is_active boolean not null default true`
-- `last_fetched_at timestamptz null`
-- `last_error text null`
-- `created_by_user_id uuid null`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-- `created_by_user_id -> users(id) on delete set null`
-
-**UNIQUE (recomanat)**
-- `UNIQUE (center_id, url)` *(evitar duplicats dins el mateix àmbit)*
-
-**Índexs**
-- `index (center_id, is_active)`
-
----
-
-### 3.12 `public.rss_center_settings`
-**Propòsit:** paràmetres globals RSS per centre (intervals i límits).
-
-**Columnes**
-- `center_id uuid pk`
-- `seconds_per_item int not null default 15`
-- `seconds_per_feed int not null default 120`
-- `refresh_minutes int not null default 60`
-- `max_items_per_feed int not null default 20`
-- `updated_at timestamptz not null default now()`
-- `updated_by_user_id uuid null`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-- `updated_by_user_id -> users(id) on delete set null`
-
----
-
-### 3.13 `public.rss_rotation_order`
-**Propòsit:** quins feeds estan en rotació per un centre i en quin ordre.
-
-**Columnes**
-- `center_id uuid not null`
-- `feed_id uuid not null`
-- `position int not null`
-- `created_at timestamptz not null default now()`
-
-**PK**
-- `PRIMARY KEY (center_id, feed_id)`
-
-**FK**
-- `center_id -> centers(id) on delete cascade`
-- `feed_id -> rss_feeds(id) on delete cascade`
-
-**UNIQUE**
-- `UNIQUE (center_id, position)`
-
-**Índexs**
-- `index (center_id, position)`
-- `index (feed_id)`
-
----
-
-### 3.14 Taules d’unió N–M
-
-#### `public.video_tags`
-**Propòsit:** assignar tags globals a un vídeo (mínim 1 tag per vídeo: regla de domini).
-
-**Columnes / PK**
-- `video_id uuid not null`
-- `tag_id uuid not null`
-- `PRIMARY KEY (video_id, tag_id)`
-
-**FK**
-- `video_id -> videos(id) on delete cascade`
-- `tag_id -> tags(id) on delete restrict`
-
-**Índexs**
-- `index (tag_id)`
-
-> Regla “mínim 1 tag”: millor via validació d’app; si cal reforç, trigger/constraint deferrable.
-
-#### `public.video_hashtags`
-**Propòsit:** assignar hashtags de centre a un vídeo (0..N).
-
-**Columnes / PK**
-- `video_id uuid not null`
-- `hashtag_id uuid not null`
-- `PRIMARY KEY (video_id, hashtag_id)`
-
-**FK**
-- `video_id -> videos(id) on delete cascade`
-- `hashtag_id -> hashtags(id) on delete restrict`
-
-**Índexs**
-- `index (hashtag_id)`
-
----
-
-## 4) Clau important: relació amb `auth.users`
-
-### Enllaç 1:1
-- `public.users.id uuid PRIMARY KEY`
-- `public.users.id` és **FK a** `auth.users(id)` (mateix UUID)
-
-### Política d’eliminació recomanada
-Escollir una i documentar-la:
-- **Opció A (recomanada a molts casos):** `ON DELETE CASCADE`
-  - Si s’elimina un usuari d’Auth, desapareix el perfil d’app.
-- **Opció B:** `ON DELETE RESTRICT`
-  - Evita eliminacions accidentals (cal desactivar en lloc d’esborrar).
-
-### CHECK “admin_global sense centre”
-- `center_id IS NULL` **només** si `role='admin_global'` (i viceversa). (Ja definit a `users`)
-
-### Email
-- `public.users.email` és una cache útil per a consultes UI.
-- Recomanat: garantir `UNIQUE(lower(email))` a `public.users` (email únic global).
-
----
-
-## 5) Constraints i índexs load-bearing (resum)
-
-- `zones`: `UNIQUE(lower(name))`
-- `hashtags`: `UNIQUE(center_id, lower(name))`
-- `schedule_overrides`: `UNIQUE(center_id, date)`
-- `video_tags`: `PRIMARY KEY(video_id, tag_id)` + index `(tag_id)`
-- `video_hashtags`: `PRIMARY KEY(video_id, hashtag_id)` + index `(hashtag_id)`
-- `playlist_items`:
-  - `UNIQUE(playlist_id, position)`
-  - (Opcional) `UNIQUE(playlist_id, video_id)`
-- Índexs clau:
-  - `videos(center_id)`, `videos(status)`, `videos(type)`, `videos(is_shared_with_other_centers)`, `videos(zone_id)`
-  - `playlists(center_id, kind)`
-  - `rss_feeds(center_id, is_active)`
-  - `rss_rotation_order(center_id, position)`
-
----
-
-## 6) Notes d’RLS i permisos (esquema general)
-
-Aquest document **no** defineix les policies concretes (millor a `docs/rls-policies.md`), però l’esquema està pensat per a:
-
-- RLS a taules “tenant-owned”: `centers`, `users`, `videos`, `hashtags`, `playlists`, `playlist_items`, `schedule_overrides`, `rss_feeds`, `rss_center_settings`, `rss_rotation_order`, `guest_access_links`.
-- Taules globals amb RLS o lectura pública controlada: `zones`, `tags` (normalment read-only per rols no-admin).
-- Columnes com `center_id`, `role`, `is_active`, `onboarding_status` faciliten policies simples i eficients.
-
-Annex recomanat:
-- `docs/rls-policies.md` amb: SELECT/INSERT/UPDATE/DELETE per rol (`admin_global`, `editor_profe`, `editor_alumne`, `display`) i casos especials (convidat via token).
+- Naming: taules en plural i `snake_case`.
+- Multi-tenant principal: `center_id`.
+- El rol i centre autoritzadors surten de `public.users`, no de `user_metadata`.
+- Les migracions ja aplicades no s'editen; els canvis nous es fan amb una migració nova.
+
+## Enums
+
+```text
+user_role:
+  admin_global
+  editor_profe
+  editor_alumne
+  display
+
+onboarding_status:
+  invited
+  active
+  disabled
+
+video_type:
+  content
+  announcement
+
+video_status:
+  pending_approval
+  published
+  needs_revision
+
+playlist_kind:
+  permanent
+  weekday
+  announcements
+  custom
+  global
+  landing
+
+display_playlist_mode:
+  permanent
+  weekday
+```
+
+## Relacions Principals
+
+```mermaid
+erDiagram
+  zones ||--o{ centers : agrupa
+  centers ||--o{ users : te
+  centers ||--o{ videos : publica
+  centers ||--o{ hashtags : defineix
+  centers ||--o{ playlists : gestiona
+  centers ||--o{ rss_feeds : configura
+  centers ||--|| display_settings : te
+  centers ||--o{ schedule_overrides : programa
+  centers ||--o{ ticker_messages : mostra
+  centers ||--o{ guest_access_links : genera
+
+  users ||--o{ videos : puja
+  users ||--o{ notifications : rep
+  users ||--o{ audit_logs : origina
+
+  videos ||--o{ notifications : genera
+  videos ||--o{ video_tags : classifica
+  tags ||--o{ video_tags : aplica
+  videos ||--o{ video_hashtags : classifica
+  hashtags ||--o{ video_hashtags : aplica
+
+  playlists ||--o{ playlist_items : conte
+  videos ||--o{ playlist_items : apareix
+  playlists ||--o{ schedule_overrides : assignada
+
+  rss_feeds ||--o{ rss_items : importa
+  rss_feeds ||--o{ rss_rotation_order : ordena
+```
+
+Relacions estructurals destacades:
+
+- `zones.id -> centers.zone_id`.
+- `centers.id -> users.center_id`, `videos.center_id`, `hashtags.center_id`, `playlists.center_id`, `rss_feeds.center_id`, `display_settings.center_id`, `schedule_overrides.center_id`, `ticker_messages.center_id`.
+- `users.id -> videos.uploaded_by_user_id`, `videos.approved_by_user_id`, `videos.shared_by_user_id`, `videos.rejected_by_user_id`, `notifications.user_id`, `playlist_items.added_by_user_id`, `rss_feeds.created_by_user_id`, `schedule_overrides.created_by_user_id`, `audit_logs.user_id`.
+- `videos.id -> playlist_items.video_id`, `notifications.video_id`, `video_tags.video_id`, `video_hashtags.video_id`.
+- `playlists.id -> playlist_items.playlist_id`, `schedule_overrides.playlist_id`, `ticker_messages.playlist_id`, `playlists.origin_playlist_id`.
+- `rss_feeds.id -> rss_items.feed_id`, `rss_rotation_order.feed_id`.
+
+## Taules i Columnes
+
+Tipus abreujats segons Postgres (`bool`, `int4`, `timestamptz`, `jsonb`). Els defaults, checks, indexes i policies exactes són a les migracions.
+
+```text
+audit_logs:
+  id uuid not null
+  user_id uuid
+  action text not null
+  entity_type text not null
+  entity_id uuid
+  details jsonb
+  ip_address text
+  created_at timestamptz not null
+
+centers:
+  id uuid not null
+  name text not null
+  zone_id uuid not null
+  logo_url text
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+display_settings:
+  center_id uuid not null
+  show_header bool not null
+  show_clock bool not null
+  show_ticker bool not null
+  ticker_speed int4 not null
+  default_playlist_mode display_playlist_mode not null
+  standby_message text
+  announcement_volume int4 not null
+  announcement_mode text not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+guest_access_links:
+  id uuid not null
+  token text not null
+  center_id uuid not null
+  expires_at timestamptz not null
+  created_by_user_id uuid
+  created_at timestamptz not null
+  revoked_at timestamptz
+
+hashtags:
+  id uuid not null
+  center_id uuid not null
+  name text not null
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+notifications:
+  id uuid not null
+  user_id uuid not null
+  type text not null
+  title text not null
+  message text not null
+  video_id uuid
+  is_read bool not null
+  created_at timestamptz not null
+
+playlist_items:
+  id uuid not null
+  playlist_id uuid not null
+  video_id uuid not null
+  position int4 not null
+  added_at timestamptz not null
+  added_by_user_id uuid
+
+playlists:
+  id uuid not null
+  center_id uuid
+  name text not null
+  kind playlist_kind not null
+  is_deletable bool not null
+  is_student_editable bool not null
+  origin_playlist_id uuid
+  created_by_user_id uuid
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+rss_center_settings:
+  center_id uuid not null
+  seconds_per_item int4 not null
+  seconds_per_feed int4 not null
+  refresh_minutes int4 not null
+  image_height_percent int4 not null
+  updated_at timestamptz not null
+
+rss_feeds:
+  id uuid not null
+  center_id uuid
+  name text not null
+  url text not null
+  is_active bool not null
+  last_fetched_at timestamptz
+  last_error text
+  created_by_user_id uuid
+  is_in_rotation bool not null
+  error_count int4 not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+rss_items:
+  id uuid not null
+  feed_id uuid not null
+  guid text not null
+  title text not null
+  description text
+  link text not null
+  pub_date timestamptz
+  image_url text
+  fetched_at timestamptz not null
+
+rss_rotation_order:
+  center_id uuid not null
+  feed_id uuid not null
+  position int4 not null
+
+schedule_overrides:
+  id uuid not null
+  center_id uuid not null
+  date date not null
+  playlist_id uuid not null
+  created_by_user_id uuid
+  created_at timestamptz not null
+
+tags:
+  id uuid not null
+  name text not null
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+ticker_messages:
+  id uuid not null
+  center_id uuid not null
+  playlist_id uuid
+  text text not null
+  position int4 not null
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+users:
+  id uuid not null
+  email text not null
+  role user_role not null
+  center_id uuid
+  full_name text
+  phone text
+  onboarding_status onboarding_status not null
+  is_active bool not null
+  invited_at timestamptz
+  activated_at timestamptz
+  created_by_user_id uuid
+  last_invitation_sent_at timestamptz
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+video_hashtags:
+  video_id uuid not null
+  hashtag_id uuid not null
+
+video_tags:
+  video_id uuid not null
+  tag_id uuid not null
+
+videos:
+  id uuid not null
+  center_id uuid not null
+  zone_id uuid
+  title text not null
+  description text
+  type video_type not null
+  status video_status not null
+  vimeo_url text not null
+  vimeo_id text
+  vimeo_hash text
+  duration_seconds int4
+  thumbnail_url text
+  frames_urls jsonb not null
+  uploaded_by_user_id uuid not null
+  approved_by_user_id uuid
+  approved_at timestamptz
+  is_shared_with_other_centers bool not null
+  shared_by_user_id uuid
+  shared_at timestamptz
+  rejection_comment text
+  rejected_at timestamptz
+  rejected_by_user_id uuid
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+
+zones:
+  id uuid not null
+  name text not null
+  is_active bool not null
+  created_at timestamptz not null
+  updated_at timestamptz not null
+```
+
+## Agrupació Funcional
+
+### Multi-tenant i administració
+
+- `zones`: agrupacions geogràfiques de centres.
+- `centers`: tenants principals.
+- `users`: perfil aplicatiu 1:1 amb `auth.users`; conté rol, centre i estat d'usuari.
+- `guest_access_links`: preparat per accessos temporals; actualment tancat per RLS sense policies.
+- `audit_logs`: preparat per auditoria; actualment tancat per RLS sense policies.
+
+### Vídeos i classificació
+
+- `videos`: contingut Vimeo del centre, amb moderació, compartició, metadades Vimeo i `frames_urls` per anuncis/slideshow.
+- `tags`: catàleg global controlat.
+- `hashtags`: etiquetes lliures per centre.
+- `video_tags`: relació N-M entre vídeos i tags.
+- `video_hashtags`: relació N-M entre vídeos i hashtags.
+- `notifications`: avisos d'aprovació, rebuig, pendent i revisió associats a usuaris i vídeos.
+
+### Llistes i pantalla
+
+- `playlists`: llistes de tipus `permanent`, `weekday`, `announcements`, `custom`, `global` o `landing`.
+- `playlist_items`: vídeos ordenats dins una playlist.
+- `schedule_overrides`: assignació d'una playlist a una data concreta per centre; passa per sobre del mode habitual.
+- `display_settings`: configuració visual i mode habitual de pantalla (`permanent` o `weekday`) per centre.
+- `ticker_messages`: missatges de ticker generals del centre o associats a una playlist `weekday`; el trigger `trg_validate_ticker_message_playlist_scope` força que `playlist_id` apunti a una playlist de dia del mateix centre.
+
+### RSS
+
+- `rss_feeds`: feeds per centre o globals, amb estat de fetch i rotació.
+- `rss_items`: items importats de cada feed.
+- `rss_center_settings`: configuració RSS per centre.
+- `rss_rotation_order`: ordre de rotació de feeds per centre.
+
+## RLS i Permisos
+
+Estat verificat:
+
+```text
+audit_logs: RLS actiu, 0 policies
+guest_access_links: RLS actiu, 0 policies
+centers: RLS actiu, 2 policies
+display_settings: RLS actiu, 4 policies
+hashtags: RLS actiu, 2 policies
+notifications: RLS actiu, 3 policies
+playlist_items: RLS actiu, 3 policies
+playlists: RLS actiu, 3 policies
+rss_center_settings: RLS actiu, 3 policies
+rss_feeds: RLS actiu, 4 policies
+rss_items: RLS actiu, 1 policy
+rss_rotation_order: RLS actiu, 2 policies
+schedule_overrides: RLS actiu, 4 policies
+tags: RLS actiu, 2 policies
+ticker_messages: RLS actiu, 4 policies
+users: RLS actiu, 5 policies
+video_hashtags: RLS actiu, 3 policies
+video_tags: RLS actiu, 3 policies
+videos: RLS actiu, 5 policies
+zones: RLS actiu, 2 policies
+```
+
+Regles que cal preservar:
+
+- `admin_global` pot operar globalment.
+- `editor_profe` opera dins el seu centre.
+- `editor_alumne` crea vídeos propis pendents i només pot corregir els seus vídeos en `needs_revision`.
+- `display` no ha de tenir capacitats d'edició.
+- Les decisions d'autorització server-side han de consultar `public.users`.
+- Les policies RLS han de tenir `USING` i `WITH CHECK` quan hi ha `UPDATE` o `INSERT` sensible.
+- La landing pública només ha de servir vídeos publicats, compartits i inclosos a la playlist global corresponent.
+
+## Triggers i Funcions
+
+Funcions públiques principals verificades en revisions recents:
+
+- `assign_lacenet_to_admin_global`
+- `create_default_playlists_for_center`
+- `notify_pending_video`
+- `notify_video_approved`
+- `notify_video_needs_revision`
+- `notify_video_rejected`
+- `notify_video_resubmitted`
+- `set_updated_at`
+- `set_video_zone_id`
+- `sync_user_email`
+
+Funcions privades de suport RLS:
+
+- `private.current_user_role`
+- `private.current_user_center_id`
+
+Criteris de seguretat:
+
+- Les funcions `SECURITY DEFINER` han de tenir `search_path` fixat.
+- Les funcions trigger internes no han de ser executables per `PUBLIC`.
+- Evita policies que consultin directament la mateixa taula protegida, especialment `users`.
+
+## Storage
+
+Estat verificat el 2026-07-09:
+
+- Bucket detectat: `announcement-frames`.
+- `announcement-frames` és públic.
+- No s'han detectat policies visibles a `storage.objects`.
+
+Aquest estat s'ha de revisar abans de tocar el flux de fotogrames d'anuncis. `docs/storage.md` encara necessita alineació amb l'estat real d'aquest bucket.
+
+## Invariants del Domini
+
+- `center_id` és el límit de tenant per defecte.
+- `videos.zone_id` s'ha de derivar del centre.
+- Els vídeos d'alumnes comencen com `pending_approval`.
+- `needs_revision` representa un retorn a l'alumne perquè corregeixi.
+- Els vídeos compartits entre centres han de ser `published`.
+- Les llistes globals públiques no han d'incloure vídeos no publicats ni no compartits.
+- `schedule_overrides` ha de referenciar playlists actives del mateix centre.
+- Si no hi ha `schedule_overrides`, `display_settings.default_playlist_mode` decideix entre `permanent` i `weekday`.
+- `ticker_messages.playlist_id` només pot apuntar a playlists `weekday` del mateix centre; `NULL` representa el ticker general.
+- `rss_rotation_order` ha d'apuntar a feeds existents i coherents amb el centre.
+
+## Punts Oberts
+
+- Decidir i documentar el comportament final de `guest_access_links`.
+- Decidir si `audit_logs` es manté tancada sense policies o s'activa amb un flux d'auditoria real.
+- Revisar `is_student_editable` en playlists `weekday` i `announcements`.
+- Revisar i documentar les policies de Storage per `announcement-frames` o moure la pujada a un endpoint server-side.
+- Actualitzar `docs/storage.md` perquè no parli només de buckets antics o opcionals.
+- Alinear documents històrics o marcar-los clarament com a no canònics.

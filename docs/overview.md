@@ -10,9 +10,9 @@ La vista principal simula (i en mode *display* es converteix en) la composició 
 
 ## 2) Objectius del producte
 
-- Oferir una **pantalla principal** que reprodueixi automàticament una llista de vídeos del dia, amb una zona d’**anuncis** en bucle i una zona **RSS** informativa. 
+- Oferir una **pantalla principal** que reprodueixi automàticament la llista habitual del centre o la llista programada del dia, amb una zona d’**anuncis** en bucle i una zona **RSS** informativa.
 - Permetre als centres **gestionar el seu catàleg de vídeos**, metadades i permisos de compartició. 
-- Permetre **gestionar llistes de reproducció** (predefinides, personalitzades i globals) i **planificar** canvis per data amb calendari. 
+- Permetre **gestionar llistes de reproducció** (permanent, per dies, amb calendari i globals) i **planificar** canvis per data amb calendari.
 - Permetre configurar i previsualitzar el comportament dels **feeds RSS** (rotació, intervals, actualització i errors). 
 - Separar clarament el flux **editorial** del flux d’**administració global** (centres, usuaris, zones i LandingPlaylist pública).
 
@@ -24,7 +24,7 @@ La vista principal simula (i en mode *display* es converteix en) la composició 
 - Barra superior amb logo i opcions de sessió (en mode editor).
 - Menú lateral per navegar (Pantalla, Contingut, Llistes, RSS i, si escau, Administració).
 - Tres zones de contingut:
-  1) **Reproductor principal** (llista del dia per defecte).
+  1) **Reproductor principal** (llista permanent, del dia o calendaritzada).
   2) **Anuncis** en bucle.
   3) **RSS** amb titulars i rotació de feeds.
 
@@ -34,7 +34,7 @@ En mode editor existeix un botó per amagar barra i menú i deixar només les 3 
 ### Mode Display (TV)
 Quan inicia sessió un usuari **display**, la pantalla:
 - va directament a **pantalla completa**,
-- carrega la llista del dia,
+- carrega la llista activa segons prioritat: calendari, mode permanent o mode per dies,
 - inicia reproducció automàtica (*autoplay*),
 - manté una experiència **passiva** (sense menú ni controls d’edició).
 
@@ -45,7 +45,7 @@ Quan inicia sessió un usuari **display**, la pantalla:
 Rols principals:
 - **Administrador global**: control total (centres, usuaris globals, zones, convidats, elements globals). 
 - **Editor-profe**: responsable editorial del centre (vídeos, llistes, RSS i usuaris del centre). 
-- **Editor-alumne**: pot pujar vídeos (pendents d’aprovació) i editar llistes només si `isStudentEditable=true`. 
+- **Editor-alumne**: pot pujar vídeos (pendents d’aprovació) i editar llistes només si `is_student_editable=true`, pendent de decisió final d'abast.
 - **Display**: només reproducció passiva en pantalla principal. 
 - **Convidat (temporal)**: accés sense autenticació via enllaç temporal, només lectura i només publicat.
 
@@ -59,9 +59,9 @@ Rols principals:
 - **Integració Vimeo**: l'editor entra una URL de Vimeo que es valida automàticament via API per obtenir thumbnail, durada i metadades. Vegeu `docs/vimeo-integration.md` per detalls tècnics.
 
 ### 5.2 Llistes de reproducció
-- Llistes predefinides (dies feiners + Anuncis), personalitzades i globals.
+- Llista permanent, llistes per dia de la setmana, llistes amb calendari, Anuncis i globals.
 - Edició amb **drag&drop**, afegir/eliminar vídeos i restriccions (p. ex. Anuncis només admet contingut tipus *announcement*).
-- **Calendari**: assignacions per data (override) que substitueixen la llista del dia quan existeixen.
+- **Calendari**: assignacions per data (override) que substitueixen el mode habitual quan existeixen.
 
 ### 5.3 RSS
 - Gestió de feeds i configuració de rotació: durada per titular, durada per feed, ordre (drag&drop), freqüència d’actualització, límit d’ítems.
@@ -106,21 +106,19 @@ Entitats clau:
 
 ## 8) Mapa de documentació (referència)
 
+- `AGENTS.md` → Regles operatives canòniques per treballar al repo.
+- `MEMORIA_PROJECTE.md` → Verificacions, rectificacions i decisions datades.
 - `docs/roles.md` → Rols d’usuari (canònic).
 - `docs/domain-model.md` → Model de domini (entitats, relacions, invariants).
-- `docs/database.schema.md` → Esquema de la base de dades.
-- `docs/vimeo-integration.md` → Integració amb Vimeo (API, validació, thumbnails).
-- `docs/storage.md` → Emmagatzematge d'arxius (logos, thumbnails, Supabase Storage).
+- `docs/database.schema.md` → Esquema, relacions i estat canònic de la base de dades.
+- `docs/vimeo-integration.md` → Integració real amb Vimeo (URL, Tus upload, metadades).
+- `docs/storage.md` → Storage actual verificat (`announcement-frames`) i riscos pendents.
 - `docs/authentication.md` → Autenticació i gestió d'usuaris (invitació, sessions, RLS).
 - `docs/moderation-system.md` → Sistema de moderació i notificacions (contingut pendent, aprovació).
-- `docs/rss-system.md` → Sistema RSS (validació, caché, retry, rotació).
-- `docs/ui/pantalla-principal.md` → Pantalla principal.
-- `docs/ui/contingut.md` → Pàgina Contingut.
-- `docs/ui/llistes.md` → Pàgina Llistes.
-- `docs/ui/rss.md` → Pàgina RSS.
-- `docs/ui/admin-global.md` → Administració global + LandingPlaylist.
-- `docs/ui/usuaris-centre.md` → Gestió d’usuaris del centre (Editor-profe).
+- `docs/rss-system.md` → Sistema RSS (feeds, items, settings, rotació i cron).
 - `docs/ui/guia-estil.md` → Guia d’estil de la UI del projecte.
+- `docs/ui/pantalles.md` → Resum curt de pantalles principals i navegació.
+- `docs/OBSOLET/` → Històric i context; no usar com a estat actual sense verificar.
 
 ---
 

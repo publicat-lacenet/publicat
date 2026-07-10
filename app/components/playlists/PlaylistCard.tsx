@@ -1,11 +1,11 @@
 'use client';
 
-import { Calendar, Megaphone, LayoutList, Globe, Home, Trash2, type LucideIcon } from 'lucide-react';
+import { Calendar, Megaphone, LayoutList, Globe, Home, Repeat, Trash2, type LucideIcon } from 'lucide-react';
 
 interface Playlist {
   id: string;
   name: string;
-  kind: 'weekday' | 'announcements' | 'custom' | 'global' | 'landing';
+  kind: 'permanent' | 'weekday' | 'announcements' | 'custom' | 'global' | 'landing';
   is_deletable: boolean;
   is_student_editable: boolean;
   video_count: number;
@@ -30,6 +30,7 @@ interface PlaylistCardProps {
 }
 
 const kindIcons: Record<string, LucideIcon> = {
+  permanent: Repeat,
   weekday: Calendar,
   announcements: Megaphone,
   custom: LayoutList,
@@ -38,9 +39,10 @@ const kindIcons: Record<string, LucideIcon> = {
 };
 
 const kindLabels: Record<string, string> = {
-  weekday: 'Predefinida',
+  permanent: 'Permanent',
+  weekday: 'Dia de la setmana',
   announcements: 'Anuncis',
-  custom: 'Personalitzada',
+  custom: 'Amb calendari',
   global: 'Global',
   landing: 'Landing',
 };

@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       show_clock: true,
       show_ticker: false,
       ticker_speed: 50,
+      default_playlist_mode: 'permanent',
       standby_message: 'Pròximament...',
       announcement_volume: 0,
       announcement_mode: 'video',
@@ -126,6 +127,7 @@ export async function PATCH(request: NextRequest) {
     'show_clock',
     'show_ticker',
     'ticker_speed',
+    'default_playlist_mode',
     'standby_message',
     'announcement_volume',
     'announcement_mode',
@@ -165,6 +167,16 @@ export async function PATCH(request: NextRequest) {
     if (!['video', 'video_360p', 'slideshow', 'none'].includes(mode)) {
       return NextResponse.json(
         { error: 'El mode d\'anuncis ha de ser video, video_360p, slideshow o none' },
+        { status: 400 }
+      );
+    }
+  }
+
+  if ('default_playlist_mode' in filteredUpdates) {
+    const mode = filteredUpdates.default_playlist_mode as string;
+    if (!['permanent', 'weekday'].includes(mode)) {
+      return NextResponse.json(
+        { error: 'El mode de llista ha de ser permanent o weekday' },
         { status: 400 }
       );
     }

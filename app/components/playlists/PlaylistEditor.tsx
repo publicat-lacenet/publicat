@@ -21,6 +21,7 @@ import DraggableVideoItem, { PlaylistItem } from './DraggableVideoItem';
 import AddVideosModal from './AddVideosModal';
 import PlaylistFormModal from './PlaylistFormModal';
 import ScheduleCalendar from './ScheduleCalendar';
+import TickerMessageEditor from '@/app/components/display/TickerMessageEditor';
 import { useAuth } from '@/utils/supabase/useAuth';
 
 interface Playlist {
@@ -37,12 +38,16 @@ interface PlaylistEditorProps {
 }
 
 const kindDescriptions: Record<string, string> = {
-  weekday: 'Aquesta llista es reprodueix automàticament el dia corresponent',
+  permanent: 'Aquesta llista es mostra cada dia si no hi ha cap llista amb calendari activa',
+  weekday: 'Aquesta llista es reprodueix automàticament el dia corresponent quan el mode per dies està actiu',
   announcements: 'Aquesta llista conté vídeos de tipus Anunci',
-  custom: 'Llista personalitzada del centre',
+  custom: 'Llista amb calendari del centre',
   global: 'Llista global compartida amb tots els centres',
   landing: 'Llista per a la pàgina principal',
 };
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
 
 export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
   const router = useRouter();
@@ -84,9 +89,9 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
       const data = await res.json();
       setPlaylist(data.playlist);
       setItems(data.items || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching playlist:', err);
-      setError(err.message);
+      setError(getErrorMessage(err, 'Error carregant la llista'));
     } finally {
       setLoading(false);
     }
@@ -139,11 +144,11 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
         const data = await res.json();
         throw new Error(data.error || 'Error guardant l\'ordre');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving reorder:', err);
       // Revert on error
       fetchPlaylistDetails();
-      alert('Error guardant l\'ordre: ' + err.message);
+      alert('Error guardant l\'ordre: ' + getErrorMessage(err, 'Error desconegut'));
     } finally {
       setSaving(false);
     }
@@ -169,9 +174,9 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
       // Update local state
       setItems(items.filter(item => item.id !== itemId));
       setRemoveConfirm(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error removing video:', err);
-      alert('Error eliminant el vídeo: ' + err.message);
+      alert('Error eliminant el vídeo: ' + getErrorMessage(err, 'Error desconegut'));
     } finally {
       setSaving(false);
     }
@@ -191,9 +196,9 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
         throw new Error(data.error || 'Error actualitzant la llista');
       }
       setPlaylist(prev => prev ? { ...prev, is_student_editable: !prev.is_student_editable } : prev);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error toggling student editable:', err);
-      alert('Error: ' + err.message);
+      alert('Error: ' + getErrorMessage(err, 'Error desconegut'));
     } finally {
       setTogglingStudentEditable(false);
     }
@@ -255,6 +260,12 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
   }
 
   const userCanEdit = canEdit();
+  const canManageTicker =
+    Boolean(playlist.center_id) &&
+    (
+      role === 'admin_global' ||
+      (role === 'editor_profe' && playlist.center_id === centerId)
+    );
 
   return (
     <div className="space-y-6">
@@ -338,6 +349,24 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
         </div>
       )}
 
+      {/* Weekday ticker section */}
+      {playlist.kind === 'weekday' && playlist.center_id && (
+        <div className="bg-white border border-[var(--color-border)] rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-[var(--color-dark)] font-[family-name:var(--font-montserrat)] mb-2">
+            Ticker d&apos;aquest dia
+          </h2>
+          <p className="text-sm text-[var(--color-gray)] mb-4">
+            Aquest ticker té prioritat sobre el ticker general del Visor quan es reprodueix aquest dia. Si el deixes buit, s&apos;utilitzarà el ticker general del Visor.
+          </p>
+          <TickerMessageEditor
+            centerId={playlist.center_id}
+            playlistId={playlist.id}
+            isEditor={canManageTicker}
+            emptyText="Aquest dia encara no té ticker propi"
+          />
+        </div>
+      )}
+
       {/* Saving indicator */}
       {saving && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-sm text-blue-700 flex items-center gap-2">
@@ -368,7 +397,6 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
       {/* Video list with drag & drop */}
       {items.length === 0 ? (
         <div className="bg-white border border-[var(--color-border)] rounded-xl p-12 text-center">
-          <div className="text-5xl mb-4">📋</div>
           <p className="text-[var(--color-gray)] mb-4">
             Aquesta llista està buida
           </p>
@@ -455,7 +483,7 @@ export default function PlaylistEditor({ playlistId }: PlaylistEditorProps) {
             Programació
           </h2>
           <p className="text-sm text-[var(--color-gray)] mb-4">
-            Selecciona els dies en què vols que aquesta llista substitueixi la llista del dia de la setmana.
+            Selecciona els dies en què vols que aquesta llista substitueixi el mode habitual de reproducció.
           </p>
           <ScheduleCalendar
             centerId={playlist.center_id}

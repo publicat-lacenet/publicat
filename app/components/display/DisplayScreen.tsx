@@ -37,10 +37,12 @@ interface DisplayConfig {
     show_clock: boolean;
     show_ticker: boolean;
     ticker_speed: number;
+    default_playlist_mode: 'permanent' | 'weekday';
     standby_message: string;
     announcement_volume: number;
     announcement_mode: string;
   };
+  ticker_playlist_id: string | null;
 }
 
 interface DisplayScreenProps {
@@ -303,10 +305,13 @@ export default function DisplayScreen({
           />
         }
         tickerZone={
-          <TickerBar
-            centerId={center.id}
-            speed={display_settings.ticker_speed}
-          />
+          display_settings.show_ticker ? (
+            <TickerBar
+              centerId={center.id}
+              playlistId={config.ticker_playlist_id}
+              speed={display_settings.ticker_speed}
+            />
+          ) : undefined
         }
       />
     </div>

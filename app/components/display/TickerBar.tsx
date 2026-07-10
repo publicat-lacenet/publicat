@@ -11,12 +11,14 @@ interface TickerMessage {
 
 interface TickerBarProps {
   centerId: string;
+  playlistId?: string | null;
   speed?: number; // pixels per second (default: 50)
   className?: string;
 }
 
 export default function TickerBar({
   centerId,
+  playlistId,
   speed = 50,
   className = '',
 }: TickerBarProps) {
@@ -31,7 +33,13 @@ export default function TickerBar({
   useEffect(() => {
     async function fetchMessages() {
       try {
-        const response = await fetch(`/api/display/ticker?centerId=${centerId}`);
+        const params = new URLSearchParams({ centerId });
+        if (playlistId) {
+          params.set('playlistId', playlistId);
+          params.set('fallbackGeneral', 'true');
+        }
+
+        const response = await fetch(`/api/display/ticker?${params.toString()}`);
         if (response.ok) {
           const data = await response.json();
           setMessages(data.messages || []);
@@ -48,7 +56,7 @@ export default function TickerBar({
     // Refresh messages every 5 minutes
     const interval = setInterval(fetchMessages, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [centerId]);
+  }, [centerId, playlistId]);
 
   // Measure widths after messages load
   useEffect(() => {

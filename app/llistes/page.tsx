@@ -26,14 +26,14 @@ export default function LlistesPage() {
 
       <PageHeader
         title="Llistes de Reproducció"
-        description="Organitza els teus vídeos en llistes per als dies de la setmana, anuncis i llistes personalitzades"
+        description="Organitza els teus vídeos en una llista permanent, llistes per dia de la setmana i llistes amb calendari"
         action={
           canCreatePlaylist ? (
             <button
               onClick={() => setShowCreateModal(true)}
               className="px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium transition-colors"
             >
-              + Nova Llista
+              + Nova llista amb calendari
             </button>
           ) : undefined
         }

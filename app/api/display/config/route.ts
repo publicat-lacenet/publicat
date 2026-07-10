@@ -12,6 +12,14 @@ const WEEKDAY_NAMES: Record<number, string> = {
   6: 'Dissabte',
 };
 
+type PlaylistWithCount = {
+  id: string;
+  name: string;
+  kind: string;
+  is_active?: boolean;
+  playlist_items?: { count: number }[];
+};
+
 // GET /api/display/config - Obtenir configuració completa de display
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -58,6 +66,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const summarizePlaylist = (playlist: PlaylistWithCount) => ({
+      id: playlist.id,
+      name: playlist.name,
+      kind: playlist.kind,
+      video_count: playlist.playlist_items?.[0]?.count || 0,
+    });
+
     // 1. Obtenir informació del centre
     const { data: center, error: centerError } = await supabase
       .from('centers')
@@ -72,7 +87,51 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 2. Determinar la playlist actual
+    // 2. Obtenir configuració de display
+    const { data: displaySettings } = await supabase
+      .from('display_settings')
+      .select('*')
+      .eq('center_id', centerId)
+      .single();
+
+    const display_settings = {
+      show_header: true,
+      show_clock: true,
+      show_ticker: false,
+      ticker_speed: 50,
+      default_playlist_mode: 'permanent',
+      standby_message: 'Pròximament...',
+      announcement_volume: 0,
+      announcement_mode: 'video',
+      ...(displaySettings || {}),
+    };
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dayOfWeek = today.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const dayName = isWeekend ? WEEKDAY_NAMES[5] : WEEKDAY_NAMES[dayOfWeek]; // Divendres per caps de setmana
+
+    const { data: weekdayPlaylistForToday } = await supabase
+      .from('playlists')
+      .select(`
+        id,
+        name,
+        kind,
+        playlist_items (count)
+      `)
+      .eq('center_id', centerId)
+      .eq('kind', 'weekday')
+      .eq('name', dayName)
+      .eq('is_active', true)
+      .single();
+
+    const tickerPlaylistId =
+      display_settings.default_playlist_mode === 'weekday' && weekdayPlaylistForToday
+        ? weekdayPlaylistForToday.id
+        : null;
+
+    // 3. Determinar la playlist actual
     let currentPlaylist = null;
 
     if (playlistOverride) {
@@ -86,24 +145,17 @@ export async function GET(request: NextRequest) {
           playlist_items (count)
         `)
         .eq('id', playlistOverride)
+        .eq('center_id', centerId)
+        .eq('is_active', true)
         .single();
 
       if (overridePlaylist) {
-        currentPlaylist = {
-          id: overridePlaylist.id,
-          name: overridePlaylist.name,
-          kind: overridePlaylist.kind,
-          video_count: overridePlaylist.playlist_items?.[0]?.count || 0,
-        };
+        currentPlaylist = summarizePlaylist(overridePlaylist);
       }
     }
 
     if (!currentPlaylist) {
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-      const dayOfWeek = today.getDay();
-
-      // Prioritat 2: schedule_overrides per la data d'avui
+      // Prioritat 1: schedule_overrides per la data d'avui
       const { data: scheduleOverride } = await supabase
         .from('schedule_overrides')
         .select(`
@@ -120,47 +172,41 @@ export async function GET(request: NextRequest) {
         .eq('date', todayStr)
         .single();
 
-      if (scheduleOverride?.playlists && (scheduleOverride.playlists as any).is_active) {
-        const pl = scheduleOverride.playlists as any;
-        currentPlaylist = {
-          id: pl.id,
-          name: pl.name,
-          kind: pl.kind,
-          video_count: pl.playlist_items?.[0]?.count || 0,
-        };
+      if (scheduleOverride?.playlists) {
+        const schedulePlaylist = scheduleOverride.playlists as unknown as PlaylistWithCount;
+        if (schedulePlaylist.is_active) {
+          currentPlaylist = summarizePlaylist(schedulePlaylist);
+        }
       }
 
-      // Prioritat 3: Weekday playlist (Dl-Dv) o fallback a Divendres (caps de setmana)
+      // Prioritat 2: mode habitual del centre
       if (!currentPlaylist) {
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const dayName = isWeekend ? WEEKDAY_NAMES[5] : WEEKDAY_NAMES[dayOfWeek]; // Divendres per caps de setmana
+        if (display_settings.default_playlist_mode === 'weekday') {
+          if (weekdayPlaylistForToday) {
+            currentPlaylist = summarizePlaylist(weekdayPlaylistForToday);
+          }
+        } else {
+          const { data: permanentPlaylist } = await supabase
+            .from('playlists')
+            .select(`
+              id,
+              name,
+              kind,
+              playlist_items (count)
+            `)
+            .eq('center_id', centerId)
+            .eq('kind', 'permanent')
+            .eq('is_active', true)
+            .single();
 
-        const { data: weekdayPlaylist } = await supabase
-          .from('playlists')
-          .select(`
-            id,
-            name,
-            kind,
-            playlist_items (count)
-          `)
-          .eq('center_id', centerId)
-          .eq('kind', 'weekday')
-          .eq('name', dayName)
-          .eq('is_active', true)
-          .single();
-
-        if (weekdayPlaylist) {
-          currentPlaylist = {
-            id: weekdayPlaylist.id,
-            name: weekdayPlaylist.name,
-            kind: weekdayPlaylist.kind,
-            video_count: weekdayPlaylist.playlist_items?.[0]?.count || 0,
-          };
+          if (permanentPlaylist) {
+            currentPlaylist = summarizePlaylist(permanentPlaylist);
+          }
         }
       }
     }
 
-    // 3. Obtenir playlist d'anuncis
+    // 4. Obtenir playlist d'anuncis
     let announcementsPlaylist = null;
     const { data: announcements } = await supabase
       .from('playlists')
@@ -182,7 +228,7 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // 4. Obtenir configuració RSS
+    // 5. Obtenir configuració RSS
     const { data: rssSettings } = await supabase
       .from('rss_center_settings')
       .select('seconds_per_item, seconds_per_feed, image_height_percent')
@@ -195,24 +241,6 @@ export async function GET(request: NextRequest) {
       image_height_percent: 50,
     };
 
-    // 5. Obtenir configuració de display
-    const { data: displaySettings } = await supabase
-      .from('display_settings')
-      .select('*')
-      .eq('center_id', centerId)
-      .single();
-
-    const display_settings = {
-      show_header: true,
-      show_clock: true,
-      show_ticker: false,
-      ticker_speed: 50,
-      standby_message: 'Pròximament...',
-      announcement_volume: 0,
-      announcement_mode: 'video',
-      ...(displaySettings || {}),
-    };
-
     return NextResponse.json({
       center: {
         id: center.id,
@@ -223,6 +251,7 @@ export async function GET(request: NextRequest) {
       announcements_playlist: announcementsPlaylist,
       rss_settings,
       display_settings,
+      ticker_playlist_id: tickerPlaylistId,
     });
   } catch (error: unknown) {
     console.error('Error fetching display config:', error);

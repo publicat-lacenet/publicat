@@ -27,6 +27,7 @@ export async function GET(
     .single();
 
   const role = dbUser?.role || user.user_metadata?.role;
+  const userCenterId = dbUser?.center_id || user.user_metadata?.center_id;
 
   // Verificar permisos (display, editor_profe, editor_alumne, admin_global)
   if (!['display', 'editor_profe', 'editor_alumne', 'admin_global'].includes(role)) {
@@ -49,6 +50,13 @@ export async function GET(
       return NextResponse.json(
         { error: 'Playlist no trobada' },
         { status: 404 }
+      );
+    }
+
+    if (role !== 'admin_global' && playlist.center_id !== userCenterId) {
+      return NextResponse.json(
+        { error: 'No tens permisos per accedir a aquesta playlist' },
+        { status: 403 }
       );
     }
 
