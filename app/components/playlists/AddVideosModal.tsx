@@ -68,9 +68,16 @@ export default function AddVideosModal({
 
       const params = new URLSearchParams({
         status: 'published',
-        includeShared: 'true',
         limit: '100',
       });
+
+      // Sense un centre concret, es poden afegir vídeos compartits d'altres centres.
+      // Un filtre de centre, en canvi, ha de retornar només els seus vídeos.
+      if (selectedCenterId) {
+        params.append('centerId', selectedCenterId);
+      } else {
+        params.append('includeShared', 'true');
+      }
 
       if (search) {
         params.append('search', search);
@@ -111,8 +118,15 @@ export default function AddVideosModal({
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, playlistKind, existingVideoIds, selectedTagIds, selectedHashtagIds, selectedZoneId]);
+  }, [
+    search,
+    playlistKind,
+    existingVideoIds,
+    selectedTagIds,
+    selectedHashtagIds,
+    selectedZoneId,
+    selectedCenterId,
+  ]);
 
   useEffect(() => {
     if (isOpen) {
