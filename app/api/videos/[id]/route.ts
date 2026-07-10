@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { parseHashtagInput } from '@/lib/hashtags';
-import { deleteVimeoVideo } from '@/lib/vimeo/api';
+import { processMediaCleanupJobs } from '@/lib/media-cleanup';
 
 type UserRole = 'admin_global' | 'editor_profe' | 'editor_alumne' | 'display';
 
@@ -170,28 +170,39 @@ export async function PATCH(
       if (type !== undefined) revisionUpdates.type = type;
       if (frames_urls !== undefined) revisionUpdates.frames_urls = Array.isArray(frames_urls) ? frames_urls : [];
 
-      // Si l'alumne ha pujat un vídeo nou, substituir les dades de Vimeo
+      // Si l'alumne ha pujat un vídeo nou, l'actualització i l'encuat de
+      // recursos antics són atòmics a la BD.
       if (new_vimeo_id && new_vimeo_id !== video.vimeo_id) {
-        // Eliminar el vídeo anterior de Vimeo
-        if (video.vimeo_id) {
-          await deleteVimeoVideo(video.vimeo_id);
+        const { error: replacementError } = await supabase.rpc(
+          'replace_revision_vimeo_and_queue_cleanup',
+          {
+            p_video_id: id,
+            p_title: title ?? video.title,
+            p_description: description ?? video.description,
+            p_type: type ?? video.type,
+            p_vimeo_url: new_vimeo_url,
+            p_vimeo_id: new_vimeo_id,
+            p_vimeo_hash: new_vimeo_hash ?? null,
+            p_thumbnail_url: new_thumbnail_url ?? null,
+            p_duration_seconds: new_duration_seconds ?? null,
+            p_frames_urls: Array.isArray(frames_urls) ? frames_urls : [],
+          }
+        );
+
+        if (replacementError) {
+          console.error('Error replacing revision Vimeo asset:', replacementError);
+          return NextResponse.json({ error: replacementError.message }, { status: 500 });
         }
-        revisionUpdates.vimeo_url = new_vimeo_url;
-        revisionUpdates.vimeo_id = new_vimeo_id;
-        revisionUpdates.vimeo_hash = new_vimeo_hash ?? null;
-        revisionUpdates.thumbnail_url = new_thumbnail_url ?? null;
-        revisionUpdates.duration_seconds = new_duration_seconds ?? null;
-        revisionUpdates.frames_urls = Array.isArray(frames_urls) ? frames_urls : [];
-      }
+      } else {
+        const { error: submitError } = await supabase
+          .from('videos')
+          .update(revisionUpdates)
+          .eq('id', id);
 
-      const { error: submitError } = await supabase
-        .from('videos')
-        .update(revisionUpdates)
-        .eq('id', id);
-
-      if (submitError) {
-        console.error('Error submitting revision:', submitError);
-        return NextResponse.json({ error: submitError.message }, { status: 500 });
+        if (submitError) {
+          console.error('Error submitting revision:', submitError);
+          return NextResponse.json({ error: submitError.message }, { status: 500 });
+        }
       }
 
       // Actualitzar tags si cal
@@ -233,6 +244,13 @@ export async function PATCH(
             }
           }
         }
+      }
+
+      try {
+        await processMediaCleanupJobs({ videoId: id, limit: 20 });
+      } catch (cleanupError) {
+        // La revisió ja s'ha desat; el cron diari reprendrà la neteja pendent.
+        console.error('[submit_revision] No s\'ha pogut iniciar la neteja externa:', cleanupError);
       }
 
       return NextResponse.json({ message: 'Correcció enviada correctament' });
@@ -413,7 +431,7 @@ export async function PATCH(
 
 // DELETE /api/videos/[id] - Eliminar vídeo
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
@@ -434,77 +452,38 @@ export async function DELETE(
     return NextResponse.json({ error: 'Perfil d\'usuari no trobat' }, { status: 403 });
   }
 
-  const finalRole = profile.role;
-  const finalCenterId = profile.center_id;
-
-  if (finalRole !== 'editor_profe' && finalRole !== 'admin_global') {
-    return NextResponse.json(
-      { error: 'No tens permisos per eliminar aquest vídeo' },
-      { status: 403 }
-    );
-  }
-
-  // Obtenir vídeo actual (incloent frames_urls per netejar Storage)
-  const { data: video } = await supabase
-    .from('videos')
-    .select('center_id, frames_urls')
-    .eq('id', id)
-    .single();
-
-  if (!video) {
-    return NextResponse.json({ error: 'Vídeo no trobat' }, { status: 404 });
-  }
-
-  // Validar permisos
-  if (finalRole !== 'admin_global' && video.center_id !== finalCenterId) {
-    return NextResponse.json(
-      { error: 'No tens permisos per eliminar aquest vídeo' },
-      { status: 403 }
-    );
-  }
-
   try {
-    // Eliminar fotogrames de Supabase Storage si n'hi ha
-    const framesUrls: string[] = Array.isArray(video.frames_urls) ? video.frames_urls : [];
-    if (framesUrls.length > 0) {
-      const BUCKET_PREFIX = '/storage/v1/object/public/announcement-frames/';
-      const paths = framesUrls
-        .map((url: string) => {
-          const idx = url.indexOf(BUCKET_PREFIX);
-          return idx !== -1 ? url.slice(idx + BUCKET_PREFIX.length) : null;
-        })
-        .filter((p): p is string => p !== null);
+    // Aquesta RPC valida permisos, posa a cua els recursos externs i elimina el
+    // vídeo amb les seves cascades en una única transacció.
+    const { error: deleteError } = await supabase.rpc('delete_video_and_queue_cleanup', {
+      p_video_id: id,
+    });
 
-      if (paths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from('announcement-frames')
-          .remove(paths);
-
-        if (storageError) {
-          // No bloquejar l'eliminació del vídeo per errors de Storage
-          console.warn('[DELETE video] Error eliminant frames de Storage:', storageError.message);
-        } else {
-          console.log(`[DELETE video] ${paths.length} frames eliminats de Storage`);
-        }
-      }
+    if (deleteError) {
+      const status = deleteError.message === 'Vídeo no trobat'
+        ? 404
+        : deleteError.message.includes('permisos') || deleteError.message.includes('Perfil')
+          ? 403
+          : 500;
+      console.error('Error deleting video:', deleteError);
+      return NextResponse.json({ error: deleteError.message }, { status });
     }
 
-    // Eliminar el vídeo (tags i hashtags s'eliminaran amb ON DELETE CASCADE)
-    const { error } = await supabase
-      .from('videos')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting video:', error);
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+    let cleanupPending = false;
+    try {
+      const cleanup = await processMediaCleanupJobs({ videoId: id, limit: 20 });
+      cleanupPending = cleanup.pending > 0;
+    } catch (cleanupError) {
+      // El vídeo ja s'ha eliminat de forma atòmica; el cron diari reprendrà la neteja.
+      cleanupPending = true;
+      console.error('[DELETE video] No s\'ha pogut iniciar la neteja externa:', cleanupError);
     }
 
     return NextResponse.json({
-      message: 'Vídeo eliminat correctament',
+      message: cleanupPending
+        ? 'Vídeo eliminat correctament. La neteja de Vimeo o Storage es completarà automàticament.'
+        : 'Vídeo eliminat correctament',
+      cleanup_pending: cleanupPending,
     });
 
   } catch (error: unknown) {

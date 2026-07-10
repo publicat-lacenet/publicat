@@ -1,6 +1,7 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
+import { processMediaCleanupJobs } from '@/lib/media-cleanup';
 
 const parser = new Parser({
   timeout: 10000,
@@ -66,9 +67,23 @@ export async function GET(request: NextRequest) {
     disabled: 0,
     // Nota: 'skipped' eliminat - amb Vercel Hobby el cron només s'executa 1x/dia
     details: [] as Array<{ feed_id: string; name: string; status: string; items?: number; error?: string }>,
+    media_cleanup: {
+      processed: 0,
+      completed: 0,
+      pending: 0,
+      errors: [] as string[],
+    },
   };
 
   try {
+    try {
+      results.media_cleanup = await processMediaCleanupJobs({ limit: 20 });
+    } catch (cleanupError) {
+      const message = getErrorMessage(cleanupError);
+      results.media_cleanup.errors.push(message);
+      console.error('Error processant la neteja de recursos externs:', message);
+    }
+
     // Obtenir tots els feeds actius amb error_count < 5
     const { data: feeds, error: feedsError } = await supabaseAdmin
       .from('rss_feeds')

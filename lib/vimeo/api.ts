@@ -1,12 +1,24 @@
+export type VimeoDeleteResult = {
+  deleted: boolean;
+  alreadyMissing: boolean;
+};
+
 /**
  * Elimina un vídeo de Vimeo per ID.
- * Falla silenciosament si el vídeo no existeix (404).
+ * Un 404 confirma que el recurs ja no existeix; qualsevol altre error es propaga
+ * perquè la cua de neteja el pugui reintentar.
  */
-export async function deleteVimeoVideo(vimeoId: string): Promise<void> {
-  if (!vimeoId) return;
+export async function deleteVimeoVideo(vimeoId: string): Promise<VimeoDeleteResult> {
+  if (!vimeoId) {
+    throw new Error('No s\'ha indicat cap identificador de Vimeo');
+  }
+
+  if (!process.env.VIMEO_ACCESS_TOKEN) {
+    throw new Error('La integració amb Vimeo no està configurada');
+  }
 
   const response = await fetch(
-    `https://api.vimeo.com/videos/${vimeoId}`,
+    `https://api.vimeo.com/videos/${encodeURIComponent(vimeoId)}`,
     {
       method: 'DELETE',
       headers: {
@@ -17,14 +29,14 @@ export async function deleteVimeoVideo(vimeoId: string): Promise<void> {
   );
 
   if (response.status === 404) {
-    // Vídeo ja eliminat o inexistent, no cal fer res
-    return;
+    return { deleted: false, alreadyMissing: true };
   }
 
-  if (!response.ok && response.status !== 204) {
-    console.error(`[deleteVimeoVideo] Error eliminant vídeo ${vimeoId}: ${response.status}`);
-    // No llançar excepció — falla silenciosament per no bloquejar el flux
+  if (response.status === 204) {
+    return { deleted: true, alreadyMissing: false };
   }
+
+  throw new Error(`Vimeo ha retornat HTTP ${response.status} en eliminar el vídeo`);
 }
 
 export interface VimeoVideoData {
@@ -35,6 +47,14 @@ export interface VimeoVideoData {
   isAccessible: boolean;
   privacy: string;
 }
+
+type VimeoApiResponse = {
+  pictures?: { sizes?: Array<{ width?: number; link?: string }> };
+  privacy?: { view?: string };
+  name?: string;
+  description?: string | null;
+  duration?: number;
+};
 
 /**
  * Obté les metadades d'un vídeo de Vimeo
@@ -63,10 +83,10 @@ export async function getVimeoVideoData(
     throw new Error('VIMEO_API_ERROR');
   }
   
-  const data = await response.json();
+  const data = await response.json() as VimeoApiResponse;
   
   // Seleccionar thumbnail de 640px
-  const thumbnail = data.pictures?.sizes?.find((s: any) => s.width === 640)?.link 
+  const thumbnail = data.pictures?.sizes?.find((s) => s.width === 640)?.link
     || data.pictures?.sizes?.[0]?.link
     || '';
   

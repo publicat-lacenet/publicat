@@ -133,7 +133,8 @@ function ContingutContent() {
       });
 
       if (res.ok) {
-        alert('Vídeo eliminat correctament');
+        const data = await res.json();
+        alert(data.message || 'Vídeo eliminat correctament');
         refetch();
         if (video.status === 'pending_approval') {
           window.dispatchEvent(new CustomEvent('videoStatusChanged'));
