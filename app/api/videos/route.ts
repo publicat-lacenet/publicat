@@ -2,6 +2,10 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractVimeoId } from '@/lib/vimeo/utils';
 import { parseHashtagInput } from '@/lib/hashtags';
+import {
+  normalizeVideoRetention,
+  VideoRetentionValidationError,
+} from '@/lib/video-retention';
 
 // GET /api/videos - Llistar vídeos amb filtres
 export async function GET(request: NextRequest) {
@@ -232,8 +236,8 @@ export async function POST(request: NextRequest) {
     .single();
   
   // Priorizar rol de DB, luego metadata
-  let role = dbUser?.role || user.user_metadata?.role || user.app_metadata?.role;
-  let centerId = dbUser?.center_id || user.user_metadata?.center_id || user.app_metadata?.center_id;
+  const role = dbUser?.role || user.user_metadata?.role || user.app_metadata?.role;
+  const centerId = dbUser?.center_id || user.user_metadata?.center_id || user.app_metadata?.center_id;
 
   console.log('📊 Role from DB:', dbUser?.role);
   console.log('📊 Final role:', role, 'centerId:', centerId);
@@ -259,6 +263,8 @@ export async function POST(request: NextRequest) {
     thumbnail_url,
     duration_seconds,
     frames_urls,
+    retention_policy,
+    delete_on,
     center_id: bodyCenterId, // Permet especificar centre des del body (per admin_global)
   } = body;
 
@@ -318,6 +324,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let retention;
+  try {
+    retention = normalizeVideoRetention(retention_policy, delete_on);
+  } catch (error) {
+    if (error instanceof VideoRetentionValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    throw error;
+  }
+
   // Obtenir zone_id del centre (ja no fallarà)
   const { data: center } = await supabase
     .from('centers')
@@ -363,6 +379,8 @@ export async function POST(request: NextRequest) {
         thumbnail_url: thumbnail_url || null,
         duration_seconds: duration_seconds || null,
         frames_urls: Array.isArray(frames_urls) ? frames_urls : [],
+        retention_policy: retention.retention_policy,
+        delete_on: retention.delete_on,
         uploaded_by_user_id: user.id,
         is_shared_with_other_centers: canShare,
         is_active: true,
@@ -456,7 +474,7 @@ export async function POST(request: NextRequest) {
       message: 'Vídeo pujat correctament',
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Unexpected error:', error);
     return NextResponse.json(
       { error: 'Error inesperat al crear el vídeo' },

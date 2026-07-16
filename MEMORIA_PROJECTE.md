@@ -141,3 +141,17 @@ Decisio de producte:
 - Si una llista de dia no té ticker propi, el display usa el ticker general del Visor com a reserva.
 - `display_settings.show_ticker` continua sent l'interruptor global: si és `false`, no es mostra cap ticker encara que hi hagi missatges generals o de dia.
 - No cal cap canvi de BD per aquesta decisio; el model existent `ticker_messages.playlist_id = null` ja representa el ticker general.
+
+## Decisions i canvis locals - 2026-07-16
+
+### Conservació i eliminació automàtica de vídeos
+
+Decisió de producte implementada:
+
+- Els vídeos nous es configuren per defecte per conservar-se fins al primer 31 de juliol que encara no hagi finalitzat.
+- També es poden conservar sense límit de temps o fins a una data concreta; totes les dates són inclusives.
+- Els 621 vídeos existents abans de la migració es conservaran indefinidament per no imposar una baixa retroactiva als centres.
+- L'eliminació automàtica reutilitza el procés atòmic existent: cascades, reindexació de playlists i cua durable de Vimeo i `announcement-frames`.
+- La caducitat d'un vídeo pendent no genera una notificació de rebuig.
+- La migració nova és `20260716120000_video_retention_and_expiration.sql`.
+- La migració s'ha aplicat i registrat a la BD real `publicat_videos`; hi ha 42 migracions locals i 42 versions remotes.

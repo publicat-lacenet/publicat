@@ -2,7 +2,7 @@
 
 Document canònic del mapa de base de dades de PUBLI*CAT. Descriu l'estructura real verificada, les relacions principals i les regles que cal preservar quan es modifica schema, RLS o fluxos de dades.
 
-Última verificació: 2026-07-10 contra la BD real `publicat_videos` (`tvsafusrasfzubiujavk`) via `DATABASE_URL`, sense exposar credencials.
+Última verificació: 2026-07-16 contra la BD real `publicat_videos` (`tvsafusrasfzubiujavk`) via `DATABASE_URL`, sense exposar credencials.
 
 ## Fonts de veritat
 
@@ -11,13 +11,13 @@ Document canònic del mapa de base de dades de PUBLI*CAT. Descriu l'estructura r
 - Les verificacions i rectificacions datades viuen a `MEMORIA_PROJECTE.md`.
 - Els informes antics moguts a `docs/OBSOLET/` són històrics i no s'han d'usar com a foto actual sense contrastar.
 
-Estat verificat el 2026-07-10:
+Estat verificat el 2026-07-16:
 
 - Taules públiques: 21.
-- Enums públics: 6 després de la migració local pendent.
-- Migracions locals: 41.
-- Versions registrades a `supabase_migrations.schema_migrations`: 41.
-- Última migració registrada: `20260710130000_video_media_cleanup.sql`.
+- Enums públics: 7.
+- Migracions locals: 42.
+- Versions registrades a `supabase_migrations.schema_migrations`: 42.
+- Última migració registrada: `20260716120000_video_retention_and_expiration.sql`.
 - Totes les taules públiques tenen RLS activat.
 
 ## Convencions
@@ -64,6 +64,11 @@ playlist_kind:
 display_playlist_mode:
   permanent
   weekday
+
+video_retention_policy:
+  end_of_school_year
+  indefinite
+  custom_date
 ```
 
 ## Relacions Principals
@@ -307,6 +312,8 @@ videos:
   duration_seconds int4
   thumbnail_url text
   frames_urls jsonb not null
+  retention_policy video_retention_policy not null
+  delete_on date
   uploaded_by_user_id uuid not null
   approved_by_user_id uuid
   approved_at timestamptz
@@ -341,6 +348,7 @@ zones:
 ### Vídeos i classificació
 
 - `videos`: contingut Vimeo del centre, amb moderació, compartició, metadades Vimeo i `frames_urls` per anuncis/slideshow.
+- `videos.retention_policy` controla si el vídeo es conserva fins al 31 de juliol, indefinidament o fins a una data concreta. `delete_on` és l'últim dia inclusiu de conservació.
 - `tags`: catàleg global controlat.
 - `hashtags`: etiquetes lliures per centre.
 - `video_tags`: relació N-M entre vídeos i tags.
@@ -415,6 +423,10 @@ Funcions públiques principals verificades en revisions recents:
 - `set_updated_at`
 - `set_video_zone_id`
 - `sync_user_email`
+- `private.normalize_video_retention`
+- `private.delete_video_and_queue_cleanup_internal`
+- `delete_video_and_queue_cleanup`
+- `delete_expired_videos`
 
 Funcions privades de suport RLS:
 
@@ -445,6 +457,9 @@ Aquest estat s'ha de revisar abans de tocar el flux de fotogrames d'anuncis. `do
 - Els vídeos d'alumnes comencen com `pending_approval`.
 - `needs_revision` representa un retorn a l'alumne perquè corregeixi.
 - Els vídeos compartits entre centres han de ser `published`.
+- Els vídeos nous tenen `end_of_school_year` per defecte i es conserven fins al primer 31 de juliol que encara no hagi finalitzat.
+- Els vídeos anteriors a la introducció de la conservació automàtica queden com a `indefinite`.
+- `delete_on` és inclusiu: el cron elimina només files amb una data anterior al dia actual d'`Europe/Madrid`.
 - Les llistes globals públiques no han d'incloure vídeos no publicats ni no compartits.
 - `schedule_overrides` ha de referenciar playlists actives del mateix centre.
 - Si no hi ha `schedule_overrides`, `display_settings.default_playlist_mode` decideix entre `permanent` i `weekday`.

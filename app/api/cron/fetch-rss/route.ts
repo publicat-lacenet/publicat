@@ -61,6 +61,10 @@ export async function GET(request: NextRequest) {
   );
 
   const results = {
+    expired_videos: {
+      deleted: 0,
+      error: null as string | null,
+    },
     processed: 0,
     success: 0,
     errors: 0,
@@ -76,6 +80,20 @@ export async function GET(request: NextRequest) {
   };
 
   try {
+    const { data: expiredVideoCount, error: expiredVideosError } =
+      await supabaseAdmin.rpc('delete_expired_videos');
+
+    if (expiredVideosError) {
+      results.expired_videos.error = expiredVideosError.message;
+      console.error(
+        'Error eliminant vídeos amb la conservació finalitzada:',
+        expiredVideosError.message
+      );
+    } else {
+      results.expired_videos.deleted =
+        typeof expiredVideoCount === 'number' ? expiredVideoCount : 0;
+    }
+
     try {
       results.media_cleanup = await processMediaCleanupJobs({ limit: 20 });
     } catch (cleanupError) {

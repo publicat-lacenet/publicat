@@ -42,6 +42,7 @@ Flux:
 4. Client consulta `/api/vimeo/status/[videoId]`.
 5. El video nomes es considera complet quan Vimeo diu que es reproduible i ja hi ha thumbnail real.
 6. El formulari guarda metadades i, si escau, `frames_urls`.
+7. El formulari guarda també la política de conservació del vídeo.
 
 ## Camps de BD
 
@@ -51,6 +52,15 @@ Flux:
 - `videos.thumbnail_url`: thumbnail Vimeo.
 - `videos.duration_seconds`: durada.
 - `videos.frames_urls`: fotogrames per mode anunci/slideshow.
+- `videos.retention_policy`: conservació fins al 31 de juliol, indefinida o fins a una data concreta.
+- `videos.delete_on`: últim dia inclusiu de conservació quan hi ha eliminació programada.
+
+## Eliminació i neteja
+
+- L'eliminació manual i la caducitat automàtica comparteixen la mateixa funció interna de BD.
+- La baixa local elimina les relacions dependents, reindexa les playlists i posa a `media_cleanup_jobs` el Vimeo i els fotogrames que cal retirar.
+- El cron diari elimina els vídeos amb `delete_on` anterior al dia actual d'`Europe/Madrid` i després processa la cua externa.
+- Una fallada de Vimeo o Storage no recupera el vídeo local: la cua conserva el treball i el reintenta.
 
 ## Seguretat i Deute
 

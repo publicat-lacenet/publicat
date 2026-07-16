@@ -119,7 +119,7 @@ docs/                  Documentació funcional, tècnica i UI
 
 ## Base de Dades
 
-El projecte Supabase és `tvsafusrasfzubiujavk` (`publicat_videos`). A data 2026-07-09, `MEMORIA_PROJECTE.md` registra 35 migracions locals i 35 versions registrades a `supabase_migrations.schema_migrations`.
+El projecte Supabase és `tvsafusrasfzubiujavk` (`publicat_videos`). A data 2026-07-16, `MEMORIA_PROJECTE.md` registra 42 migracions locals i 42 versions registrades a `supabase_migrations.schema_migrations`.
 
 La font canònica de l'estructura i relacions és `docs/database.schema.md`; el SQL exacte és a `supabase/migrations/`.
 

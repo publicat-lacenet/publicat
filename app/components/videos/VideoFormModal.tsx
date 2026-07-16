@@ -7,6 +7,12 @@ import HashtagInput from './HashtagInput';
 import { useAuth } from '@/utils/supabase/useAuth';
 import { parseHashtagInput, formatHashtagsForInput } from '@/lib/hashtags';
 import { MessageSquareWarning } from 'lucide-react';
+import {
+  formatRetentionDate,
+  getEndOfSchoolYearDeleteOn,
+  getMadridToday,
+  VideoRetentionPolicy,
+} from '@/lib/video-retention';
 
 interface VimeoMetadata {
   vimeo_id?: string;
@@ -27,6 +33,8 @@ interface VideoData {
   is_shared_with_other_centers: boolean;
   status?: string;
   rejection_comment?: string | null;
+  retention_policy: VideoRetentionPolicy;
+  delete_on: string | null;
   video_tags?: Array<{ tags: { id: string; name: string } }>;
   video_hashtags?: Array<{ hashtags: { id: string; name: string } }>;
 }
@@ -59,6 +67,9 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [hashtags, setHashtags] = useState('');
   const [isShared, setIsShared] = useState(false);
+  const [retentionPolicy, setRetentionPolicy] =
+    useState<VideoRetentionPolicy>('end_of_school_year');
+  const [customDeleteOn, setCustomDeleteOn] = useState('');
   const [framesUrls, setFramesUrls] = useState<string[]>([]);
   const pendingVideoIdRef = useRef<string | null>(null);
 
@@ -73,6 +84,12 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       setDescription(editVideo.description || '');
       setType(editVideo.type);
       setIsShared(editVideo.is_shared_with_other_centers);
+      setRetentionPolicy(editVideo.retention_policy || 'indefinite');
+      setCustomDeleteOn(
+        editVideo.retention_policy === 'custom_date'
+          ? editVideo.delete_on || ''
+          : ''
+      );
       setHasNewVideo(false);
 
       const videoTagIds = editVideo.video_tags?.map(vt => vt.tags.id) || [];
@@ -82,15 +99,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       setHashtags(formatHashtagsForInput(hashtagNames));
     }
   }, [isEditMode, editVideo]);
-
-  const handleVimeoValidation = useCallback((isValid: boolean, metadata?: VimeoMetadata) => {
-    setIsVimeoValid(isValid);
-    setVimeoMetadata(metadata ?? null);
-
-    if (isValid && metadata?.title) {
-      setTitle(prev => prev || metadata.title || '');
-    }
-  }, []);
 
   const handleUploadComplete = useCallback((uploadedUrl: string, metadata: UploadMetadata) => {
     setVimeoUrl(uploadedUrl);
@@ -153,6 +161,11 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       return;
     }
 
+    if (retentionPolicy === 'custom_date' && !customDeleteOn) {
+      alert('Si us plau, selecciona fins a quina data vols conservar el vídeo');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -162,13 +175,16 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
 
       // ---- MODE REVISIÓ: enviar correcció ----
       if (isRevisionMode) {
-        const payload: Record<string, any> = {
+        const payload: Record<string, unknown> = {
           action: 'submit_revision',
           title,
           description: description || null,
           type,
           tag_ids: tagIds,
           hashtag_names: processedHashtags,
+          retention_policy: retentionPolicy,
+          delete_on:
+            retentionPolicy === 'custom_date' ? customDeleteOn : null,
         };
 
         // Incloure dades del nou vídeo si l'alumne ha pujat un de nou
@@ -201,13 +217,16 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       }
 
       // ---- MODE EDICIÓ NORMAL ----
-      const payload: Record<string, any> = {
+      const payload: Record<string, unknown> = {
         title,
         description: description || null,
         type,
         tag_ids: tagIds,
         hashtag_names: processedHashtags,
         is_shared_with_other_centers: isShared,
+        retention_policy: retentionPolicy,
+        delete_on:
+          retentionPolicy === 'custom_date' ? customDeleteOn : null,
       };
 
       if (!isEditMode) {
@@ -258,6 +277,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setTagIds([]);
     setHashtags('');
     setIsShared(false);
+    setRetentionPolicy('end_of_school_year');
+    setCustomDeleteOn('');
     setFramesUrls([]);
     setHasNewVideo(false);
     setUploadStatus('idle');
@@ -273,6 +294,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   if (!isOpen) return null;
 
   const modalTitle = isRevisionMode ? 'Corregir vídeo' : isEditMode ? 'Editar Vídeo' : 'Pujar Vídeo';
+  const endOfSchoolYearDeleteOn = getEndOfSchoolYearDeleteOn();
+  const today = getMadridToday();
   const submitLabel = isRevisionMode
     ? (submitting ? 'Enviant...' : 'Enviar per revisió')
     : isEditMode
@@ -439,6 +462,110 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
           <TagSelector selectedTagIds={tagIds} onChange={setTagIds} />
 
           <HashtagInput value={hashtags} onChange={setHashtags} />
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold text-gray-900">
+              Quant de temps vols conservar aquest vídeo?
+            </legend>
+
+            <label
+              className={`block rounded-lg border p-4 cursor-pointer transition-colors ${
+                retentionPolicy === 'end_of_school_year'
+                  ? 'border-[#16AFAA] bg-[#16AFAA]/5'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="retentionPolicy"
+                  value="end_of_school_year"
+                  checked={retentionPolicy === 'end_of_school_year'}
+                  onChange={() => setRetentionPolicy('end_of_school_year')}
+                  className="mt-1 h-4 w-4 text-[#16AFAA] focus:ring-[#16AFAA]"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-gray-900">
+                    Conservar fins al 31 de juliol
+                  </span>
+                  <span className="mt-1 block text-xs leading-relaxed text-gray-600">
+                    En arribar a final de curs, el vídeo s&apos;eliminarà
+                    automàticament. Data prevista:{' '}
+                    {formatRetentionDate(endOfSchoolYearDeleteOn)}.
+                  </span>
+                </span>
+              </span>
+            </label>
+
+            <label
+              className={`block rounded-lg border p-4 cursor-pointer transition-colors ${
+                retentionPolicy === 'indefinite'
+                  ? 'border-[#16AFAA] bg-[#16AFAA]/5'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="retentionPolicy"
+                  value="indefinite"
+                  checked={retentionPolicy === 'indefinite'}
+                  onChange={() => setRetentionPolicy('indefinite')}
+                  className="mt-1 h-4 w-4 text-[#16AFAA] focus:ring-[#16AFAA]"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-gray-900">
+                    Conservar sense límit de temps
+                  </span>
+                  <span className="mt-1 block text-xs leading-relaxed text-gray-600">
+                    El vídeo continuarà disponible fins que l&apos;eliminis
+                    manualment.
+                  </span>
+                </span>
+              </span>
+            </label>
+
+            <label
+              className={`block rounded-lg border p-4 cursor-pointer transition-colors ${
+                retentionPolicy === 'custom_date'
+                  ? 'border-[#16AFAA] bg-[#16AFAA]/5'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="retentionPolicy"
+                  value="custom_date"
+                  checked={retentionPolicy === 'custom_date'}
+                  onChange={() => setRetentionPolicy('custom_date')}
+                  className="mt-1 h-4 w-4 text-[#16AFAA] focus:ring-[#16AFAA]"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-gray-900">
+                    Conservar fins a una data concreta
+                  </span>
+                  <span className="mt-1 block text-xs leading-relaxed text-gray-600">
+                    Selecciona el dia en què vols que el vídeo s&apos;elimini
+                    automàticament.
+                  </span>
+                </span>
+              </span>
+
+              {retentionPolicy === 'custom_date' && (
+                <input
+                  type="date"
+                  value={customDeleteOn}
+                  min={today}
+                  required
+                  onChange={(event) => setCustomDeleteOn(event.target.value)}
+                  onClick={(event) => event.stopPropagation()}
+                  className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-[#16AFAA] focus:outline-none"
+                  aria-label="Data límit de conservació"
+                />
+              )}
+            </label>
+          </fieldset>
 
           {canShare && !isRevisionMode && (
             <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">

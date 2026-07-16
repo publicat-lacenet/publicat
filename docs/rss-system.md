@@ -18,12 +18,13 @@ Document viu del sistema RSS real: feeds, items importats, configuracio per cent
 - `POST /api/rss/[id]/retry`: reintenta fetch d'un feed.
 - `GET/PATCH /api/rss/settings`: configuracio per centre.
 - `GET/POST /api/rss/rotation`: lectura i reordenacio de rotacio.
-- `GET /api/cron/fetch-rss`: actualitzacio programada protegida amb `CRON_SECRET`.
+- `GET /api/cron/fetch-rss`: tasca diària protegida amb `CRON_SECRET`; elimina vídeos caducats, processa la cua de neteja externa i actualitza els feeds RSS.
 
 ## Cron
 
 - En entorns no locals, `CRON_SECRET` ha d'estar configurat.
 - El cron requereix header `Authorization: Bearer <CRON_SECRET>`.
+- Abans de llegir els feeds, crida `delete_expired_videos()` amb `service_role`. La funció només elimina vídeos amb `delete_on` anterior al dia actual d'`Europe/Madrid`, perquè la data configurada és inclusiva.
 - Si falta `CRON_SECRET` fora de desenvolupament, ha de fallar tancat.
 
 ## Permisos

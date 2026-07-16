@@ -47,6 +47,12 @@ Regles:
 - Els videos compartits amb altres centres han de ser `published`.
 - `vimeo_id` i `vimeo_hash` s'han de conservar per videos unlisted.
 - `frames_urls` guarda fotogrames associats a anuncis/slideshow.
+- Cada vídeo té una política de conservació:
+  - `end_of_school_year`: es conserva fins al 31 de juliol corresponent.
+  - `indefinite`: no té eliminació automàtica.
+  - `custom_date`: es conserva fins a la data concreta seleccionada.
+- La data és inclusiva. L'eliminació automàtica s'executa l'endemà i reutilitza el mateix procés atòmic i la mateixa cua de neteja externa que l'eliminació manual.
+- Els vídeos creats abans d'aquesta funcionalitat es conserven indefinidament.
 
 Nota: `rejected_at`, `rejected_by_user_id` i `rejection_comment` existeixen a BD, pero el flux viu prioritza `needs_revision` per retorn amb feedback. No documentis `rejected` com a estat enum: no existeix dins `video_status`.
 

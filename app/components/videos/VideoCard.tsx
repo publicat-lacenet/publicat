@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Video, Clock, Megaphone, Globe, Play, Pencil, Trash2, X, MessageSquareWarning, Wrench } from 'lucide-react';
+import { Video, Clock, Megaphone, Globe, Play, Pencil, Trash2, X, MessageSquareWarning, Wrench, CalendarClock } from 'lucide-react';
 import { extractVimeoId } from '@/lib/vimeo/utils';
+import {
+  formatVideoRetentionSummary,
+  VideoRetentionPolicy,
+} from '@/lib/video-retention';
 
 interface Video {
   id: string;
@@ -16,6 +20,8 @@ interface Video {
   vimeo_id?: string | null;
   vimeo_hash?: string | null;
   is_shared_with_other_centers: boolean;
+  retention_policy: VideoRetentionPolicy;
+  delete_on: string | null;
   created_at: string;
   rejection_comment?: string | null;
   uploaded_by_user_id?: string | null;
@@ -104,18 +110,6 @@ export default function VideoCard({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return 'fa 1 dia';
-    if (diffDays < 7) return `fa ${diffDays} dies`;
-    if (diffDays < 30) return `fa ${Math.floor(diffDays / 7)} setmanes`;
-    return date.toLocaleDateString('ca-ES');
-  };
-
   return (
     <div className={`bg-white border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
       isNeedsRevision
@@ -180,6 +174,14 @@ export default function VideoCard({
         {/* Center and Zone */}
         <p className="text-sm text-[var(--color-gray)] mb-2 font-[family-name:var(--font-inter)]">
           {video.centers?.name || 'Centre desconegut'} · {video.centers?.zones?.name || 'Zona desconeguda'}
+        </p>
+
+        <p className="mb-3 flex items-center gap-1.5 text-xs text-[var(--color-gray)] font-[family-name:var(--font-inter)]">
+          <CalendarClock className="h-3.5 w-3.5" />
+          {formatVideoRetentionSummary(
+            video.retention_policy || 'indefinite',
+            video.delete_on
+          )}
         </p>
 
         {/* Comentari del professor (visible per alumne en needs_revision) */}

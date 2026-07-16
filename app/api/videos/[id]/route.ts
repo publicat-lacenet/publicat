@@ -2,6 +2,11 @@ import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { parseHashtagInput } from '@/lib/hashtags';
 import { processMediaCleanupJobs } from '@/lib/media-cleanup';
+import {
+  normalizeVideoRetention,
+  VideoRetentionPolicy,
+  VideoRetentionValidationError,
+} from '@/lib/video-retention';
 
 type UserRole = 'admin_global' | 'editor_profe' | 'editor_alumne' | 'display';
 
@@ -27,6 +32,8 @@ type VideoUpdatePayload = {
   is_shared_with_other_centers?: boolean;
   shared_by_user_id?: string;
   shared_at?: string;
+  retention_policy?: VideoRetentionPolicy;
+  delete_on?: string | null;
 };
 
 async function getUserProfile(
@@ -106,7 +113,34 @@ export async function PATCH(
     vimeo_hash: new_vimeo_hash,
     thumbnail_url: new_thumbnail_url,
     duration_seconds: new_duration_seconds,
+    retention_policy,
+    delete_on,
   } = body;
+
+  let normalizedRetention:
+    | ReturnType<typeof normalizeVideoRetention>
+    | undefined;
+
+  if (retention_policy !== undefined || delete_on !== undefined) {
+    if (retention_policy === undefined) {
+      return NextResponse.json(
+        { error: 'Cal indicar la política de conservació' },
+        { status: 400 }
+      );
+    }
+
+    try {
+      normalizedRetention = normalizeVideoRetention(
+        retention_policy,
+        delete_on
+      );
+    } catch (error) {
+      if (error instanceof VideoRetentionValidationError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
+    }
+  }
 
   // ============================================================
   // CAS 1: Demanar revisió (editor_profe / admin_global)
@@ -169,6 +203,10 @@ export async function PATCH(
       if (description !== undefined) revisionUpdates.description = description;
       if (type !== undefined) revisionUpdates.type = type;
       if (frames_urls !== undefined) revisionUpdates.frames_urls = Array.isArray(frames_urls) ? frames_urls : [];
+      if (normalizedRetention) {
+        revisionUpdates.retention_policy = normalizedRetention.retention_policy;
+        revisionUpdates.delete_on = normalizedRetention.delete_on;
+      }
 
       // Si l'alumne ha pujat un vídeo nou, l'actualització i l'encuat de
       // recursos antics són atòmics a la BD.
@@ -186,6 +224,10 @@ export async function PATCH(
             p_thumbnail_url: new_thumbnail_url ?? null,
             p_duration_seconds: new_duration_seconds ?? null,
             p_frames_urls: Array.isArray(frames_urls) ? frames_urls : [],
+            p_retention_policy:
+              normalizedRetention?.retention_policy ?? video.retention_policy,
+            p_delete_on:
+              normalizedRetention?.delete_on ?? video.delete_on,
           }
         );
 
@@ -286,6 +328,10 @@ export async function PATCH(
     if (description !== undefined) updates.description = description;
     if (type !== undefined) updates.type = type;
     if (frames_urls !== undefined) updates.frames_urls = Array.isArray(frames_urls) ? frames_urls : [];
+    if (normalizedRetention) {
+      updates.retention_policy = normalizedRetention.retention_policy;
+      updates.delete_on = normalizedRetention.delete_on;
+    }
 
     // Permetre canvi d'estat NOMÉS per editor_profe
     // L'admin_global NO gestiona aprovacions de vídeos pendents
