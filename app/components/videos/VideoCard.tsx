@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Video, Clock, Megaphone, Globe, Play, Pencil, Trash2, X, MessageSquareWarning, Wrench, CalendarClock } from 'lucide-react';
+import { Video, Clock, Megaphone, Globe, Play, Pencil, Trash2, X, MessageSquareWarning, Wrench, CalendarClock, ListVideo } from 'lucide-react';
 import { extractVimeoId } from '@/lib/vimeo/utils';
 import {
   formatVideoRetentionSummary,
@@ -22,6 +22,7 @@ interface Video {
   is_shared_with_other_centers: boolean;
   retention_policy: VideoRetentionPolicy;
   delete_on: string | null;
+  playlist_count: number | null;
   created_at: string;
   rejection_comment?: string | null;
   uploaded_by_user_id?: string | null;
@@ -182,6 +183,21 @@ export default function VideoCard({
             video.retention_policy || 'indefinite',
             video.delete_on
           )}
+        </p>
+
+        <p
+          className={`mb-3 flex items-center gap-1.5 text-xs font-[family-name:var(--font-inter)] ${
+            video.playlist_count === 0
+              ? 'font-semibold text-amber-700'
+              : 'text-[var(--color-gray)]'
+          }`}
+        >
+          <ListVideo className="h-3.5 w-3.5" />
+          {video.playlist_count === null || video.playlist_count === undefined
+            ? 'Ús no disponible'
+            : video.playlist_count === 0
+              ? 'Cap llista'
+              : `${video.playlist_count} ${video.playlist_count === 1 ? 'llista' : 'llistes'}`}
         </p>
 
         {/* Comentari del professor (visible per alumne en needs_revision) */}

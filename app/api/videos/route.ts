@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractVimeoId } from '@/lib/vimeo/utils';
 import { parseHashtagInput } from '@/lib/hashtags';
@@ -201,11 +202,69 @@ export async function GET(request: NextRequest) {
     console.log(`🎓 [editor_alumne] User ID: ${user.id}`);
   }
 
+  const videosWithPlaylistCount = filteredVideos.map(video => ({
+    ...video,
+    playlist_count: null as number | null,
+  }));
+
+  const videoIds = filteredVideos.map(video => video.id);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (videoIds.length > 0 && supabaseUrl && serviceRoleKey) {
+    const admin = createAdminClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    const { data: playlistItems, error: playlistCountError } = await admin
+      .from('playlist_items')
+      .select(`
+        video_id,
+        playlists!inner (
+          id
+        )
+      `)
+      .in('video_id', videoIds)
+      .eq('playlists.is_active', true);
+
+    if (playlistCountError) {
+      console.error(
+        '[GET /api/videos] No s’ha pogut calcular l’ús en llistes:',
+        playlistCountError.message
+      );
+    } else {
+      const playlistIdsByVideo = new Map<string, Set<string>>();
+
+      for (const item of playlistItems || []) {
+        const playlist = Array.isArray(item.playlists)
+          ? item.playlists[0]
+          : item.playlists;
+
+        if (!playlist?.id) continue;
+
+        const playlistIds = playlistIdsByVideo.get(item.video_id) || new Set<string>();
+        playlistIds.add(playlist.id);
+        playlistIdsByVideo.set(item.video_id, playlistIds);
+      }
+
+      for (const video of videosWithPlaylistCount) {
+        video.playlist_count = playlistIdsByVideo.get(video.id)?.size || 0;
+      }
+    }
+  } else if (videoIds.length > 0) {
+    console.error(
+      '[GET /api/videos] No s’ha pogut calcular l’ús en llistes: configuració del servidor incompleta'
+    );
+  }
+
   // Nota: El filtratge per tags/hashtags es fa a nivell de BD (pre-query amb .in('id', ...))
   // ja no cal filtrar client-side
 
   return NextResponse.json({
-    videos: filteredVideos,
+    videos: videosWithPlaylistCount,
     total: count || 0,
     page,
     totalPages: Math.ceil((count || 0) / limit),

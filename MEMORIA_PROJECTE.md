@@ -166,3 +166,13 @@ Decisió de producte implementada:
 - La caducitat d'un vídeo pendent no genera una notificació de rebuig.
 - La migració nova és `20260716120000_video_retention_and_expiration.sql`.
 - La migració s'ha aplicat i registrat a la BD real `publicat_videos`; hi ha 42 migracions locals i 42 versions remotes.
+
+### Indicador d'ús dels vídeos en llistes
+
+Decisió de producte implementada:
+
+- Les targetes de Contingut mostren el nombre de llistes actives diferents que contenen cada vídeo.
+- El recompte és global, incloses les llistes d'altres centres que utilitzen un vídeo compartit, perquè l'indicador sigui fiable abans d'eliminar-lo.
+- L'API només exposa la xifra agregada; no revela noms, tipus ni centres de les altres llistes.
+- Els vídeos sense cap llista activa es destaquen amb «Cap llista» i una fallada del recompte es mostra com «Ús no disponible».
+- El recompte representa l'estat actual, no l'historial d'incorporacions, i no requereix cap canvi de schema.
