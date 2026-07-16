@@ -1,5 +1,7 @@
 # Roadmap de revisio completa del projecte PUBLI*CAT
 
+> Nota 2026-07-09: aquest fitxer és un registre de revisió, no una font canònica permanent. Algunes observacions del 2026-07-07 han quedat superades; per exemple, `MEMORIA_PROJECTE.md` verifica que les migracions locals i remotes estan al dia amb 35 versions registrades. Per regles operatives consulta `AGENTS.md`; per BD consulta `docs/database.schema.md`.
+
 ## Objectiu
 
 Fer una revisio completa, ordenada i documentada del projecte PUBLI*CAT per verificar que el codi, la base de dades, els permisos, els fluxos funcionals i la documentacio estan alineats.
@@ -20,7 +22,7 @@ Durant els passos 1 a 6, la prioritat es auditar i entendre. Les correccions s'h
 - Projecte Supabase: `tvsafusrasfzubiujavk` (`publicat_videos`)
 - Repo local: `D:\Drive shorrill\app-videos-lacenet`
 - Font operativa per agents: `AGENTS.md`
-- Estat: Pas 7 iniciat amb matriu prioritzada i primera tongada de correccions de codi aplicada; pendents migracions/RLS, dades i documentacio final
+- Estat: Pas 7 iniciat amb matriu prioritzada; primera tongada de codi aplicada i migracio RLS critica registrada/aplicada segons verificacio del 2026-07-09. Pendents: segona tongada funcional, validacions manuals, dades i documentacio final.
 
 ## Resum executiu viu
 
@@ -29,11 +31,12 @@ Anotar aqui el resum curt que s'anira actualitzant despres de cada fase.
 - Punts forts:
   - BD real accessible via `DATABASE_URL` i coherent amb el projecte Supabase esperat.
   - Totes les taules publiques detectades tenen RLS activat.
+  - Les migracions locals i les registrades a `supabase_migrations.schema_migrations` estan alineades a data 2026-07-09: 35 locals i 35 remotes.
+  - La migracio `20260707180000_harden_core_rls_policies.sql` consta registrada i les policies reals de `videos`, `users`, `video_tags` i `video_hashtags` reflecteixen l'enduriment esperat.
   - Les correccions recents de funcions (`search_path`) i revocacio d'`EXECUTE` public consten aplicades a la BD real.
   - El trigger duplicat de notificacions pendents ja no existeix a la BD real.
 - Riscos principals:
-  - El registre `supabase_migrations.schema_migrations` no reflecteix totes les migracions locals aplicades manualment.
-  - `docs/DB-AUDIT-REPORT.md` esta desfasat respecte de la BD real.
+  - `docs/OBSOLET/DB-AUDIT-REPORT.md` esta desfasat respecte de la BD real.
   - `docs/database.schema.md` barreja esquema real, recomanacions i taules futures, i no es pot usar com a foto exacta.
   - `audit_logs` i `guest_access_links` tenen RLS activat pero cap politica definida.
   - La policy antiga `Users can manage videos in their center` dona `ALL` sobre `videos` a qualsevol usuari autenticat del mateix centre, inclosos `editor_alumne` i `display`.
@@ -52,14 +55,13 @@ Anotar aqui el resum curt que s'anira actualitzant despres de cada fase.
   - El bucket `announcement-frames` existeix, pero no hi ha policies de Storage; la pujada client-side de fotogrames probablement falla silenciosament.
   - Hi ha 16 videos `needs_revision` i 0 notificacions `video_needs_revision` a la BD real.
 - Decisions pendents:
-  - Decidir si cal registrar o documentar formalment les migracions aplicades manualment fora de `schema_migrations`.
   - Decidir si `audit_logs` i `guest_access_links` han de continuar tancades sense policies o han de tenir politiques explicites.
   - Decidir si la BD ha de tancar completament l'escriptura directa de perfils, videos i playlists per rols no editors, encara que l'API ja faci validacions.
   - Decidir si el fallback a `user_metadata` s'ha d'eliminar completament de les API routes o mantenir-se nomes com a compatibilitat no autoritzadora.
   - Decidir si `user_metadata` ha de deixar de contenir rol/centre i si cal migrar aquesta informacio cap a `public.users` exclusivament o `app_metadata` nomes com a cache no autoritzadora.
 - Correccions candidates:
   - Actualitzar documentacio de BD amb una foto real nova.
-  - Revisar traçabilitat de migracions no registrades.
+  - Mantenir verificacio de traçabilitat de migracions quan hi hagi nous canvis de schema.
   - Revisar policies pendents a `audit_logs` i `guest_access_links` al Pas 2.
   - Substituir policies RLS massa amples per policies per operacio i rol, especialment a `users`, `videos`, `playlists`, `playlist_items`, `video_tags` i `video_hashtags`.
   - Refactoritzar helpers d'autorizacio server-side compartits per API routes per llegir sempre rol/centre de `public.users`.
@@ -82,9 +84,9 @@ Comparar l'estat real de Supabase amb la documentacio i les migracions del repo.
 
 - BD real de Supabase via `DATABASE_URL` o eina disponible.
 - `supabase/migrations/`
-- `docs/DB-AUDIT-REPORT.md`
+- `docs/OBSOLET/DB-AUDIT-REPORT.md`
 - `docs/database.schema.md`
-- `docs/model-data.md`
+- `docs/OBSOLET/model-data.md`
 - `README.md`
 - `AGENTS.md`
 
@@ -101,11 +103,11 @@ Comparar l'estat real de Supabase amb la documentacio i les migracions del repo.
 ## Evidencies recollides
 
 - Sessio: 2026-07-07, mode nomes lectura excepte aquesta anotacio final.
-- Fonts llegides: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`, `docs/DB-AUDIT-REPORT.md`, `docs/database.schema.md`, `docs/model-data.md` i migracions clau de `supabase/migrations/`.
+- Fonts llegides: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`, `docs/OBSOLET/DB-AUDIT-REPORT.md`, `docs/database.schema.md`, `docs/OBSOLET/model-data.md` i migracions clau de `supabase/migrations/`.
 - Connexio BD real via `DATABASE_URL` de `.env.local`: `current_database() = postgres`, `current_user = postgres`, PostgreSQL 17.6, consulta a data 2026-07-07.
 - Taules publiques reals detectades: 20. Llista: `audit_logs`, `centers`, `display_settings`, `guest_access_links`, `hashtags`, `notifications`, `playlist_items`, `playlists`, `rss_center_settings`, `rss_feeds`, `rss_items`, `rss_rotation_order`, `schedule_overrides`, `tags`, `ticker_messages`, `users`, `video_hashtags`, `video_tags`, `videos`, `zones`.
 - Totes les taules publiques tenen RLS activat.
-- Taules amb RLS activat i 0 policies: `audit_logs`, `guest_access_links`. `schedule_overrides` te 4 policies i ja no encaixa amb l'avís antic de `docs/model-data.md`.
+- Taules amb RLS activat i 0 policies: `audit_logs`, `guest_access_links`. `schedule_overrides` te 4 policies i ja no encaixa amb l'avís antic de `docs/OBSOLET/model-data.md`.
 - Enums reals: `user_role = {admin_global, editor_profe, editor_alumne, display}`, `onboarding_status = {invited, active, disabled}`, `video_type = {content, announcement}`, `video_status = {pending_approval, published, needs_revision}`, `playlist_kind = {weekday, announcements, custom, global, landing}`.
 - Files reals per taula en el moment de la consulta: `rss_items=13803`, `notifications=1796`, `video_tags=849`, `videos=621`, `schedule_overrides=567`, `video_hashtags=207`, `playlists=197`, `playlist_items=170`, `hashtags=99`, `users=69`, `rss_feeds=30`, `centers=23`, `rss_rotation_order=18`, `ticker_messages=13`, `tags=12`, `zones=8`, `display_settings=6`, `rss_center_settings=1`, `audit_logs=0`, `guest_access_links=0`.
 - Views publiques: cap view detectada a `public`.
@@ -118,13 +120,13 @@ Comparar l'estat real de Supabase amb la documentacio i les migracions del repo.
 - Registre de migracions: 34 fitxers locals a `supabase/migrations/`, pero nomes 29 versions registrades a `supabase_migrations.schema_migrations`.
 - Versions locals no registrades a `schema_migrations`: `20260226130000_add_none_announcement_mode.sql`, `20260227100000_m3d_revision_feedback.sql`, `20260302120000_rss_image_height.sql`, `20260304100000_fix_rls_editor_alumne_playlists.sql`, `20260707120000_fix_security_advisor_warnings.sql`.
 - Malgrat no estar registrades, s'han vist efectes reals d'aquestes migracions: `announcement_mode` accepta `none`, `video_status` inclou `needs_revision`, `rss_center_settings.image_height_percent` existeix, les policies de playlists inclouen `editor_alumne` quan `is_student_editable = true`, i les funcions tenen `search_path` fixat amb grants restringits.
-- Diferencies destacades respecte `docs/DB-AUDIT-REPORT.md`: l'informe es de 2026-01-19, parla de 14 taules/18 migracions i no recull RSS complet, display, ticker, schedule, revisio de videos, `frames_urls`, ni correccions de juliol.
+- Diferencies destacades respecte `docs/OBSOLET/DB-AUDIT-REPORT.md`: l'informe es de 2026-01-19, parla de 14 taules/18 migracions i no recull RSS complet, display, ticker, schedule, revisio de videos, `frames_urls`, ni correccions de juliol.
 - Diferencies destacades respecte `docs/database.schema.md`: descriu part de l'esquema com a recomanacio; inclou camps no existents a la BD real (`rss_center_settings.max_items_per_feed`, `rss_center_settings.updated_by_user_id`, `guest_access_links.revoked_by_user_id`, `guest_access_links.full_name`) i no reflecteix completament camps reals com `videos.frames_urls`, `display_settings.announcement_mode`, `rss_center_settings.image_height_percent` o `ticker_messages`.
-- Diferencies destacades respecte `docs/model-data.md`: es mes proper a la realitat que `DB-AUDIT-REPORT.md`, pero les estadistiques de files estan desfasades i alguns avisos ja no son certs, especialment `schedule_overrides` sense policies, trigger duplicat i funcions sense `search_path`.
+- Diferencies destacades respecte `docs/OBSOLET/model-data.md`: es mes proper a la realitat que `DB-AUDIT-REPORT.md`, pero les estadistiques de files estan desfasades i alguns avisos ja no son certs, especialment `schedule_overrides` sense policies, trigger duplicat i funcions sense `search_path`.
 
 ## Conclusions
 
-- La BD real esta substancialment mes avançada que `docs/DB-AUDIT-REPORT.md`; aquest informe no s'hauria d'usar com a font fiable sense actualitzacio.
+- La BD real esta substancialment mes avançada que `docs/OBSOLET/DB-AUDIT-REPORT.md`; aquest informe no s'hauria d'usar com a font fiable sense actualitzacio.
 - L'esquema real sembla alineat amb les migracions locals fins i tot per canvis posteriors no registrats a `schema_migrations`, cosa que indica aplicacio manual parcial o fora del flux CLI.
 - La traçabilitat de migracions es el principal problema del Pas 1: el cataleg de Supabase no reflecteix cinc migracions locals que aparentment si han deixat efectes reals.
 - La superficie real de BD per als passos seguents es de 20 taules publiques, 5 enums, cap view publica, funcions trigger amb `search_path` fixat, i esquema `private` per evitar recursio RLS a `users`.
@@ -141,7 +143,7 @@ Comparar l'estat real de Supabase amb la documentacio i les migracions del repo.
 
 ## Correccions candidates per al pas 7
 
-- Crear un informe nou de BD real o actualitzar `docs/DB-AUDIT-REPORT.md` amb data 2026-07-07.
+- Crear un informe nou de BD real o actualitzar `docs/OBSOLET/DB-AUDIT-REPORT.md` amb data 2026-07-07.
 - Clarificar `docs/database.schema.md`: separar "esquema real" de "recomanacions/futur".
 - Documentar explícitament que les migracions `20260226130000`, `20260227100000`, `20260302120000`, `20260304100000` i `20260707120000` estan aplicades manualment pero no registrades a `supabase_migrations.schema_migrations`, o decidir una estrategia segura per reconciliar el registre.
 - Revisar i, si toca, afegir policies a `audit_logs` i `guest_access_links`.
@@ -195,7 +197,7 @@ Verificar que les politiques RLS implementen correctament el model multi-tenant 
 ## Evidencies recollides
 
 - Sessio: 2026-07-07, mode nomes lectura sobre codi i BD; unica escriptura feta en aquest document de roadmap.
-- Fonts llegides: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`, `docs/roles.md`, `docs/domain-model.md`, `docs/overview.md`, `docs/DB-AUDIT-REPORT.md` i migracions de `supabase/migrations/`.
+- Fonts llegides: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`, `docs/roles.md`, `docs/domain-model.md`, `docs/overview.md`, `docs/OBSOLET/DB-AUDIT-REPORT.md` i migracions de `supabase/migrations/`.
 - Consulta real a `pg_policies`: 57 policies RLS a l'esquema `public`.
 - RLS continua actiu a totes les taules publiques revisades; `audit_logs` i `guest_access_links` segueixen amb 0 policies i, per tant, sense files visibles per `anon`/`authenticated` tot i tenir grants de taula.
 - Grants detectats: `anon` i `authenticated` tenen privilegis amplis de taula (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, etc.) sobre les taules publiques; la proteccio efectiva depen sobretot de RLS.
@@ -563,7 +565,7 @@ Validar els fluxos principals del producte des del punt de vista funcional i de 
 ## Evidencies recollides
 
 - Sessio: 2026-07-07, mode auditoria nomes lectura sobre codi, documentacio i BD real; unica escriptura feta en aquest document de roadmap.
-- Fonts llegides: `docs/overview.md`, `docs/domain-model.md`, `docs/roles.md`, `docs/moderation-system.md`, `docs/ui/llistes.md`, `docs/storage.md`, components i API de videos, playlists, calendari, display, RSS, notificacions i usuaris.
+- Fonts llegides: `docs/overview.md`, `docs/domain-model.md`, `docs/roles.md`, `docs/moderation-system.md`, `docs/OBSOLET/ui/llistes.md`, `docs/storage.md`, components i API de videos, playlists, calendari, display, RSS, notificacions i usuaris.
 - Flux usuaris/invitacions:
   - `admin/users` i `center/users` creen usuaris via `inviteUserByEmail` amb `service_role` despres de comprovar rol.
   - `center/users/[id]` protegeix canvis de rol/desactivacio per no deixar el centre amb 0 `editor_profe` actius.
@@ -605,7 +607,7 @@ Validar els fluxos principals del producte des del punt de vista funcional i de 
   - API reforça que `global` nomes accepti videos compartits, pero no valida explicitament `status='published'`; ara mateix les dades reals no tenen items globals invalids.
   - `editor_alumne` pot afegir, treure i reordenar si `is_student_editable=true`, sense limitar-ho a `custom`, sense validar propietat del video, i sense bloquejar `announcements`/`weekday` quan el flag esta activat.
   - UI permet togglar `is_student_editable` a qualsevol playlist visible per `editor_profe`/`admin_global`; no restringeix a `custom`.
-  - Dada real: playlists actives `is_student_editable=true`: `weekday=6`, `announcements=2`, `custom=1`. Això contradiu `docs/domain-model.md` i parcialment `docs/ui/llistes.md`.
+  - Dada real: playlists actives `is_student_editable=true`: `weekday=6`, `announcements=2`, `custom=1`. Això contradeia `docs/domain-model.md` i parcialment l'antic `docs/OBSOLET/ui/llistes.md`.
   - Dada real: no hi ha items no publicats en playlists actives, ni videos no anunci en llistes `announcements`.
 - Flux calendari:
   - UI mostra calendari nomes en playlists `custom` amb `center_id` i rols `editor_profe`/`admin_global`.
@@ -659,7 +661,7 @@ Validar els fluxos principals del producte des del punt de vista funcional i de 
 - Mitja: RSS pot deixar feeds inactius en rotacio; ja hi ha 1 cas real.
 - Mitja: totes les notificacions existents consten com no llegides, cosa que suggereix que la UI de notificacions no esta integrada o no s'utilitza.
 - Mitja: diferencies documentals sobre landing `global` vs `landing` poden portar a migracions o UI futures incompatibles.
-- Dubte: si `editor_alumne` ha de poder reordenar qualsevol item d'una llista editable o nomes afegir/treure videos propis, ja que `docs/roles.md`, `docs/domain-model.md` i `docs/ui/llistes.md` no son completament identics.
+- Dubte: si `editor_alumne` ha de poder reordenar qualsevol item d'una llista editable o nomes afegir/treure videos propis, ja que `docs/roles.md`, `docs/domain-model.md` i l'antic `docs/OBSOLET/ui/llistes.md` no eren completament identics.
 - Dubte: si el bucket `announcement-frames` ha estat configurat manualment al dashboard amb algun mecanisme no visible a migracions; la BD mostra 0 policies.
 
 ## Correccions candidates per al pas 7
@@ -677,7 +679,7 @@ Validar els fluxos principals del producte des del punt de vista funcional i de 
 - Afegir migracio/documentacio per bucket `announcement-frames` i policies de Storage necessaries per uploads client-side segurs, o moure la pujada a endpoint server-side amb `service_role`.
 - Netejar `rss_rotation_order` quan un feed es desactiva per errors i reforçar que feeds inactius no quedin en rotacio.
 - Endurir RSS URL validation i cron secret segons Pas 4.
-- Actualitzar `docs/moderation-system.md`, `docs/ui/llistes.md`, `docs/domain-model.md`, `docs/rss-system.md` i docs Storage amb l'estat real.
+- Actualitzar `docs/moderation-system.md`, `docs/ui/pantalles.md`, `docs/domain-model.md`, `docs/rss-system.md` i docs Storage amb l'estat real.
 
 ---
 
@@ -691,8 +693,8 @@ Actualitzar la visio global del projecte amb el que s'ha verificat realment als 
 
 - `AGENTS.md`
 - `README.md`
-- `docs/DB-AUDIT-REPORT.md` o nou informe datat
-- `docs/model-data.md`
+- `docs/OBSOLET/DB-AUDIT-REPORT.md` o nou informe datat
+- `docs/OBSOLET/model-data.md`
 - `docs/roles.md`
 - `docs/rss-system.md`
 - `docs/vimeo-integration.md`
@@ -708,38 +710,38 @@ Actualitzar la visio global del projecte amb el que s'ha verificat realment als 
 ## Evidencies recollides
 
 - Sessio: 2026-07-07, consolidacio documental del que ja s'ha auditat als passos 1-5; no s'han aplicat correccions de codi ni de BD en aquest pas.
-- Fonts revisades per aquest tancament: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`, llista de fitxers dins `docs/` i mostra inicial de `docs/DB-AUDIT-REPORT.md`.
+- Fonts revisades per aquest tancament: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`, llista de fitxers dins `docs/` i mostra inicial de `docs/OBSOLET/DB-AUDIT-REPORT.md`.
 - El mateix roadmap ja conte una foto detallada i accionable de l'estat real de BD, RLS, API, auth/secrets i fluxos critics. Per tant, el Pas 6 no necessita reauditar, sino ordenar que s'ha de documentar ara i que s'ha d'ajornar fins al Pas 7.
 - `AGENTS.md` i `README.md` estan raonablement alineats amb l'estat funcional general i amb les regles operatives principals: `public.users` com a font d'autoritzacio, Supabase com a backend, Vimeo/Tus, RSS, display, landing global i verificacions `lint`/`build`.
-- `docs/DB-AUDIT-REPORT.md` es clarament historic/desfasat: data 2026-01-19, parla de 18 migracions i un estat general correcte que no reflecteix les 20 taules publiques, els canvis RSS/display/moderacio, les migracions manuals no registrades ni els riscos RLS/API trobats.
-- `docs/database.schema.md` i `docs/model-data.md` no son equivalents a una foto exacta de la BD real: barregen estat real, recomanacions, estadistiques antigues i camps futurs o inexistents.
+- `docs/OBSOLET/DB-AUDIT-REPORT.md` es clarament historic/desfasat: data 2026-01-19, parla de 18 migracions i un estat general correcte que no reflecteix les 20 taules publiques, els canvis RSS/display/moderacio, les migracions manuals no registrades ni els riscos RLS/API trobats.
+- `docs/database.schema.md` i `docs/OBSOLET/model-data.md` no son equivalents a una foto exacta de la BD real: barregen estat real, recomanacions, estadistiques antigues i camps futurs o inexistents.
 - Documents funcionals amb divergencies detectades:
   - `docs/moderation-system.md`: no descriu prou be l'estat viu `needs_revision` ni les notificacions associades.
-  - `docs/domain-model.md` i `docs/ui/llistes.md`: no estan del tot alineats amb el comportament real de `is_student_editable`, especialment en llistes `weekday` i `announcements`.
+  - `docs/domain-model.md` i l'antic `docs/OBSOLET/ui/llistes.md`: no estaven del tot alineats amb el comportament real de `is_student_editable`, especialment en llistes `weekday` i `announcements`.
   - `docs/rss-system.md`: no recull prou els riscos detectats de cron secret, validacio URL, feeds inactius en rotacio i estat real de dades.
   - `docs/storage.md`: no deixa prou documentat el bucket `announcement-frames` ni les policies inexistents de Storage.
   - `docs/authentication.md`: s'ha de revisar per eliminar o matisar patrons basats en `user_metadata` com a font d'autoritzacio.
   - Docs de landing/global: hi ha divergencia entre el concepte `kind='landing'` i la implementacio real basada en `kind='global'`.
-- Documents historics o de milestone (`docs/milestones/*`, `docs/README-historic.md`, `docs/DB_REVIEW_2026-01-12.md`) poden conservar-se com a historial, pero no haurien de ser fonts operatives principals si contradiuen `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md` o una auditoria nova de BD.
+- Documents historics o de milestone (`docs/OBSOLET/milestones/*`, `docs/OBSOLET/README-historic.md`, `docs/OBSOLET/DB_REVIEW_2026-01-12.md`) poden conservar-se com a historial, pero no haurien de ser fonts operatives principals si contradiuen `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md` o una auditoria nova de BD.
 - Estat del worktree abans del Pas 6: ja hi havia canvis locals i fitxers no versionats no relacionats directament amb aquesta edicio; s'han respectat i no s'han revertit.
 
 ## Conclusions
 
 - El Pas 6 s'ha de considerar una consolidacio, no una fase de reescriptura massiva. El projecte ja te prou evidencia acumulada per passar al Pas 7.
 - La font viva de continuitat ha de ser `PROJECT_REVIEW_ROADMAP.md` fins que s'apliquin correccions. Actualitzar massa documents funcionals abans del Pas 7 podria fixar com a "comportament correcte" alguns bugs o decisions encara obertes.
-- La documentacio mes urgent a corregir es la de BD: cal crear un informe nou datat o substituir `docs/DB-AUDIT-REPORT.md` amb una foto real posterior a l'auditoria de 2026-07-07.
+- La documentacio mes urgent a corregir es la de BD: cal crear un informe nou datat o substituir `docs/OBSOLET/DB-AUDIT-REPORT.md` amb una foto real posterior a l'auditoria de 2026-07-07.
 - `AGENTS.md` i `README.md` no requereixen una reescriptura immediata. Els ajustos que necessitin haurien de fer-se despres de decidir/aplicar les correccions principals del Pas 7.
 - Les divergencies documentals principals no son purament editorials: reflecteixen decisions de producte i seguretat encara obertes, especialment permisos de rols, playlists editables per alumnes, landing `global` vs `landing`, notificacions `needs_revision`, Storage i cron/RSS.
 - Cal classificar els documents en tres grups:
   - Fonts operatives actuals: `AGENTS.md`, `README.md`, `PROJECT_REVIEW_ROADMAP.md`.
-  - Documents a actualitzar despres de correccions: `docs/roles.md`, `docs/domain-model.md`, `docs/moderation-system.md`, `docs/ui/llistes.md`, `docs/rss-system.md`, `docs/storage.md`, `docs/authentication.md`.
-  - Documents historics o obsolets: `docs/DB-AUDIT-REPORT.md` actual, `docs/DB_REVIEW_2026-01-12.md`, `docs/README-historic.md` i milestones antics quan contradiguin l'estat real.
+  - Documents a actualitzar despres de correccions: `docs/roles.md`, `docs/domain-model.md`, `docs/moderation-system.md`, `docs/ui/pantalles.md`, `docs/rss-system.md`, `docs/storage.md`, `docs/authentication.md`.
+  - Documents historics o obsolets: `docs/OBSOLET/DB-AUDIT-REPORT.md` actual, `docs/OBSOLET/DB_REVIEW_2026-01-12.md`, `docs/OBSOLET/README-historic.md` i milestones antics quan contradiguin l'estat real.
 - El Pas 7 hauria de comencar prioritzant riscos de seguretat/permisos i dades incoherents; la documentacio final estable hauria de venir despres de cada correccio o bloc de correccions.
 
 ## Riscos o dubtes
 
 - Risc de documentar massa aviat: si es reescriuen `roles`, `domain-model` o UI abans del Pas 7, es poden normalitzar comportaments que probablement s'han de corregir.
-- Risc de font equivocada: `docs/DB-AUDIT-REPORT.md` encara sembla un informe d'auditoria vigent, pero les dades i conclusions ja no son fiables com a estat real.
+- Risc de font equivocada: `docs/OBSOLET/DB-AUDIT-REPORT.md` encara sembla un informe d'auditoria vigent, pero les dades i conclusions ja no son fiables com a estat real.
 - Dubte pendent: decidir si `docs/database.schema.md` ha de ser una referencia exacta d'esquema real o un document mixt de model/recomanacions. Ara mateix la barreja pot confondre.
 - Dubte pendent: decidir si cal mantenir un sol informe de BD sempre actualitzat o informes datats successius. Per traçabilitat, sembla millor crear un informe nou datat i marcar l'antic com a historic.
 - Dubte pendent: decidir si `guest_access_links` i `audit_logs` s'han de documentar com a funcionalitats futures tancades per RLS o activar-les amb policies i UI/API.
@@ -754,13 +756,13 @@ Actualitzar la visio global del projecte amb el que s'ha verificat realment als 
   - estat de RLS i taules sense policies (`audit_logs`, `guest_access_links`).
   - migracions locals aplicades manualment pero no registrades a `supabase_migrations.schema_migrations`.
   - avis explicit que l'informe antic de 2026-01-19 queda historic.
-- Despres de corregir permisos/codi, actualitzar `docs/roles.md`, `docs/domain-model.md` i `docs/ui/llistes.md` amb la decisio final sobre `editor_alumne` i `is_student_editable`.
+- Despres de corregir permisos/codi, actualitzar `docs/roles.md`, `docs/domain-model.md` i `docs/ui/pantalles.md` amb la decisio final sobre `editor_alumne` i `is_student_editable`.
 - Despres de corregir o decidir moderacio/notificacions, actualitzar `docs/moderation-system.md` amb `needs_revision`, `video_needs_revision`, triggers i UI real.
 - Despres de corregir RSS/cron, actualitzar `docs/rss-system.md` amb requisits de `CRON_SECRET`, validacio URL i neteja de rotacio.
 - Despres de corregir Storage, actualitzar `docs/storage.md` amb bucket `announcement-frames`, ownership, mida/MIME i policies o endpoint server-side.
 - Despres de corregir auth/API, actualitzar `docs/authentication.md` per deixar clar que `user_metadata` no autoritza i que `public.users` es la font canonica.
 - Decidir i documentar una sola terminologia per la landing publica: playlist global actual o `kind='landing'` si es decideix migrar.
-- Afegir notes curtes d'obsolescencia als documents historics que puguin induir a error, especialment `docs/DB-AUDIT-REPORT.md`, si no se substitueixen immediatament.
+- Afegir notes curtes d'obsolescencia als documents historics que puguin induir a error, especialment `docs/OBSOLET/DB-AUDIT-REPORT.md`, si no se substitueixen immediatament.
 
 ---
 
@@ -842,7 +844,7 @@ Convertir les conclusions dels passos 1 a 6 en un pla d'accio prioritzat i aplic
 - Necessita canvi de codi: possiblement ajustos menors.
 - Necessita docs: si.
 - Verificacio prevista: simulacions `SET ROLE authenticated` amb JWT claims i consultes d'escriptura controlades.
-- Estat: migracio creada i validada en dry-run; pendent aplicar manualment al SQL Editor.
+- Estat: migracio registrada/aplicada segons `schema_migrations` i policies reals verificades el 2026-07-09; pendent prova funcional amb sessions reals.
 
 ### C05 - Tancar RLS de `users`, `video_tags` i `video_hashtags`
 
@@ -855,7 +857,7 @@ Convertir les conclusions dels passos 1 a 6 en un pla d'accio prioritzat i aplic
 - Necessita canvi de codi: potser.
 - Necessita docs: si.
 - Verificacio prevista: simulacions RLS per rols.
-- Estat: migracio creada i validada en dry-run; pendent aplicar manualment al SQL Editor.
+- Estat: migracio registrada/aplicada segons `schema_migrations` i policies reals verificades el 2026-07-09; pendent prova funcional amb sessions reals.
 
 ### C06 - Corregir playlists editables per alumnes
 
@@ -912,7 +914,7 @@ Convertir les conclusions dels passos 1 a 6 en un pla d'accio prioritzat i aplic
 ### C10 - Actualitzar auditoria i docs de BD
 
 - Prioritat: Mitja/Alta.
-- Problema: `docs/DB-AUDIT-REPORT.md` i docs d'esquema no reflecteixen la BD real.
+- Problema: `docs/OBSOLET/DB-AUDIT-REPORT.md` i docs d'esquema no reflecteixen la BD real.
 - Evidencia: Pas 1 i Pas 6.
 - Impacte: agents/mantenidors poden prendre decisions sobre informacio falsa.
 - Proposta: crear informe datat 2026-07-07 i marcar l'antic com a historic.
@@ -920,7 +922,7 @@ Convertir les conclusions dels passos 1 a 6 en un pla d'accio prioritzat i aplic
 - Necessita canvi de codi: no.
 - Necessita docs: si.
 - Verificacio prevista: revisio creuada amb queries del Pas 1.
-- Estat: pendent.
+- Estat: aplicat parcialment el 2026-07-09: `AGENTS.md`, `README.md`, `docs/database.schema.md`, `MEMORIA_PROJECTE.md`, `docs/overview.md` i avisos historics actualitzats; pendent revisio profunda de `docs/storage.md` i docs funcionals afectats per canvis futurs.
 
 ### C11 - Storage `announcement-frames`
 
@@ -1054,7 +1056,7 @@ Anotar aqui cada sessio de revisio per mantenir continuitat entre converses.
 - S'ha completat el Pas 6 com a consolidacio documental:
   - no s'han reescrit encara els documents funcionals grossos per evitar documentar com a correcte allo que pot canviar al Pas 7.
   - s'ha classificat la documentacio entre fonts operatives, documents a actualitzar despres de correccions i documents historics/obsolets.
-  - s'ha identificat `docs/DB-AUDIT-REPORT.md` com el document mes urgent a substituir o marcar com a historic.
+  - s'ha identificat `docs/OBSOLET/DB-AUDIT-REPORT.md` com el document mes urgent a substituir o marcar com a historic.
 - S'ha iniciat el Pas 7 amb aplicacio controlada:
   - s'ha creat una matriu prioritzada de correccions C01-C15 dins el roadmap.
   - s'ha aplicat la primera tongada de codi sobre videos, endpoints Vimeo i cron RSS.
@@ -1064,4 +1066,4 @@ Anotar aqui cada sessio de revisio per mantenir continuitat entre converses.
 
 ## Proper pas recomanat
 
-Aplicar manualment `supabase/migrations/20260707180000_harden_core_rls_policies.sql` al Supabase SQL Editor i repetir les simulacions RLS contra la BD ja persistida. Despres, continuar el **Pas 7** amb la segona tongada de playlists i `is_student_editable`.
+Continuar el **Pas 7** amb la segona tongada funcional: playlists i `is_student_editable`, validacio d'items de playlists/schedule, eliminacio transversal de fallbacks a `user_metadata`, reduccio de logs sensibles i revisio de Storage `announcement-frames`.

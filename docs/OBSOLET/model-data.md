@@ -1,5 +1,7 @@
 # Model de Dades PUBLI*CAT
 
+> Nota 2026-07-09: aquest document és històric/generat i pot contenir estadístiques, polítiques i recomanacions superades. La font canònica actual per estructura i relacions és `docs/database.schema.md`; les verificacions recents es registren a `MEMORIA_PROJECTE.md`.
+
 **Versió:** 1.0
 **Data:** 2026-01-26
 **Autor:** Documentació generada automàticament

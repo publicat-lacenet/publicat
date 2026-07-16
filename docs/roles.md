@@ -1,156 +1,88 @@
-# **Rols d’usuari – Publicat**
+# Rols i permisos - PUBLI*CAT
 
-Aquest document defineix de manera clara i exhaustiva els **rols d’usuari** del sistema Publicat, els seus objectius i els permisos associats. El model està pensat per ser **simple, segur i escalable**, i per facilitar tant la implementació tècnica (RLS, UI) com l’ús real per part dels centres.
+Font funcional dels rols. Per detalls de BD consulta `docs/database.schema.md`; per regles operatives consulta `AGENTS.md`.
 
----
+## Principis
 
-## **1\. Administrador global**
+- El rol i centre autoritzadors provenen de `public.users`.
+- `user_metadata` no s'ha d'usar per autoritzar.
+- Les restriccions han d'existir a UI, API i RLS.
+- `center_id` limita l'abast de tots els rols excepte `admin_global`.
 
-### **Objectiu**
+## `admin_global`
 
-Usuari amb control total sobre el sistema, independent dels centres. És l’únic rol amb abast global.
-### **Associació al Centre Lacenet**
+Objectiu: administracio global del sistema.
 
-A partir de la implementació del sistema, tots els administradors globals es vinculen automàticament al **Centre Lacenet** per defecte. Aquesta política garanteix:
+Pot:
 
-* **Consistència operativa**: Els administradors globals poden gestionar i pujar contingut propi del projecte PUBLI\*CAT.
-* **Flexibilitat**: Tot i tenir accés global a tots els centres, els administradors disposen d'un espai de treball propi per a contingut corporatiu.
-* **Simplificació tècnica**: Elimina casos excepcionals d'usuaris sense centre assignat, facilitant la gestió de permisos i continguts.
+- Gestionar centres, zones i usuaris globals.
+- Veure i gestionar contingut de qualsevol centre.
+- Gestionar llistes globals i la landing publica.
+- Crear contingut propi, normalment associat al Centre Lacenet per defecte.
+- Configurar o supervisar RSS, display i dades compartides.
 
-**Mecanisme d'assignació:**
-* **Usuaris existents**: Els administradors globals creats abans d'aquesta política s'actualitzen automàticament al centre Lacenet mitjançant una migració de base de dades.
-* **Usuaris nous**: Quan es crea un nou administrador global, un trigger de base de dades assigna automàticament el centre Lacenet si no se n'especifica un altre.
-* **Opció de canvi**: Els administradors globals poden tenir assignat un centre diferent si es defineix explícitament durant la creació.
-### **Permisos**
+Restriccions:
 
-* Accés a la **pantalla d’Administració global**.  
-* Crear, editar i eliminar **tots els tipus d’usuaris** de tots els centres:  
-  * Administrador global  
-  * Editor-profe  
-  * Editor-alumne  
-  * Display  
-* Assignar usuaris a centres.  
-* Crear i revocar **enllaços temporals de convidat**.  
-* Revocar accessos abans del termini.  
-* Accés complet a tots els centres i continguts.
+- Ha d'operar amb el compte GitHub/Supabase correcte quan es facin canvis externs.
+- Encara que tingui abast global, les accions sensibles han de passar per API/RLS.
 
-### **Restriccions**
+## `editor_profe`
 
-* No en té a nivell funcional.
+Objectiu: gestio editorial d'un centre.
 
----
+Pot:
 
-## **2\. Editor-profe**
+- Crear i editar videos del seu centre.
+- Aprovar videos pendents d'alumnes.
+- Demanar revisio (`needs_revision`) amb comentari.
+- Gestionar llistes, items, calendari, RSS, ticker i configuracio de pantalla del seu centre.
+- Substituir el logo del seu propi centre des de la configuracio de pantalla.
+- Gestionar usuaris del seu centre dins els rols permesos.
 
-### **Objectiu**
+Restriccions:
 
-Responsable editorial d’un centre. Gestiona contingut, llistes i usuaris del seu centre.
+- No pot operar sobre altres centres.
+- No pot modificar el logo d'un altre centre.
+- No pot convertir usuaris en `admin_global`.
+- No ha de poder crear ni modificar llistes globals de sistema.
 
-### **Permisos**
+## `editor_alumne`
 
-* Accés complet a totes les pàgines del seu centre (excepte administració global).  
-* Pujar, editar i eliminar vídeos del centre.  
-* Crear, editar i eliminar llistes de reproducció.  
-* Editar metadades de vídeos.  
-* Aprovar o rebutjar vídeos pujats per alumnes.  
-* Crear usuaris del seu centre amb els rols:  
-  * Editor-profe  
-  * Editor-alumne  
-  * Display
+Objectiu: pujar i corregir contingut amb supervisio.
 
-### **Restriccions**
+Pot:
 
-* No pot crear ni gestionar convidats.  
-* No pot accedir a les pàgines d'altres centres.
+- Crear videos propis, que entren com `pending_approval`.
+- Veure videos publicats disponibles segons permisos.
+- Veure els seus videos `pending_approval` o `needs_revision`.
+- Corregir els seus videos en `needs_revision` i reenviar-los a revisio.
+- Editar items de playlists marcades com editables per alumnes quan el flux ho permeti.
 
----
+Restriccions:
 
-## **3\. Editor-alumne**
+- No pot publicar directament.
+- No pot aprovar, compartir ni eliminar videos d'altres usuaris.
+- No pot editar videos propis ja publicats pel flux normal.
+- No pot gestionar metadades de playlists.
 
-### **Objectiu**
+Pendent:
 
-Permetre la participació de l’alumnat en la pujada de contingut, sota supervisió del professorat.
+- Tancar la regla definitiva de `is_student_editable` per playlists `weekday` i `announcements`.
 
-### **Permisos**
+## `display`
 
-#### **Vídeos**
+Objectiu: mode passiu de pantalla.
 
-* Pot pujar vídeos il·limitadament.  
-* Els vídeos pujats queden en estat **pendent d’aprovació**.  
-* Pot eliminar o modificar **només els seus vídeos** mentre estiguin pendents.
+Pot:
 
-#### **Llistes de reproducció**
+- Accedir al mode pantalla/display.
+- Llegir la configuracio i contingut necessari per reproduir la pantalla del seu centre.
 
-* Pot editar llistes existents **només si** `isStudentEditable = true`.  
-* Pot afegir, treure o reordenar **només vídeos aprovats**.
+Restriccions:
 
-### **Restriccions**
+- No pot crear, editar ni eliminar contingut.
+- No pot gestionar usuaris, RSS, llistes ni configuracio.
 
-* No pot crear ni eliminar llistes.  
-* No pot canviar el nom ni les propietats de les llistes.  
-* No pot editar vídeos un cop aprovats.  
-* No pot veure vídeos pendents d’altres alumnes.  
-* No pot aprovar contingut.  
-* No pot gestionar usuaris.
+## Convidats temporals
 
----
-
-## **4\. Display**
-
-### **Objectiu**
-
-Mostrar contingut en una pantalla física (TV, projector, monitor) en mode passiu.
-
-### **Permisos**
-
-* Accés exclusiu a la **pantalla de reproducció**.  
-* Reproducció automàtica.  
-* Visualització en **pantalla completa**.
-
-### **Restriccions**
-
-* No veu menús ni cap altra pàgina.  
-* No pot navegar, editar ni interactuar amb el sistema.
-
----
-
-## **5\. Convidat (temporal)**
-
-### **Objectiu**
-
-Permetre la visualització del contingut d’un centre sense autenticació.
-
-### **Característiques generals**
-
-* Accés mitjançant **enllaç temporal**.  
-* Caducitat per defecte: **7 dies**.  
-* Només l’**administrador global** pot crear i revocar aquests enllaços.  
-* No requereix autenticació.
-
-### **Permisos**
-
-* Veure vídeos **publicats** d’un únic centre.  
-* Veure llistes de reproducció del centre.
-
-### **Restriccions**
-
-* Mode **només lectura**.  
-* No pot pujar vídeos.  
-* No pot editar contingut ni llistes.  
-* No pot veure contingut pendent o no publicat.
-
----
-
-## **6\. Principis generals del model de rols**
-
-* Un usuari **només pot tenir un rol**.  
-* Els permisos sempre estan **limitats al centre**, excepte l’administrador global.  
-* Els fluxos crítics (aprovació, convidats, usuaris) estan centralitzats per garantir control.  
-* Els rols estan pensats per tenir una correspondència clara amb:  
-  * UI (què veu cada rol)  
-  * Backend (RLS)
-
----
-
-Aquest document és la base per definir, en una fase posterior, **quins rols poden accedir a cada pantalla** del sistema.
-
+Les taules de guest access existeixen, pero `guest_access_links` esta tancada per RLS sense policies visibles a data 2026-07-09. Tracta el rol convidat com a funcionalitat pendent fins que hi hagi API/UI/policies actives.

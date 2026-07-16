@@ -1,4 +1,7 @@
 # Informe d'Auditoria de Base de Dades - PUBLI*CAT
+
+> Nota 2026-07-09: aquest document és històric. No descriu l'estat actual complet de la BD. Per l'estructura i relacions vigents consulta `docs/database.schema.md`; per verificacions i rectificacions recents consulta `MEMORIA_PROJECTE.md`.
+
 **Data:** 2026-01-19
 **Revisor:** Claude Code (Anàlisi automàtica)
 **Base de dades:** Supabase PostgreSQL

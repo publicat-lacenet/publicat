@@ -435,7 +435,7 @@ Per verificar que tot funciona:
 
 ## 📚 Documentació Relacionada
 
-- [M2 Admin UI](../milestones/M2-admin-ui.md)
+- [M2 Admin UI](../OBSOLET/milestones/M2-admin-ui.md)
 - [Guia d'Estil](guia-estil.md)
 - [Roles](../roles.md)
 - [Domain Model](../domain-model.md)

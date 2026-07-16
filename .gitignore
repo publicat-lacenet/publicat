@@ -45,3 +45,9 @@ next-env.d.ts
 
 # MCP config
 .mcp.json
+
+# local agent worktrees and development artifacts
+/.claude/worktrees/
+/codex-dev-server.*.log
+/notatemporal.txt
+/nul

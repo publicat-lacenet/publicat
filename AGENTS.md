@@ -2,16 +2,31 @@
 
 Guia canonica per a agents que treballin en aquest repositori. Aquest projecte es diu **PUBLI*CAT**: una plataforma multi-centre per gestionar videos educatius de Vimeo, playlists, RSS i pantalles informatives per a centres educatius.
 
-`AGENTS.md` es la font operativa principal per a agents. `README.md` i `docs/` son documentacio de suport. Si alguna informacio antiga contradiu aquest fitxer, preval aquest fitxer i despres la documentacio especifica dins `docs/`.
+Aquest fitxer defineix les regles operatives obligatories. Si una altra documentacio el contradiu, atura't, verifica l'estat real i actualitza la font desfasada o registra la rectificacio a `MEMORIA_PROJECTE.md`.
 
-## Abans de tocar codi
+## Jerarquia documental
 
-- Llegeix primer aquest `AGENTS.md` i `README.md`.
+Ordre de prioritat per treballar:
+
+1. `AGENTS.md`: regles de treball, seguretat, GitHub, Supabase i criteris d'implementacio. Es la font operativa principal.
+2. `MEMORIA_PROJECTE.md`: registre datat de fets verificats, rectificacions i decisions operatives recents. Serveix per no redescobrir el mateix ni dubtar d'una verificacio ja feta.
+3. `README.md`: porta d'entrada humana al projecte. Resumeix estat, arquitectura, arrencada local, estructura i mapa de BD, pero no substitueix les especificacions.
+4. `docs/database.schema.md`: mapa canonic de l'estructura i relacions de la BD. Les migracions de `supabase/migrations/` continuen sent la font exacta de SQL.
+5. Documentacio especifica de `docs/`: domini, rols, autenticacio, Vimeo, RSS, storage i UI.
+6. `PROJECT_REVIEW_ROADMAP.md`: registre d'auditoria i treball de revisio. Pot contenir observacions historiques superades per verificacions posteriors; contrasta'l sempre amb `MEMORIA_PROJECTE.md` i la BD real.
+7. Documents historics a `docs/OBSOLET/`: conserva'ls com a context, no com a font actual si no han estat verificats.
+
+No eliminis documentacio antiga sense acord explicit de l'usuari. Si un document pot induir a error, marca'l com a historic/desfasat i apunta cap a la font canonica actual.
+
+## Abans de tocar codi o documentacio
+
+- Llegeix `AGENTS.md`, `README.md` i `MEMORIA_PROJECTE.md`.
+- Revisa `git status --short` i respecta canvis locals existents. No facis revert ni neteges de fitxers no relacionats.
 - Per canvis de domini consulta `docs/overview.md`, `docs/domain-model.md` i `docs/roles.md`.
-- Per base de dades consulta sempre `docs/DB-AUDIT-REPORT.md` i les migracions de `supabase/migrations/`.
+- Per base de dades consulta `docs/database.schema.md`, `supabase/migrations/` i, si cal, la BD real. No confiis en informes historics sense verificar.
 - Per UI consulta `docs/ui/guia-estil.md` i, si escau, el document de pantalla dins `docs/ui/`.
-- Respecta canvis locals existents. No facis revert ni neteges de fitxers no relacionats.
 - Mantingues els missatges d'error de cara a usuari en catala quan el context ja ho sigui.
+- Quan descobreixis una rectificacio important o una decisio estable, afegeix-la a `MEMORIA_PROJECTE.md`.
 
 ## Comandes habituals
 
@@ -22,7 +37,7 @@ npm run start
 npm run lint
 ```
 
-No hi ha una suite de tests automatitzada definida. Com a verificacio minima, executa `npm run lint`; per canvis de Next/Supabase o d'abast mitja/alt, executa tambe `npm run build` quan sigui raonable.
+No hi ha una suite de tests automatitzada definida. Com a verificacio minima per canvis de codi, executa `npm run lint`; per canvis de Next/Supabase o d'abast mitja/alt, executa tambe `npm run build` quan sigui raonable. Per canvis nomes documentals, una revisio de coherencia amb `rg` i `git diff --check` sol ser suficient.
 
 ## GitHub i comptes
 
@@ -88,7 +103,7 @@ Abans de fer `git push`, verifica tambe l'autor i el committer de l'ultim commit
 git log -1 --format="author=%an <%ae>%ncommitter=%cn <%ce>"
 ```
 
-No facis `git push` si `gh auth status` no mostra `publicat-lacenet` com a compte actiu i autenticat, si `origin` no apunta a `publicat-lacenet/publicat`, o si l'autor/committer del commit que vols pujar no son `publicat-lacenet <publicat@xtec.cat>`. En aquesta maquina hi pot haver altres comptes GitHub autenticats per altres projectes; canvia de compte explicitament quan canviis de repositori.
+No facis `git push` si `gh auth status` no mostra `publicat-lacenet` com a compte actiu i autenticat, si `origin` no apunta a `publicat-lacenet/publicat`, o si l'autor/committer del commit que vols pujar no son `publicat-lacenet <publicat@xtec.cat>`.
 
 Si un commit local s'ha creat amb la identitat equivocada i encara no s'ha publicat, corregeix primer la identitat local i despres amenda'l:
 
@@ -172,8 +187,9 @@ const supabase = createClient()
 En API routes:
 
 - Verifica l'usuari amb `supabase.auth.getUser()`.
-- Per rol i centre, prioritza la taula `users` per sobre de metadata d'Auth.
-- No facis servir `user_metadata` per decisions d'autoritzacio.
+- Per rol i centre, prioritza sempre la taula `public.users`.
+- No facis servir `user_metadata` per decisions d'autoritzacio. A Supabase, `raw_user_meta_data` pot ser modificable per l'usuari.
+- `app_metadata` pot servir com a cache si es decideix, pero no substitueix una comprovacio server-side quan l'accio es sensible.
 - Aplica comprovacions server-side encara que `proxy.ts` protegeixi la ruta.
 - Retorna JSON amb `NextResponse.json(...)`.
 - Usa el `service_role` nomes al servidor i nomes quan sigui necessari.
@@ -217,26 +233,16 @@ $env:USERPROFILE = $oldUserProfile
 
 En entorns sandbox com Codex, `supabase projects list` o `supabase db query` poden fallar amb `EPERM` intentant escriure `telemetry.json`, fins i tot amb credencials correctes. Si passa, no canviis de projecte ni toquis tokens: repeteix la mateixa comanda fora del sandbox, mantenint `HOME` i `USERPROFILE` apuntant al directori temporal anterior.
 
-Comandes CLI utils quan els permisos son correctes:
-
-```powershell
-$env:SUPABASE_ACCESS_TOKEN = $null
-supabase projects list --profile lacenet
-supabase db query --linked --profile lacenet "select current_database() as database, current_user as user, now() as server_time;"
-supabase db advisors --linked --profile lacenet --type security --level warn --fail-on none -o json
-```
-
-Per consultes SQL directes tambe funciona `DATABASE_URL` a `.env.local`. Ha de ser la URL del pooler IPv4 amb port `6543`, no la connexio directa IPv6:
-
-```env
-DATABASE_URL=postgresql://postgres.tvsafusrasfzubiujavk:...@aws-1-eu-west-3.pooler.supabase.com:6543/postgres
-```
+Per consultes SQL directes de lectura tambe funciona `DATABASE_URL` a `.env.local`. Ha de ser la URL del pooler IPv4 amb port `6543`, no la connexio directa IPv6. No imprimeixis mai la URL completa.
 
 Si CLI o MCP fallen per permisos, no insisteixis en bucle: comprova `.env.local` i usa `DATABASE_URL` per consultes SQL de lectura o validacions puntuals.
 
 ## Base de dades i migracions
 
-- S'utilitza Supabase CLI per aplicar migracions a PUBLI*CAT, pero sempre amb comprovacio previa del projecte i amb `--dry-run` abans de qualsevol aplicacio real.
+- `docs/database.schema.md` es el mapa canonic de l'estructura i relacions de BD.
+- `supabase/migrations/` es la font exacta de SQL i historial versionat.
+- A data 2026-07-09, `MEMORIA_PROJECTE.md` registra que hi ha 35 migracions locals i 35 versions registrades a `supabase_migrations.schema_migrations`, sense diferencies.
+- Abans de tocar schema, RLS, triggers, indexes o Storage, verifica de nou l'estat real del projecte.
 - Crea migracions noves amb `supabase migration new <nom_descriptiu>` quan sigui possible; si es crea manualment, posa-les a `supabase/migrations/` amb prefix cronologic `YYYYMMDDHHmmss`.
 - No editis migracions existents si ja representen historial aplicat.
 - Abans d'aplicar migracions, comprova que la CLI apunta a `publicat_videos` (`tvsafusrasfzubiujavk`) i que no hi ha cap `SUPABASE_ACCESS_TOKEN` global apuntant a un altre compte.
@@ -247,14 +253,13 @@ Si CLI o MCP fallen per permisos, no insisteixis en bucle: comprova `.env.local`
   - nomes si el `dry-run` es correcte, executa `supabase db push --linked`.
 - Si una migracio ja s'ha aplicat manualment pero no consta a `supabase_migrations.schema_migrations`, verifica primer els seus efectes a la BD i nomes llavors usa `supabase migration repair --linked --status applied <version>`.
 - El Supabase SQL Editor queda com a fallback manual si el CLI falla o si cal una intervencio controlada que no convingui automatitzar.
-- Si canvies schema, RLS, triggers o indexes, actualitza la documentacio rellevant.
-- Per l'estat real de la BD, consulta `docs/DB-AUDIT-REPORT.md` i, si cal, inspecciona la BD real.
+- Si canvies schema, RLS, triggers o indexes, actualitza `docs/database.schema.md` i registra la decisio a `MEMORIA_PROJECTE.md`.
 
 Punts importants:
 
 - Totes les taules principals han de tenir RLS.
 - `videos.zone_id` es deriva del centre.
-- Els videos d'alumnes entren com `pending_approval`.
+- Els videos d'alumnes entren com `pending_approval`; `needs_revision` permet retornar un video a l'alumne per correccio.
 - La landing publica nomes ha de mostrar videos publicats, compartits i dins la playlist global corresponent.
 - Les views en esquemes exposats han de ser `security_invoker` o no accessibles a `anon/authenticated`.
 - Les funcions `SECURITY DEFINER` han de tenir `search_path` fixat i no han de ser executables per `PUBLIC` si son nomes triggers.
@@ -266,14 +271,14 @@ Rols actuals:
 
 - `admin_global`: abast global, administracio completa, llistes globals i Centre Lacenet per defecte.
 - `editor_profe`: gestiona contingut, llistes, RSS i usuaris del seu centre.
-- `editor_alumne`: pot pujar videos pendents d'aprovacio i editar llistes marcades com a editables per alumnes.
+- `editor_alumne`: pot pujar videos pendents d'aprovacio i editar items de llistes marcades com a editables per alumnes, segons les restriccions vigents.
 - `display`: mode passiu de pantalla, sense controls d'edicio.
 
 El sistema es multi-tenant per `center_id`. No confiis nomes en la UI per limitar permisos: la logica critica ha de quedar reforcada a API i RLS.
 
 ## Auth i proteccio de rutes
 
-- `proxy.ts` protegeix rutes i redireccions segons sessio/rol.
+- `proxy.ts` protegeix rutes i redireccions segons sessio/rol, pero no substitueix les comprovacions server-side.
 - Les pagines son Server Components per defecte; afegeix `"use client"` nomes quan calgui estat, efectes o interaccio del navegador.
 - `/api/auth/me` hidrata la sessio amb el perfil de `public.users`.
 - Les operacions d'administracio han de tornar a validar permisos dins l'API route.
@@ -288,7 +293,7 @@ Convencions:
 - Errors d'usuari en catala quan el context del producte sigui catala.
 - Validacio de rol i centre al servidor.
 
-Exemples de superficie API:
+Superficie rellevant:
 
 - `GET /api/videos`
 - `POST /api/videos`
@@ -368,22 +373,31 @@ Components rellevants:
 - Llista/Playlist: col.leccio ordenada de videos.
 - Llista global: playlist publica de landing, editable per `admin_global`.
 - Compartir: fer un video visible a altres centres.
-- Moderacio: aprovacio/rebuig/revisio de videos d'alumnes.
+- Moderacio: aprovacio o retorn a revisio de videos d'alumnes.
 - Schedule override: assignacio de playlist per data concreta en pantalles.
 
 ## Documentacio de referencia
 
-- `README.md`: estat actual, posada en marxa i estructura.
+Fonts actuals principals:
+
+- `README.md`: estat actual, posada en marxa, arquitectura i mapa resum de BD.
+- `MEMORIA_PROJECTE.md`: registre datat de verificacions i decisions.
+- `docs/database.schema.md`: estructura i relacions canoniques de BD.
 - `docs/overview.md`: visio general.
 - `docs/domain-model.md`: model de domini.
 - `docs/roles.md`: rols i permisos.
-- `docs/DB-AUDIT-REPORT.md`: auditoria i estat real conegut de BD.
-- `docs/database.schema.md`: esquema de referencia.
 - `docs/authentication.md`: fluxos d'autenticacio.
+- `docs/moderation-system.md`: moderacio de videos d'alumnes.
 - `docs/vimeo-integration.md`: integracio Vimeo.
 - `docs/rss-system.md`: sistema RSS.
+- `docs/storage.md`: Storage actual verificat.
 - `docs/ui/guia-estil.md`: guia visual.
-- `docs/milestones/`: especificacions i historial de milestones.
+- `docs/ui/pantalles.md`: resum de pantalles i navegacio.
+
+Fonts historiques o de context:
+
+- `PROJECT_REVIEW_ROADMAP.md`: auditoria de revisio, pot contenir punts superats.
+- `docs/OBSOLET/`: documentacio antiga, generada o de milestones; historial i context, no estat actual.
 
 ## Deploy
 
@@ -395,10 +409,12 @@ Components rellevants:
 
 ## Checklist per canvis
 
-- Revisa docs canoniques abans de modificar domini o permisos.
+- Revisa docs canoniques abans de modificar domini, permisos o BD.
 - Mantingues RLS, API i UI alineats.
 - Valida amb rols diferents quan el canvi toca permisos.
 - Executa `npm run lint`; executa `npm run build` per canvis d'abast mitja o alt.
-- Actualitza docs quan canviis comportament, schema o fluxos importants.
+- Actualitza `docs/database.schema.md` quan canviis schema o relacions.
+- Actualitza docs funcionals quan canviis comportament, permisos o fluxos importants.
+- Registra decisions/verificacions importants a `MEMORIA_PROJECTE.md`.
 - No introdueixis dependències noves si el patro existent resol el problema.
 - Si una eina de Supabase falla per permisos, canvia d'estrategia aviat i documenta el bloqueig.
