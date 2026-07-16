@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import LandingVideoPlayer from "@/app/components/landing/LandingVideoPlayer";
+import ParticipantCenters from "@/app/components/landing/ParticipantCenters";
 
 export default function Home() {
 
@@ -58,6 +59,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <ParticipantCenters />
 
         <section
           id="objectius"

@@ -144,6 +144,17 @@ Decisio de producte:
 
 ## Decisions i canvis locals - 2026-07-16
 
+### Centres participants a la landing publica
+
+Decisio de producte implementada:
+
+- La landing mostra una franja de centres participants entre el hero i la seccio de visio pedagogica.
+- La franja inclou nom i logo i nomes publica centres amb `centers.is_active = true`.
+- La presentacio visual definitiva usa una capcalera centrada, un degradat fosc visible de `#374151` a `#6B7280` amb textos blancs i una unica banda clara continua; no hi ha targetes separades per centre.
+- L'endpoint public de landing limita la resposta a `id`, `name` i `logo_url`; la lectura amb `service_role` es fa exclusivament al servidor.
+- La llista es refresca cada cinc minuts, te scroll horitzontal tactil en mobil, pausa en hover/focus i respecta `prefers-reduced-motion`.
+- No s'ha requerit cap canvi de schema ni cap migracio.
+
 ### Conservació i eliminació automàtica de vídeos
 
 Decisió de producte implementada:

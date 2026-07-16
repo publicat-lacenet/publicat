@@ -63,6 +63,14 @@ La navegacio ha de mantenir-se coherent amb `app/components/layout/AppSidebar.ts
 - Usuaris globals.
 - Landing publica/global.
 
+### Landing publica
+
+- Hero del projecte i reproduccio de la playlist global.
+- Franja automatica de centres participants entre el hero i la visio pedagogica.
+- La franja usa un degradat fosc visible des del gris `#374151` de l'engranatge «PER QUÈ?» fins a `#6B7280`, amb titol i recompte en blanc i una unica banda clara continua.
+- Els centres no es mostren com a targetes individuals; formen visualment una sola xarxa, actualitzada des de la BD i amb desplacament tactil en mobil.
+- El moviment es pausa amb hover/focus i es desactiva quan l'usuari prefereix reduir animacions.
+
 ## Guia Visual
 
 La font visual continua sent `docs/ui/guia-estil.md`.
