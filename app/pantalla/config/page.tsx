@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/utils/supabase/useAuth';
 import AdminLayout from '@/app/components/layout/AdminLayout';
 import PageHeader from '@/app/components/ui/PageHeader';
@@ -20,6 +21,12 @@ interface DisplaySettings {
     announcement_mode: 'video' | 'video_360p' | 'slideshow' | 'none';
 }
 
+interface CenterIdentity {
+    id: string;
+    name: string;
+    logo_url: string;
+}
+
 export default function PantallaConfigPage() {
     const router = useRouter();
     const { role, centerId, loading: authLoading } = useAuth();
@@ -30,6 +37,8 @@ export default function PantallaConfigPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [hasChanges, setHasChanges] = useState(false);
+    const [center, setCenter] = useState<CenterIdentity | null>(null);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
 
     const isEditor = role === 'editor_profe' || role === 'admin_global';
 
@@ -48,7 +57,10 @@ export default function PantallaConfigPage() {
         setError(null);
 
         try {
-            const settingsRes = await fetch(`/api/display/settings?centerId=${centerId}`);
+            const [settingsRes, configRes] = await Promise.all([
+                fetch(`/api/display/settings?centerId=${centerId}`),
+                fetch(`/api/display/config?centerId=${centerId}`),
+            ]);
 
             if (!settingsRes.ok) {
                 throw new Error('Error carregant la configuració');
@@ -56,6 +68,11 @@ export default function PantallaConfigPage() {
 
             const settingsData = await settingsRes.json();
             setSettings(settingsData.settings);
+
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                setCenter(configData.center);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconegut');
         } finally {
@@ -80,6 +97,27 @@ export default function PantallaConfigPage() {
         });
         setHasChanges(true);
         setSuccess(null);
+    };
+
+    const handleLogoUpload = async (file: File | null) => {
+        if (!file || !center || !isEditor) return;
+        setUploadingLogo(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('logo', file);
+            const response = await fetch(`/api/centers/${center.id}/logo`, { method: 'PATCH', body: formData });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Error pujant el logo');
+            setCenter(data.center);
+            setSuccess('Logo del centre actualitzat correctament');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error desconegut');
+        } finally {
+            setUploadingLogo(false);
+        }
     };
 
     // Save all settings
@@ -195,6 +233,28 @@ export default function PantallaConfigPage() {
 
                 {/* Settings Form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div className="p-6 border-b border-gray-200">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-1">Identitat del centre</h2>
+                        <p className="text-sm text-gray-500 mb-4">Aquest logo apareix a la barra lateral i a la capçalera del display.</p>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <div className="h-20 w-20 rounded-lg border border-gray-200 bg-gray-50 p-2">
+                                <Image src={center?.logo_url || '/logo_videos.png'} alt={center?.name || 'Logo del centre'} width={80} height={80} className="h-full w-full object-contain" />
+                            </div>
+                            {isEditor && (
+                                <div>
+                                    <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp"
+                                        disabled={uploadingLogo}
+                                        onChange={(event) => handleLogoUpload(event.target.files?.[0] || null)}
+                                        className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-[#FEDD2C] file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-900 hover:file:bg-yellow-400 disabled:opacity-50"
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">PNG, JPG/JPEG o WebP · màxim 2 MB · mínim 256 × 256 px. Recomanat: 512 × 512 px.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Header section */}
                     <div className="p-6 border-b border-gray-200">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">

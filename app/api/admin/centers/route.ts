@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { validateCenterLogo } from '@/lib/center-logo';
+import { createClient } from '@/utils/supabase/server';
+
+const LOGOS_BUCKET = 'center-logos';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = await createClient();
 
   // Verificar que l'usuari és admin_global
   const { data: { user } } = await supabase.auth.getUser();
@@ -53,19 +44,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = await createClient();
 
   // Verificar que l'usuari és admin_global
   const { data: { user } } = await supabase.auth.getUser();
@@ -84,19 +63,35 @@ export async function POST(request: Request) {
   }
 
   // Validar dades
-  const body = await request.json();
-  const { name, zone_id } = body;
+  const formData = await request.formData();
+  const name = formData.get('name');
+  const zone_id = formData.get('zone_id');
+  const logo = formData.get('logo');
 
-  if (!name || name.trim().length < 2) {
+  if (typeof name !== 'string' || name.trim().length < 2) {
     return NextResponse.json(
       { error: 'El nom del centre ha de tenir almenys 2 caràcters' },
       { status: 400 }
     );
   }
 
-  if (!zone_id) {
+  if (typeof zone_id !== 'string' || !zone_id) {
     return NextResponse.json(
       { error: 'Cal seleccionar una zona' },
+      { status: 400 }
+    );
+  }
+
+  if (!(logo instanceof File)) {
+    return NextResponse.json({ error: 'Cal pujar el logo del centre' }, { status: 400 });
+  }
+
+  let extension: string;
+  try {
+    ({ extension } = await validateCenterLogo(logo));
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'El logo no és vàlid' },
       { status: 400 }
     );
   }
@@ -134,5 +129,42 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ center }, { status: 201 });
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const path = `${center.id}/logo-${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await admin.storage.from(LOGOS_BUCKET).upload(path, logo, {
+    contentType: logo.type,
+    cacheControl: '3600',
+    upsert: false,
+  });
+
+  if (uploadError) {
+    await admin.from('centers').delete().eq('id', center.id);
+    return NextResponse.json({ error: 'No s’ha pogut pujar el logo. El centre no s’ha creat.' }, { status: 500 });
+  }
+
+  const { data: publicUrl } = admin.storage.from(LOGOS_BUCKET).getPublicUrl(path);
+  const { data: centerWithLogo, error: logoError } = await admin
+    .from('centers')
+    .update({ logo_url: publicUrl.publicUrl })
+    .eq('id', center.id)
+    .select(`
+      *,
+      zones (
+        id,
+        name
+      )
+    `)
+    .single();
+
+  if (logoError || !centerWithLogo) {
+    await admin.storage.from(LOGOS_BUCKET).remove([path]);
+    await admin.from('centers').delete().eq('id', center.id);
+    return NextResponse.json({ error: 'No s’ha pogut desar el logo. El centre no s’ha creat.' }, { status: 500 });
+  }
+
+  return NextResponse.json({ center: centerWithLogo }, { status: 201 });
 }

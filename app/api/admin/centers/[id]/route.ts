@@ -1,25 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const cookieStore = await cookies();
   const { id } = await params;
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = await createClient();
 
   // Verificar que l'usuari és admin_global
   const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +28,7 @@ export async function PATCH(
   const body = await request.json();
   const { name, zone_id, is_active } = body;
 
-  const updates: any = {};
+  const updates: Record<string, string | boolean> = {};
   
   if (name !== undefined) {
     if (name.trim().length < 2) {

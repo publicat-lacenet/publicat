@@ -2,7 +2,7 @@
 
 Document canònic del mapa de base de dades de PUBLI*CAT. Descriu l'estructura real verificada, les relacions principals i les regles que cal preservar quan es modifica schema, RLS o fluxos de dades.
 
-Última verificació: 2026-07-09 contra la BD real `publicat_videos` (`tvsafusrasfzubiujavk`) via `DATABASE_URL`, sense exposar credencials.
+Última verificació: 2026-07-10 contra la BD real `publicat_videos` (`tvsafusrasfzubiujavk`) via `DATABASE_URL`, sense exposar credencials.
 
 ## Fonts de veritat
 
@@ -11,13 +11,13 @@ Document canònic del mapa de base de dades de PUBLI*CAT. Descriu l'estructura r
 - Les verificacions i rectificacions datades viuen a `MEMORIA_PROJECTE.md`.
 - Els informes antics moguts a `docs/OBSOLET/` són històrics i no s'han d'usar com a foto actual sense contrastar.
 
-Estat verificat el 2026-07-09:
+Estat verificat el 2026-07-10:
 
-- Taules públiques: 20.
+- Taules públiques: 21.
 - Enums públics: 6 després de la migració local pendent.
-- Migracions locals: 37 després de la migració local pendent.
-- Versions registrades a `supabase_migrations.schema_migrations`: 35.
-- Última migració registrada: `20260707180000_harden_core_rls_policies.sql`.
+- Migracions locals: 41.
+- Versions registrades a `supabase_migrations.schema_migrations`: 41.
+- Última migració registrada: `20260710130000_video_media_cleanup.sql`.
 - Totes les taules públiques tenen RLS activat.
 
 ## Convencions
@@ -127,7 +127,7 @@ centers:
   id uuid not null
   name text not null
   zone_id uuid not null
-  logo_url text
+  logo_url text not null
   is_active bool not null
   created_at timestamptz not null
   updated_at timestamptz not null
@@ -171,6 +171,19 @@ notifications:
   video_id uuid
   is_read bool not null
   created_at timestamptz not null
+
+media_cleanup_jobs:
+  id uuid not null
+  video_id uuid not null
+  resource_type text not null
+  resource_identifier text not null
+  status text not null
+  attempts int4 not null
+  last_error text
+  next_attempt_at timestamptz not null
+  completed_at timestamptz
+  created_at timestamptz not null
+  updated_at timestamptz not null
 
 playlist_items:
   id uuid not null
@@ -333,6 +346,7 @@ zones:
 - `video_tags`: relació N-M entre vídeos i tags.
 - `video_hashtags`: relació N-M entre vídeos i hashtags.
 - `notifications`: avisos d'aprovació, rebuig, pendent i revisió associats a usuaris i vídeos.
+- `media_cleanup_jobs`: cua privada i durable per eliminar vídeos de Vimeo i fotogrames d'anuncis. No té FK cap a `videos` deliberadament: ha de sobreviure després de l'esborrat local i es processa amb `service_role`.
 
 ### Llistes i pantalla
 
@@ -359,6 +373,7 @@ guest_access_links: RLS actiu, 0 policies
 centers: RLS actiu, 2 policies
 display_settings: RLS actiu, 4 policies
 hashtags: RLS actiu, 2 policies
+media_cleanup_jobs: RLS actiu, 0 policies (només service_role)
 notifications: RLS actiu, 3 policies
 playlist_items: RLS actiu, 3 policies
 playlists: RLS actiu, 3 policies
@@ -425,6 +440,7 @@ Aquest estat s'ha de revisar abans de tocar el flux de fotogrames d'anuncis. `do
 ## Invariants del Domini
 
 - `center_id` és el límit de tenant per defecte.
+- `centers.logo_url` és obligatori. Els centres existents sense logo usen `/logo_videos.png` (PUBLI*CAT) com a valor inicial; els centres nous han de rebre un logo vàlid durant la creació.
 - `videos.zone_id` s'ha de derivar del centre.
 - Els vídeos d'alumnes comencen com `pending_approval`.
 - `needs_revision` representa un retorn a l'alumne perquè corregeixi.

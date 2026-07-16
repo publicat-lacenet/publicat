@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/utils/supabase/useAuth';
 import { useState, useEffect } from 'react';
@@ -31,6 +32,7 @@ export default function AppSidebar() {
   const { user, role, loading, centerId } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);   // per editor_profe
   const [revisionCount, setRevisionCount] = useState(0); // per editor_alumne
+  const [centerLogo, setCenterLogo] = useState('/logo_videos.png');
   const supabase = createClient();
 
   // Fetch pending videos count per editor_profe
@@ -79,6 +81,23 @@ export default function AppSidebar() {
       window.removeEventListener('videoStatusChanged', handleVideoStatusChange);
     };
   }, [role, centerId, supabase]);
+
+  useEffect(() => {
+    if (!centerId) {
+      return;
+    }
+
+    const fetchCenterLogo = async () => {
+      const { data } = await supabase
+        .from('centers')
+        .select('logo_url')
+        .eq('id', centerId)
+        .single();
+      setCenterLogo(data?.logo_url || '/logo_videos.png');
+    };
+
+    fetchCenterLogo();
+  }, [centerId, supabase]);
 
   // Fetch needs_revision count per editor_alumne (polling cada 60s)
   useEffect(() => {
@@ -176,6 +195,22 @@ export default function AppSidebar() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Identitat visual del centre */}
+        <div className="p-2 border-t border-[#E5E7EB]/50">
+          <div className="group relative h-12 flex items-center justify-center rounded-lg bg-white/55">
+            <Image
+              src={centerLogo}
+              alt="Logo del centre"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
+            <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+              Logo del centre
+            </span>
+          </div>
         </div>
 
         {/* Profile at bottom */}

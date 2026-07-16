@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: 'i.vimeocdn.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+        pathname: '/storage/v1/object/public/center-logos/**',
+      },
     ],
   },
 

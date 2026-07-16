@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Pencil, Power } from 'lucide-react';
+import { ImagePlus, Pencil, Power } from 'lucide-react';
+import Image from 'next/image';
 import Button from '@/app/components/ui/button';
 import Modal from '@/app/components/ui/Modal';
 
@@ -30,6 +31,8 @@ export default function CentresTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCenter, setEditingCenter] = useState<Center | null>(null);
   const [formData, setFormData] = useState({ name: '', zone_id: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Carregar centres i zones
@@ -68,41 +71,59 @@ export default function CentresTab() {
   const handleCreate = () => {
     setEditingCenter(null);
     setFormData({ name: '', zone_id: '' });
+    setLogoFile(null);
+    setLogoPreview(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (center: Center) => {
     setEditingCenter(center);
     setFormData({ name: center.name, zone_id: center.zone_id });
+    setLogoFile(null);
+    setLogoPreview(center.logo_url || '/logo_videos.png');
     setIsModalOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formData.name.trim() || !formData.zone_id) {
+    if (!formData.name.trim() || !formData.zone_id || (!editingCenter && !logoFile)) {
       alert('Cal omplir tots els camps obligatoris');
       return;
     }
 
     setSaving(true);
     try {
-      const url = editingCenter
-        ? `/api/admin/centers/${editingCenter.id}`
-        : '/api/admin/centers';
-      
-      const method = editingCenter ? 'PATCH' : 'POST';
-      
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      let res: Response;
+      let data: { error?: string };
 
-      const data = await res.json();
+      if (editingCenter) {
+        res = await fetch(`/api/admin/centers/${editingCenter.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        data = await res.json();
+
+        if (res.ok && logoFile) {
+          const logoData = new FormData();
+          logoData.append('logo', logoFile);
+          res = await fetch(`/api/centers/${editingCenter.id}/logo`, { method: 'PATCH', body: logoData });
+          data = await res.json();
+        }
+      } else {
+        const createData = new FormData();
+        createData.append('name', formData.name);
+        createData.append('zone_id', formData.zone_id);
+        createData.append('logo', logoFile!);
+        res = await fetch('/api/admin/centers', { method: 'POST', body: createData });
+        data = await res.json();
+      }
 
       if (res.ok) {
         await fetchCenters();
         setIsModalOpen(false);
         setFormData({ name: '', zone_id: '' });
+        setLogoFile(null);
+        setLogoPreview(null);
       } else {
         alert(data.error || 'Error al guardar el centre');
       }
@@ -112,6 +133,20 @@ export default function CentresTab() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLogoChange = (file: File | null) => {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      alert('El logo ha de ser un fitxer PNG, JPG/JPEG o WebP');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('El logo ha de pesar com a màxim 2 MB');
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
   };
 
   const handleToggleActive = async (center: Center) => {
@@ -253,6 +288,30 @@ export default function CentresTab() {
               className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg 
                        focus:outline-none focus:border-[var(--color-secondary)]"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-dark)] mb-1">
+              Logo del centre {!editingCenter && '*'}
+            </label>
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-light-bg)] p-2">
+                {logoPreview ? (
+                  <Image src={logoPreview} alt="Previsualització del logo" width={64} height={64} className="h-full w-full object-contain" unoptimized />
+                ) : (
+                  <ImagePlus className="h-full w-full p-2 text-[var(--color-gray)]" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => handleLogoChange(event.target.files?.[0] || null)}
+                  className="block w-full text-sm text-[var(--color-gray)] file:mr-3 file:rounded-md file:border-0 file:bg-[#FEDD2C] file:px-3 file:py-2 file:text-sm file:font-medium file:text-[var(--color-dark)] hover:file:bg-yellow-400"
+                />
+                <p className="mt-1 text-xs text-[var(--color-gray)]">PNG, JPG/JPEG o WebP · màxim 2 MB · mínim 256 × 256 px. Recomanat: 512 × 512 px.</p>
+              </div>
+            </div>
           </div>
 
           <div>

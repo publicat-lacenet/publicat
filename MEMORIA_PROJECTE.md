@@ -110,6 +110,27 @@ Decisio aplicada el 2026-07-09:
 
 ## Decisions i canvis locals - 2026-07-10
 
+### Eliminació fiable de vídeos i recursos externs
+
+Decisió de producte implementada i aplicada a la BD real `publicat_videos`:
+
+- En eliminar un vídeo, la funció `delete_video_and_queue_cleanup` valida de nou rol i centre, registra la neteja externa i elimina el registre dins d'una sola transacció.
+- Les FK existents fan cascada de `playlist_items`, `video_tags`, `video_hashtags` i notificacions; les playlists afectades es renumeren perquè no quedin salts de posició.
+- `media_cleanup_jobs` conserva treballs pendents de Vimeo i `announcement-frames` sense FK a `videos`, per poder reintentar-los després de l'esborrat local.
+- El servidor prova la neteja immediatament; el cron diari existent la reprèn si Vimeo o Storage fallen. Vimeo `204` i `404` compten com a eliminació correcta.
+- La substitució del Vimeo d'una revisió d'alumne també posa a cua el vídeo i els fotogrames anteriors.
+- Migració aplicada i registrada: `20260710130000_video_media_cleanup.sql`.
+
+### Logos obligatoris de centre
+
+Decisió de producte implementada i verificada a la BD real `publicat_videos`:
+
+- `centers.logo_url` passa a ser obligatori; els centres existents sense valor reben `/logo_videos.png`, el logo institucional de PUBLI*CAT.
+- Els centres nous requereixen un PNG, JPG/JPEG o WebP de fins a 2 MB i com a mínim 256 × 256 px; es recomana 512 × 512 px i la UI no retalla ni deforma el logo.
+- L'`admin_global` pot pujar o substituir logos de qualsevol centre. L'`editor_profe` només pot fer-ho al seu propi centre des de «Visor > Configuració de Pantalla».
+- La migració local `20260710120000_center_logos.sql` crea el bucket públic `center-logos`. No hi ha escriptura client-side: l'API valida sessió, rol i centre abans d'usar `service_role`.
+- Verificació posterior: migració registrada, `logo_url` és `NOT NULL`, els 23 centres existents tenen el fallback de PUBLI*CAT i no hi ha polítiques `storage.objects`; per tant cap client autenticat pot escriure directament al bucket.
+
 ### Ticker general del Visor com a reserva
 
 Decisio de producte:
