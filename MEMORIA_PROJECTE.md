@@ -176,3 +176,18 @@ Decisió de producte implementada:
 - L'API només exposa la xifra agregada; no revela noms, tipus ni centres de les altres llistes.
 - Els vídeos sense cap llista activa es destaquen amb «Cap llista» i una fallada del recompte es mostra com «Ús no disponible».
 - El recompte representa l'estat actual, no l'historial d'incorporacions, i no requereix cap canvi de schema.
+
+## Reparació conservadora de producció - 2026-10-01
+
+- Treball aïllat des de main/producció 07eb4d7 en el worktree cron-security-review, branca codex/cron-security-2026-10-01. Els canvis locals previs, inclòs ZOOM, no s'han incorporat a la reparació.
+- Comptes verificats: GitHub publicat-lacenet amb identitat publicat-lacenet <publicat@xtec.cat>; Vercel publicat-3848, equip lacenets-projects, projecte prj_H1mbvmSDdVpDQZuscdKxTjb6lX5M. Supabase publicat_videos/tvsafusrasfzubiujavk consultat només de lectura; 43 migracions remotes. Cap canvi SQL/Auth/RLS.
+- CRON_SECRET generat amb 48 bytes aleatoris criptogràfics, configurat com a variable sensible exclusivament de producció, sense publicar-lo. La verificació Bearer i el codi del cron es conserven.
+- Commit funcional 40aa961: Next 16.3.8, React/React DOM 19.2.8, eslint-config-next 16.3.8 i transitives corregides. Supabase JS 2.84.0, SSR 0.7.0, Vimeo Player 2.30.1, Tailwind 4.1.17 i la resta de llibreries de domini es conserven. No s'ha utilitzat audit fix --force ni afegit dependències.
+- Rectificació de l'auditoria: main net tenia 15 paquets afectats (1 crítica, 10 altes, 3 moderades, 1 baixa), no els 45 de l'estat local amb canvis previs. Auditoria final: 0 vulnerabilitats conegudes, incloent desenvolupament.
+- Build local, build remot Vercel, TypeScript i diff --check correctes. Lint de main: 67 errors/18 warnings; final: els mateixos 67 errors/19 warnings. L'avís nou és no-location-assign-relative-destination a pantalla/sign-out-button.tsx, codi sense modificar. No s'ha desactivat cap regla.
+- Desplegament verificat i promogut: dpl_4Ty1HYhZ7Sf3RSeqXvopWH6CfzEC (40aa961), READY. www.publicat.org i publicat-lovat.vercel.app: landing/login/playlist HTTP 200, 20 vídeos amb IDs i ordre idèntics; endpoints protegits 401 i redireccions esperades. Navegador modern: landing/login i progrés real de Vimeo sense errors de pàgina detectats. Cap prova completa d'edició autenticada per rols ni prova física de TV.
+- Execució manual única del cron autoritzada explícitament per l'usuari després d'inspeccionar l'abast: 0 vídeos caducats, 26 neteges elegibles (31 pendents totals), límit 20. HTTP 200 en 150,743 s; 29/31 feeds actualitzats, 0 desactivats, 0 vídeos caducats eliminats.
+- Neteja Vimeo pendent: els 20 intents han retornat 403, cap neteja completada; 31 treballs continuen pendents amb reintents. /oauth/verify confirma scopes private/upload/video_files/public i absència de delete. Cal un token del mateix compte amb els permisos actuals més delete; no cal modificar el codi ni eliminar la cua. No s'ha repetit el cron.
+- Regió7 - Berguedà i Regió7 - Moianès retornen HTTP 406. Reproduït només de lectura amb el parser original sense les actualitzacions: no és una regressió observada de les dependències.
+- Cron Vercel habilitat a 0 0 * * * i apuntant al desplegament promogut. Bearer absent/incorrecte: 401 als dos dominis. L'execució real del següent torn programat encara s'ha d'observar; la prova manual no la substitueix.
+- Decisió de l'usuari: prioritzar seguretat i verificar el funcionament existent, sense adaptacions específiques per a la TCL ni canvis del reproductor en aquesta reparació. Les troballes de robustesa i user_metadata del visor continuen pendents a docs/revisio-2026-10-01.md.
