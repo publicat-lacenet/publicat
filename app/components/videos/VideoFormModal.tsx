@@ -70,8 +70,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const [retentionPolicy, setRetentionPolicy] =
     useState<VideoRetentionPolicy>('end_of_school_year');
   const [customDeleteOn, setCustomDeleteOn] = useState('');
-  const [framesUrls, setFramesUrls] = useState<string[]>([]);
-  const pendingVideoIdRef = useRef<string | null>(null);
+  const uploadedFileRef = useRef<File | null>(null);
+  const [savingFrames, setSavingFrames] = useState(false);
 
   const canShare = role === 'editor_profe' || role === 'admin_global';
 
@@ -100,7 +100,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     }
   }, [isEditMode, editVideo]);
 
-  const handleUploadComplete = useCallback((uploadedUrl: string, metadata: UploadMetadata) => {
+  const handleUploadComplete = useCallback((uploadedUrl: string, metadata: UploadMetadata, file: File | null) => {
+    uploadedFileRef.current = file;
     setVimeoUrl(uploadedUrl);
     setIsVimeoValid(true);
     setHasNewVideo(true);
@@ -121,22 +122,33 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setUploadStatus(status);
   }, []);
 
-  const handleFramesExtracted = useCallback(async (urls: string[]) => {
-    setFramesUrls(urls);
-    if (pendingVideoIdRef.current && urls.length > 0) {
-      const videoId = pendingVideoIdRef.current;
-      pendingVideoIdRef.current = null;
-      try {
-        await fetch(`/api/videos/${videoId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ frames_urls: urls }),
-        });
-      } catch {
-        console.warn('[VideoFormModal] No s\'ha pogut actualitzar frames_urls al vídeo creat');
+  const saveAnnouncementFrames = async (videoId: string) => {
+    // El tipus definitiu es coneix en desar: mai extreure ni pujar captures de contingut.
+    const file = uploadedFileRef.current;
+    if (type !== 'announcement' || !hasNewVideo || !file || !vimeoMetadata?.vimeo_id) return;
+    setSavingFrames(true);
+    try {
+      const { extractFrames } = await import('@/lib/display/frameExtractor');
+      const blobs = await extractFrames(file, 3);
+      if (!blobs.length) throw new Error('No s’han pogut extreure captures del fitxer');
+      const form = new FormData();
+      form.set('vimeo_id', vimeoMetadata.vimeo_id);
+      blobs.forEach((blob, index) => form.append('frames', blob, 'frame_' + index + '.jpg'));
+      const res = await fetch('/api/videos/' + videoId + '/frames', {
+        method: 'POST', body: form, signal: AbortSignal.timeout(65000),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'No s’han pogut desar les captures');
       }
+    } catch (error) {
+      alert('L’anunci s’ha desat, però les captures no: ' +
+        (error instanceof Error ? error.message : 'Error de connexió') +
+        '. En mode Diapositives es mostrarà la miniatura.');
+    } finally {
+      setSavingFrames(false);
     }
-  }, []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +206,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
           payload.vimeo_hash = vimeoMetadata.vimeo_hash ?? null;
           payload.thumbnail_url = vimeoMetadata.thumbnail_url ?? null;
           payload.duration_seconds = vimeoMetadata.duration ?? null;
-          payload.frames_urls = framesUrls;
+          payload.frames_urls = [];
         }
 
         const res = await fetch(`/api/videos/${editVideo!.id}`, {
@@ -206,6 +218,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         const data = await res.json();
 
         if (res.ok) {
+          await saveAnnouncementFrames(editVideo!.id);
           alert('Correcció enviada correctament. El professor la revisarà aviat.');
           resetForm();
           onSuccess();
@@ -234,7 +247,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
         payload.vimeo_hash = vimeoMetadata?.vimeo_hash;
         payload.thumbnail_url = vimeoMetadata?.thumbnail_url;
         payload.duration_seconds = vimeoMetadata?.duration;
-        payload.frames_urls = framesUrls;
+        payload.frames_urls = [];
       }
 
       const url = isEditMode ? `/api/videos/${editVideo!.id}` : '/api/videos';
@@ -249,10 +262,8 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
       const data = await res.json();
 
       if (res.ok) {
+        await saveAnnouncementFrames(isEditMode ? editVideo!.id : data.video.id);
         alert(isEditMode ? 'Vídeo actualitzat correctament!' : 'Vídeo pujat correctament!');
-        if (!isEditMode && data.video?.id) {
-          pendingVideoIdRef.current = data.video.id;
-        }
         resetForm();
         onSuccess();
         onClose();
@@ -279,7 +290,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
     setIsShared(false);
     setRetentionPolicy('end_of_school_year');
     setCustomDeleteOn('');
-    setFramesUrls([]);
+    uploadedFileRef.current = null;
     setHasNewVideo(false);
     setUploadStatus('idle');
   };
@@ -296,7 +307,7 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
   const modalTitle = isRevisionMode ? 'Corregir vídeo' : isEditMode ? 'Editar Vídeo' : 'Pujar Vídeo';
   const endOfSchoolYearDeleteOn = getEndOfSchoolYearDeleteOn();
   const today = getMadridToday();
-  const submitLabel = isRevisionMode
+  const submitLabel = savingFrames ? 'Desant captures de l’anunci...' : isRevisionMode
     ? (submitting ? 'Enviant...' : 'Enviar per revisió')
     : isEditMode
       ? (submitting ? 'Actualitzant...' : 'Actualitzar Vídeo')
@@ -343,7 +354,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
                 onUploadComplete={handleUploadComplete}
                 onError={handleUploadError}
                 onStatusChange={handleStatusChange}
-                onFramesExtracted={handleFramesExtracted}
               />
               {(uploadStatus === 'uploading' || uploadStatus === 'processing') && (
                 <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
@@ -376,7 +386,6 @@ export default function VideoFormModal({ isOpen, onClose, onSuccess, editVideo =
                   onUploadComplete={handleUploadComplete}
                   onError={handleUploadError}
                   onStatusChange={handleStatusChange}
-                  onFramesExtracted={handleFramesExtracted}
                 />
               </div>
               {(uploadStatus === 'uploading' || uploadStatus === 'processing') && (

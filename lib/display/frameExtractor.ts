@@ -1,3 +1,5 @@
+import { MAX_ANNOUNCEMENT_FRAMES, MAX_ANNOUNCEMENT_FRAME_BYTES } from './announcementFrames';
+
 /**
  * Extreu fotogrames JPEG d'un fitxer de vídeo local.
  * S'executa al navegador (canvas API).
@@ -9,11 +11,23 @@ export async function extractFrames(
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const video = document.createElement('video');
-    video.preload = 'metadata';
+    video.preload = 'auto';
     video.muted = true;
     video.playsInline = true;
 
-    const cleanup = () => URL.revokeObjectURL(url);
+    const metadataTimeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('El navegador no ha pogut carregar el vídeo per generar captures'));
+    }, 15000);
+    const cleanup = () => {
+      clearTimeout(metadataTimeout);
+      video.onerror = null;
+      video.onloadedmetadata = null;
+      video.onseeked = null;
+      video.removeAttribute('src');
+      video.load();
+      URL.revokeObjectURL(url);
+    };
 
     video.onerror = () => {
       cleanup();
@@ -21,6 +35,7 @@ export async function extractFrames(
     };
 
     video.onloadedmetadata = async () => {
+      clearTimeout(metadataTimeout);
       const duration = video.duration;
       if (!duration || !isFinite(duration) || duration <= 0) {
         cleanup();
@@ -38,7 +53,7 @@ export async function extractFrames(
 
       // Calcular timestamps (excloure l'últim segon per evitar frames negres)
       const timestamps: number[] = [];
-      for (let t = 0; t < duration - 0.5; t += intervalSeconds) {
+      for (let t = 0; t < duration - 0.5 && timestamps.length < MAX_ANNOUNCEMENT_FRAMES; t += intervalSeconds) {
         timestamps.push(t);
       }
       if (timestamps.length === 0) {
@@ -50,14 +65,15 @@ export async function extractFrames(
       for (const timestamp of timestamps) {
         try {
           const blob = await seekAndCapture(video, canvas, ctx, timestamp);
-          if (blob) blobs.push(blob);
+          if (blob && blob.size <= MAX_ANNOUNCEMENT_FRAME_BYTES) blobs.push(blob);
         } catch {
           // Ignorar errors en frames individuals
         }
       }
 
       cleanup();
-      resolve(blobs);
+      if (!blobs.length) reject(new Error('No s’han pogut generar captures JPEG del vídeo'));
+      else resolve(blobs);
     };
 
     video.src = url;
@@ -108,6 +124,7 @@ function seekAndCapture(
       }
     };
 
-    video.currentTime = timestamp;
+    // Evitar el seek a 0, que alguns navegadors no notifiquen amb seeked.
+    video.currentTime = Math.min(Math.max(timestamp, 0.05), video.duration / 2 + timestamp / 2);
   });
 }

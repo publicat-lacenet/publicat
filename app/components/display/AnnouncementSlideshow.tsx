@@ -99,6 +99,13 @@ export default function AnnouncementSlideshow({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={currentFrame}
+            onError={({ currentTarget }) => {
+              const thumbnail = videos.find(video => video.frames_urls?.includes(currentFrame))?.thumbnail_url;
+              // Si s'ha eliminat una captura de Storage, conservar la miniatura de l'anunci.
+              if (thumbnail && currentTarget.src !== new URL(thumbnail, window.location.href).href) {
+                currentTarget.src = thumbnail;
+              }
+            }}
             alt=""
             className="w-full h-full object-contain"
             draggable={false}
